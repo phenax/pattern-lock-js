@@ -23,8 +23,8 @@ window.PatternLock= class {
 			bg: '#2c3e50',
 		};
 
-		this._attachListeners();
 		this.setInitialState();
+		this._attachListeners();
 	}
 
 
@@ -46,17 +46,18 @@ window.PatternLock= class {
 
 	setInitialState() {
 
-		this.pickedNodes= [];
-		this.renderLoop(false);
+		this.selectedNodes= [];
 	}
 
 
 	_mouseStart() {
 		this._isDragging= true;
+		this.setInitialState();
+		this.calculationLoop(false);
+		this.renderLoop(false);
 	}
 
 	_mouseEnd() {
-		this.setInitialState();
 		this._isDragging= false;
 	}
 
@@ -82,13 +83,13 @@ window.PatternLock= class {
 	}
 
 
-	getNode(node) {
+	hasNode(node) {
 
-		return this.pickedNodes
+		return this.selectedNodes
 			.find((p) => p.row == node.row && p.col == node.col);
 	}
 
-	calculationLoop() {
+	calculationLoop(runLoop= true) {
 
 		if(this._isDragging) {
 
@@ -105,11 +106,11 @@ window.PatternLock= class {
 
 					const node= { row, col };
 
-					const nodeExists= this.getNode(node);
+					const nodeExists= this.hasNode(node);
 
 					if(!nodeExists) {
 
-						this.pickedNodes.push(node);
+						this.selectedNodes.push(node);
 
 						return false;
 					}
@@ -117,7 +118,9 @@ window.PatternLock= class {
 			});
 		}
 
-		requestAnimationFrame(this.calculationLoop);
+		if(runLoop) {
+			requestAnimationFrame(this.calculationLoop);
+		}
 	}
 
 
@@ -130,18 +133,33 @@ window.PatternLock= class {
 
 			this.renderGrid();
 
-			this.pickedNodes
-				.reduce((prevNode, node) => {
+			const lastNode=
+				this.selectedNodes
+					.reduce((prevNode, node) => {
 
-					if(prevNode) {
-						this.joinNodes(
-							prevNode.row, prevNode.col,
-							node.row, node.col
-						);
-					}
+						if(prevNode) {
+							this.joinNodes(
+								prevNode.row, prevNode.col,
+								node.row, node.col
+							);
+						}
 
-					return node;
-				}, null);
+						return node;
+					}, null);
+
+			console.log(this.coordinates);
+
+			// if(lastNode) {
+
+			// 	lastNode.row*= this.interval.x;
+			// 	lastNode.col*= this.interval.y;
+
+			// 	this.joinNodes(
+			// 		lastNode.row, lastNode.col,
+			// 		this.coordinates.x, this.coordinates.y,
+			// 		true  // IsCoordinates instead of row and column position
+			// 	);
+			// }
 		}
 
 		if(runLoop) {
