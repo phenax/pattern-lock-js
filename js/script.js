@@ -5,7 +5,7 @@
 
 		const patternLock= new PatternLock({
 			el: '#patternLock',
-			dimens: { width: 360, height: 500 },
+			dimens: { width: 350, height: 470 },
 		});
 
 		patternLock.setTheme({
