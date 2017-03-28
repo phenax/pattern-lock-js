@@ -7,13 +7,11 @@ window.PatternLock= class {
 		this.$canvas= document.querySelector(config.el);
 		this.dimens= Object.assign({}, config.dimens);
 
-		this.$canvas.width= config.dimens.width;
-		this.$canvas.height= config.dimens.height;
+		this.$canvas.width= this.dimens.width;
+		this.$canvas.height= this.dimens.height;
 		this.ctx= this.$canvas.getContext('2d');
 
 		this.bounds= this.$canvas.getBoundingClientRect();
-
-		this.coordinates= { x: 0, y: 0 };
 
 		this.NODE_RADIUS= 25;
 
@@ -46,15 +44,16 @@ window.PatternLock= class {
 
 	setInitialState() {
 
+		this.coordinates= { x: 0, y: 0 };
 		this.selectedNodes= [];
 	}
 
 
 	_mouseStart() {
-		this._isDragging= true;
 		this.setInitialState();
 		this.calculationLoop(false);
 		this.renderLoop(false);
+		this._isDragging= true;
 	}
 
 	_mouseEnd() {
@@ -83,7 +82,7 @@ window.PatternLock= class {
 	}
 
 
-	hasNode(node) {
+	getNode(node) {
 
 		return this.selectedNodes
 			.find((p) => p.row == node.row && p.col == node.col);
@@ -101,12 +100,13 @@ window.PatternLock= class {
 				);
 
 				if(dist < this.NODE_RADIUS) {
+
 					const row= x/this.interval.x;
 					const col= y/this.interval.y;
 
 					const node= { row, col };
 
-					const nodeExists= this.hasNode(node);
+					const nodeExists= !!this.getNode(node);
 
 					if(!nodeExists) {
 
