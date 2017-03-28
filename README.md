@@ -1,5 +1,5 @@
 # PatternLockJS
-A pattern lock library for the web.
+A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock-js/)
 
 [![forthebadge](http://forthebadge.com/images/badges/uses-js.svg)](http://forthebadge.com)
 [![forthebadge](http://forthebadge.com/images/badges/you-didnt-ask-for-this.svg)](http://forthebadge.com)
