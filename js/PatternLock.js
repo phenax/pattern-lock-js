@@ -9,10 +9,14 @@ window.PatternLock= class {
 
 		this.$canvas.width= this.dimens.width;
 		this.$canvas.height= this.dimens.height;
+
+		// Canvas context
 		this.ctx= this.$canvas.getContext('2d');
 
+		// Canvas position and dimens
 		this.bounds= this.$canvas.getBoundingClientRect();
 
+		// Default themes
 		this.THEME= {
 			accent: '#1abc9c',
 			primary: '#ffffff',
@@ -29,37 +33,54 @@ window.PatternLock= class {
 	}
 
 
+	/**
+	 * Set the pattern lock screen theme
+	 * 
+	 * @param {Object}   theme    Theme to add to defaults
+	 *
+	 * @return {Object}           Full theme
+	 */
 	setTheme(theme) {
 		return this.THEME= Object.assign({}, this.THEME, theme);
 	}
 
 
-
+	/**
+	 * Attach event listeners and start frame loops
+	 */
 	_attachListeners() {
 
+		// Binding context
 		this._mouseStartHandler= this._mouseStartHandler.bind(this);
 		this._mouseEndHandler= this._mouseEndHandler.bind(this);
 		this._mouseMoveHandler= this._mouseMoveHandler.bind(this);
-
 		this.renderLoop= this.renderLoop.bind(this);
 		this.calculationLoop= this.calculationLoop.bind(this);
 
 
+		// Attach event handlers
 		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
 		this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
 		this.$canvas.addEventListener('mousemove', this._mouseMoveHandler);
 
+		// Start frame loops
 		requestAnimationFrame(this.renderLoop);
 		requestAnimationFrame(this.calculationLoop);
 	}
 
+
+	/**
+	 * Set the initial state
+	 */
 	setInitialState() {
 
-		this.coordinates= { x: 0, y: 0 };
+		this.coordinates= null;
 		this.selectedNodes= [];
 	}
 
-
+	/**
+	 * Mouse start handler
+	 */
 	_mouseStartHandler(e) {
 		e.preventDefault();
 
@@ -70,12 +91,22 @@ window.PatternLock= class {
 		this._isDragging= true;
 	}
 
+	/**
+	 * Mouse end handler
+	 */
 	_mouseEndHandler(e) {
 		e.preventDefault();
+
+		this.coordinates= null;
+		this.renderLoop(false);
 
 		this._isDragging= false;
 	}
 
+
+	/**
+	 * Mouse move handler
+	 */
 	_mouseMoveHandler(e) {
 
 		e.preventDefault();
@@ -100,7 +131,14 @@ window.PatternLock= class {
 	}
 
 
-	hasNode(targetNode) {
+	/**
+	 * Check if the given node is already selected
+	 * 
+	 * @param  {Object}  targetNode  Node to check
+	 * 
+	 * @return {Boolean}             True if the node is selected
+	 */
+	isSelected(targetNode) {
 
 		return !!this.selectedNodes.find(
 			node => (
@@ -110,9 +148,10 @@ window.PatternLock= class {
 		);
 	}
 
+
 	calculationLoop(runLoop= true) {
 
-		if(this._isDragging) {
+		if(this._isDragging && this.coordinates) {
 
 			this.forEachNode((x, y) => {
 
@@ -128,7 +167,7 @@ window.PatternLock= class {
 
 					const currentNode= { row, col };
 
-					if(!this.hasNode(currentNode)) {
+					if(!this.isSelected(currentNode)) {
 						this.selectedNodes.push(currentNode);
 						return false;
 					}
@@ -165,7 +204,7 @@ window.PatternLock= class {
 						return node;
 					}, null);
 
-			if(lastNode) {
+			if(lastNode && this.coordinates) {
 
 				this.joinNodes(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
