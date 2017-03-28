@@ -157,7 +157,6 @@ window.PatternLock= class PatternLock {
 
 		e.preventDefault();
 
-		console.log(e);
 
 		if(this._isDragging) {
 
