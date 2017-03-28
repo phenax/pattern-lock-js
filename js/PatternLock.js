@@ -14,6 +14,7 @@ window.PatternLock= class {
 		this.bounds= this.$canvas.getBoundingClientRect();
 
 		this.NODE_RADIUS= 25;
+		this.LINE_WIDTH= 7;
 
 		this.THEME= {
 			accent: '#1abc9c',
@@ -28,15 +29,17 @@ window.PatternLock= class {
 
 	_attachListeners() {
 
-		this._mouseStart= this._mouseStart.bind(this);
-		this._mouseEnd= this._mouseEnd.bind(this);
-		this._mouseMove= this._mouseMove.bind(this);
+		this._mouseStartHandler= this._mouseStartHandler.bind(this);
+		this._mouseEndHandler= this._mouseEndHandler.bind(this);
+		this._mouseMoveHandler= this._mouseMoveHandler.bind(this);
+
 		this.renderLoop= this.renderLoop.bind(this);
 		this.calculationLoop= this.calculationLoop.bind(this);
 
-		this.$canvas.addEventListener('mousedown', this._mouseStart);
-		this.$canvas.addEventListener('mouseup', this._mouseEnd);
-		this.$canvas.addEventListener('mousemove', this._mouseMove);
+
+		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
+		this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
+		this.$canvas.addEventListener('mousemove', this._mouseMoveHandler);
 
 		requestAnimationFrame(this.renderLoop);
 		requestAnimationFrame(this.calculationLoop);
@@ -49,50 +52,61 @@ window.PatternLock= class {
 	}
 
 
-	_mouseStart() {
+	_mouseStartHandler(e) {
+		e.preventDefault();
+
 		this.setInitialState();
 		this.calculationLoop(false);
 		this.renderLoop(false);
+
 		this._isDragging= true;
 	}
 
-	_mouseEnd() {
+	_mouseEndHandler(e) {
+		e.preventDefault();
+
 		this._isDragging= false;
 	}
 
-	_mouseMove(e) {
+	_mouseMoveHandler(e) {
+
+		e.preventDefault();
 
 		if(this._isDragging) {
 
-			const point= {
+			const mousePoint= {
 				x: e.pageX,
 				y: e.pageY,
 			};
 
-			point.x-= this.bounds.left;
-			point.y-= this.bounds.top;
+			mousePoint.x-= this.bounds.left;
+			mousePoint.y-= this.bounds.top;
 
 			if(
-				point.x <= this.dimens.width && point.x > 0 &&
-				point.y <= this.dimens.height && point.y > 0
+				mousePoint.x <= this.dimens.width && mousePoint.x > 0 &&
+				mousePoint.y <= this.dimens.height && mousePoint.y > 0
 			) {
-				this.coordinates= point;
+				this.coordinates= mousePoint;
 			}
 		}
 	}
 
 
-	getNode(node) {
+	hasNode(targetNode) {
 
-		return this.selectedNodes
-			.find((p) => p.row == node.row && p.col == node.col);
+		return !!this.selectedNodes.find(
+			node => (
+				node.row == targetNode.row &&
+				node.col == targetNode.col
+			)
+		);
 	}
 
 	calculationLoop(runLoop= true) {
 
 		if(this._isDragging) {
 
-			this.forEachHook((x, y) => {
+			this.forEachNode((x, y) => {
 
 				const dist= Math.sqrt(
 					Math.pow(this.coordinates.x - x, 2) + 
@@ -104,14 +118,10 @@ window.PatternLock= class {
 					const row= x/this.interval.x;
 					const col= y/this.interval.y;
 
-					const node= { row, col };
+					const currentNode= { row, col };
 
-					const nodeExists= !!this.getNode(node);
-
-					if(!nodeExists) {
-
-						this.selectedNodes.push(node);
-
+					if(!this.hasNode(currentNode)) {
+						this.selectedNodes.push(currentNode);
 						return false;
 					}
 				}
@@ -147,8 +157,6 @@ window.PatternLock= class {
 						return node;
 					}, null);
 
-			console.log(this.coordinates);
-
 			// if(lastNode) {
 
 			// 	lastNode.row*= this.interval.x;
@@ -183,19 +191,19 @@ window.PatternLock= class {
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
 		this.interval= {
-			x: this.dimens.width/(this.cols + 1),
-			y: this.dimens.height/(this.rows + 1),
+			x: this.dimens.width/(this.rows + 1),
+			y: this.dimens.height/(this.cols + 1),
 		};
 
 		this.plotPatternHook();
 	}
 
 	plotPatternHook() {
-		this.forEachHook((x, y) => this.drawHook(x, y));		
+		this.forEachNode(this.drawHook.bind(this));		
 	}
 
 
-	forEachHook(fn) {
+	forEachNode(callback) {
 
 		const xGrid= Array(this.rows).fill(this.interval.x);
 		const yGrid= Array(this.cols).fill(this.interval.y);
@@ -208,9 +216,8 @@ window.PatternLock= class {
 
 				xGrid.reduce((x, dx) => {
 
-					if(fn(x, y) === false) {
+					if(callback(x, y) === false)
 						throw breakException;
-					}
 
 					return x + dx;
 
@@ -221,8 +228,7 @@ window.PatternLock= class {
 			}, this.interval.y);
 
 		} catch(e) {
-			if(e !== breakException)
-				throw e;
+			if(e !== breakException) throw e;
 		}
 	}
 
@@ -235,7 +241,7 @@ window.PatternLock= class {
 		this.ctx.strokeStyle= borderColor;
 
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, 8, 0, Math.PI*2);
+		this.ctx.arc(x, y, this.LINE_WIDTH + 2, 0, Math.PI*2);
 		this.ctx.fill();
 
 		this.ctx.beginPath();
@@ -266,7 +272,7 @@ window.PatternLock= class {
 		this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary, 5);
 
 		this.ctx.beginPath();
-		this.ctx.lineWidth= 7;
+		this.ctx.lineWidth= this.LINE_WIDTH;
 		this.ctx.strokeStyle= this.THEME.accent;
 		this.ctx.lineCap= 'round';
 		this.ctx.moveTo(point1.x, point1.y);

@@ -8,6 +8,6 @@
 	});
 
 
-	patternLock.generateGrid(3, 3);
+	patternLock.generateGrid(3, 4);
 
 })(window.PatternLock);
