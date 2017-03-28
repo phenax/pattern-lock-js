@@ -16,6 +16,11 @@
 
 	patternLock.generateGrid(3, 3);
 
+
+	patternLock.onPatternComplete= nodes => {
+		console.log(nodes);
+	};
+
 	patternLock.start();
 
 })(window.PatternLock);

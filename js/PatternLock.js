@@ -24,11 +24,17 @@ window.PatternLock= class {
 			dimens: {
 				line_width: 6,
 				node_radius: 28,
-				node_core: 7,
+				node_core: 8,
+				node_ring: 1,
 			}
 		};
 
 		this.setInitialState();
+	}
+
+
+	set onPatternComplete(cb) {
+		this._patternCompleteHandler= cb;
 	}
 
 
@@ -105,6 +111,10 @@ window.PatternLock= class {
 		this.renderLoop(false);
 
 		this._isDragging= false;
+
+		if(typeof this._patternCompleteHandler === 'function') {
+			this._patternCompleteHandler(this.selectedNodes.slice(0));
+		}
 	}
 
 
@@ -212,12 +222,22 @@ window.PatternLock= class {
 
 					if(prevNode) {
 
-						const point1= { row: node.row*this.interval.x, col: node.col*this.interval.y };
-						const point2= { row: prevNode.row*this.interval.x, col: prevNode.col*this.interval.y };
+						const point1= { x: node.row*this.interval.x, y: node.col*this.interval.y };
+						const point2= { x: prevNode.row*this.interval.x, y: prevNode.col*this.interval.y };
 
-						this.drawNode(point1.row, point1.col, this.THEME.accent, this.THEME.primary, 4);
-						this.drawNode(point2.row, point2.col, this.THEME.accent, this.THEME.primary, 4);
+						// Make the two selected nodes bigger
+						this.drawNode(
+							point1.x, point1.y,
+							this.THEME.accent, this.THEME.primary,
+							this.THEME.dimens.node_ring + 3
+						);
+						this.drawNode(
+							point2.x, point2.y,
+							this.THEME.accent, this.THEME.primary,
+							this.THEME.dimens.node_ring + 3
+						);
 
+						// Join the nodes
 						this.joinNodes(
 							prevNode.row, prevNode.col,
 							node.row, node.col
@@ -233,7 +253,8 @@ window.PatternLock= class {
 				// Draw the last node
 				this.drawNode(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
-					this.THEME.accent, this.THEME.primary, 8
+					this.THEME.accent, this.THEME.primary,
+					this.THEME.dimens.node_ring + 6
 				);
 
 				// Draw a line between last node to the current drag position
@@ -331,7 +352,7 @@ window.PatternLock= class {
 	 * @param  {String} borderColor
 	 * @param  {Number} size       
 	 */
-	drawNode(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary, size=1) {
+	drawNode(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary, size=this.THEME.dimens.node_ring) {
 
 		// Config
 		this.ctx.lineWidth= size;
