@@ -18,7 +18,9 @@
 
 
 	patternLock.onPatternComplete= nodes => {
-		console.log(nodes);
+		const password= PatternLock.patternToWords(nodes);
+
+		console.log(PatternLock.hashCode(password));
 	};
 
 	patternLock.start();

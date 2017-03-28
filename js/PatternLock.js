@@ -1,5 +1,31 @@
 
-window.PatternLock= class {
+window.PatternLock= class PatternLock {
+
+
+
+	static patternToWords(nodes) {
+
+		const string= nodes.reduce((string, node) => {
+
+			return window.PatternLock.wordMap[node.row - 1][node.col - 1] + string;
+		}, '');
+
+		return string;
+	}
+
+	static hashCode(str) {
+
+		const hash=
+			str
+				.split('')
+				.reduce((a, b) => {
+					a= ( (a << 5) - a ) + b.charCodeAt(0);
+					return a & a;
+				}, 0);
+
+		return btoa(hash.toString(16));
+	}
+
 
 
 	constructor(config) {
@@ -403,3 +429,38 @@ window.PatternLock= class {
 		this.ctx.stroke();
 	}
 };
+
+
+window.PatternLock.wordMap=
+[ [
+	'lorem',
+	'ipsum',
+	'dolor',
+	'sit',
+	'amet',
+], [
+	'fo^$*@!#x',
+	'jum[.,]ps',
+	'ov#$^er',
+	'bri;24dge',
+	'dea=-=th',
+], [
+	'fancy',
+	'planes',
+	'foolish',
+	'man',
+	'juice',
+], [
+	'nunc',
+	'vehicula',
+	'lectus',
+	'fermentum',
+	'suscipit',
+], [
+	'adipiscing',
+	'erat',
+	'porta',
+	'lobortis',
+	'ullamcorper',
+] ];
+
