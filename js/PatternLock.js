@@ -13,18 +13,26 @@ window.PatternLock= class {
 
 		this.bounds= this.$canvas.getBoundingClientRect();
 
-		this.NODE_RADIUS= 25;
-		this.LINE_WIDTH= 7;
-
 		this.THEME= {
 			accent: '#1abc9c',
 			primary: '#ffffff',
 			bg: '#2c3e50',
+			dimens: {
+				line_width: 6,
+				node_radius: 28,
+				node_core: 9,
+			}
 		};
 
 		this.setInitialState();
 		this._attachListeners();
 	}
+
+
+	setTheme(theme) {
+		return this.THEME= Object.assign({}, this.THEME, theme);
+	}
+
 
 
 	_attachListeners() {
@@ -113,7 +121,7 @@ window.PatternLock= class {
 					Math.pow(this.coordinates.y - y, 2)
 				);
 
-				if(dist < this.NODE_RADIUS) {
+				if(dist < this.THEME.dimens.node_radius + 1) {
 
 					const row= x/this.interval.x;
 					const col= y/this.interval.y;
@@ -157,17 +165,14 @@ window.PatternLock= class {
 						return node;
 					}, null);
 
-			// if(lastNode) {
+			if(lastNode) {
 
-			// 	lastNode.row*= this.interval.x;
-			// 	lastNode.col*= this.interval.y;
-
-			// 	this.joinNodes(
-			// 		lastNode.row, lastNode.col,
-			// 		this.coordinates.x, this.coordinates.y,
-			// 		true  // IsCoordinates instead of row and column position
-			// 	);
-			// }
+				this.joinNodes(
+					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
+					this.coordinates.x, this.coordinates.y,
+					true  // IsCoordinates instead of row and column position
+				);
+			}
 		}
 
 		if(runLoop) {
@@ -241,11 +246,11 @@ window.PatternLock= class {
 		this.ctx.strokeStyle= borderColor;
 
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.LINE_WIDTH + 2, 0, Math.PI*2);
+		this.ctx.arc(x, y, this.THEME.dimens.node_core, 0, Math.PI*2);
 		this.ctx.fill();
 
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.NODE_RADIUS, 0, Math.PI*2);
+		this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI*2);
 		this.ctx.stroke();
 	}
 
@@ -258,21 +263,16 @@ window.PatternLock= class {
 			factor= { x: 1, y: 1 };
 		}
 
-		const point1= {
-			x: factor.x*row1,
-			y: factor.y*col1,
-		};
+		const point1= { x: factor.x*row1, y: factor.y*col1 };
+		const point2= { x: factor.x*row2, y: factor.y*col2 };
 
-		const point2= {
-			x: factor.x*row2,
-			y: factor.y*col2,
-		};
-
-		this.drawHook(point1.x, point1.y, this.THEME.accent, this.THEME.primary, 5);
-		this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary, 5);
+		if(!isCoordinates) {
+			this.drawHook(point1.x, point1.y, this.THEME.accent, this.THEME.primary, 5);
+			this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary, 5);
+		}
 
 		this.ctx.beginPath();
-		this.ctx.lineWidth= this.LINE_WIDTH;
+		this.ctx.lineWidth= this.THEME.dimens.line_width;
 		this.ctx.strokeStyle= this.THEME.accent;
 		this.ctx.lineCap= 'round';
 		this.ctx.moveTo(point1.x, point1.y);
