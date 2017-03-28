@@ -41,7 +41,12 @@ window.PatternLock= class {
 	 * @return {Object}           Full theme
 	 */
 	setTheme(theme) {
-		return this.THEME= Object.assign({}, this.THEME, theme);
+
+		this.THEME.dimens= Object.assign({}, this.THEME.dimens, theme.dimens || {});
+		theme.dimens= this.THEME.dimens;
+		this.THEME= Object.assign({}, this.THEME, theme);
+
+		return this.THEME;
 	}
 
 
@@ -363,11 +368,6 @@ window.PatternLock= class {
 
 		const point1= { x: factor.x*row1, y: factor.y*col1 };
 		const point2= { x: factor.x*row2, y: factor.y*col2 };
-
-		// Redraw the nodes if its not coordinates
-		if(!isCoordinates) {
-			
-		}
 
 		// Config
 		this.ctx.lineWidth= this.THEME.dimens.line_width;

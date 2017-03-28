@@ -4,10 +4,16 @@
 
 	const patternLock= new PatternLock({
 		el: '#patternLock',
-		dimens: { width: 500, height: 500 },
+		dimens: { width: 360, height: 500 },
 	});
 
+	patternLock.setTheme({
+		accent: '#1abc9c',
+		dimens: {
+			node_radius: 25,
+		}
+	});
 
-	patternLock.generateGrid(3, 4);
+	patternLock.generateGrid(3, 3);
 
 })(window.PatternLock);

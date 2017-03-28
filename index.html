@@ -4,15 +4,39 @@
 	<title>Hello world</title>
 	<style>
 
+	* {
+		box-sizing: border-box;
+	}
 
-	canvas {
-		
+	html, body {
+		margin: 0;
+		padding: 0;
+		background-color: #fff;
+		color: #2c3e50;
+		font-family: Helvetica, "sans-serif";
+	}
+
+	.pattern-container {
+		text-align: center;
+	}
+
+	.title {
+		font-size: 1.6em;
+		text-align: center;
+		padding: 1em 0;
+		text-transform: uppercase;
 	}
 	</style>
 </head>
 <body>
 
-<canvas id='patternLock'></canvas>
+<div class='title'>
+	Draw unlock pattern
+</div>
+
+<div class='pattern-container'>
+	<canvas id='patternLock'></canvas>
+</div>
 
 <script src='./js/PatternLock.js'></script>
 <script src='./js/script.js'></script>
