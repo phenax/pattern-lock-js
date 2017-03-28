@@ -15,6 +15,9 @@ window.PatternLock= class PatternLock {
 
 	static hashCode(str) {
 
+		if(!str.length)
+			return '';
+
 		const hash=
 			str
 				.split('')
