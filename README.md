@@ -1,10 +1,18 @@
 # PatternLockJS
 A pattern lock library for the web.
 
+[![forthebadge](http://forthebadge.com/images/badges/uses-js.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/you-didnt-ask-for-this.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/no-ragrets.svg)](http://forthebadge.com)
+
 
 ### If you wanna use it
-Import the library with `<script src='https://rawgit.com/phenax/pattern-lock-js/master/js/PatternLock.js'></script>`.
-The library is currently written in es2015 so if you want to use it for production, build it to es5 with babel.
+Import the library with
+```html
+<script src='https://rawgit.com/phenax/pattern-lock-js/master/js/PatternLock.js'></script>
+```
+
+NOTE: The library is currently written in es2015 so if you want to use it for production, build it to es5 with babel.
 
 ### Instantiation
 ```javascript
