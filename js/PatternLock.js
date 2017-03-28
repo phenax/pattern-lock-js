@@ -23,7 +23,7 @@ window.PatternLock= class PatternLock {
 					return a & a;
 				}, 0);
 
-		return btoa(hash.toString(16));
+		return btoa(hash + '');
 	}
 
 
