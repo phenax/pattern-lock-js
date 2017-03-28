@@ -101,6 +101,9 @@ window.PatternLock= class PatternLock {
 		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
 		this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
 		window.addEventListener('mousemove', this._mouseMoveHandler);
+		this.$canvas.addEventListener('touchstart', this._mouseStartHandler);
+		this.$canvas.addEventListener('touchend', this._mouseEndHandler);
+		window.addEventListener('touchmove', this._mouseMoveHandler);
 
 		// Start frame loops
 		requestAnimationFrame(this.renderLoop);
@@ -154,11 +157,13 @@ window.PatternLock= class PatternLock {
 
 		e.preventDefault();
 
+		console.log(e);
+
 		if(this._isDragging) {
 
 			const mousePoint= {
-				x: e.pageX,
-				y: e.pageY,
+				x: e.pageX || e.touches[0].pageX,
+				y: e.pageY || e.touches[0].pageY,
 			};
 
 			mousePoint.x-= this.bounds.left;

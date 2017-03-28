@@ -5,13 +5,13 @@
 
 		const patternLock= new PatternLock({
 			el: '#patternLock',
-			dimens: { width: 350, height: 470 },
+			dimens: { width: 300, height: 430 },
 		});
 
 		patternLock.setTheme({
 			accent: '#1abc9c',
 			dimens: {
-				node_radius: 25,
+				node_radius: 20,
 			}
 		});
 
