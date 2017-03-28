@@ -24,7 +24,7 @@ window.PatternLock= class {
 			dimens: {
 				line_width: 6,
 				node_radius: 28,
-				node_core: 9,
+				node_core: 7,
 			}
 		};
 
@@ -149,6 +149,11 @@ window.PatternLock= class {
 	}
 
 
+	/**
+	 * Calculate the state of the lock for the next frame
+	 * 
+	 * @param  {Boolean} runLoop  Start it as a loop if true
+	 */
 	calculationLoop(runLoop= true) {
 
 		if(this._isDragging && this.coordinates) {
@@ -181,31 +186,51 @@ window.PatternLock= class {
 	}
 
 
-
+	/**
+	 * Render the state of the lock
+	 * 
+	 * @param  {Boolean} runLoop  Start it as a loop if true
+	 */
 	renderLoop(runLoop= true) {
 
 		if(this._isDragging) {
 
+			// Clear the canvas(Redundant)
 			this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
 
 			this.renderGrid();
 
+			// Plot all the selected nodes
 			const lastNode=
-				this.selectedNodes
-					.reduce((prevNode, node) => {
+				this.selectedNodes.reduce((prevNode, node) => {
 
-						if(prevNode) {
-							this.joinNodes(
-								prevNode.row, prevNode.col,
-								node.row, node.col
-							);
-						}
+					if(prevNode) {
 
-						return node;
-					}, null);
+						const point1= { row: node.row*this.interval.x, col: node.col*this.interval.y };
+						const point2= { row: prevNode.row*this.interval.x, col: prevNode.col*this.interval.y };
+
+						this.drawNode(point1.row, point1.col, this.THEME.accent, this.THEME.primary, 4);
+						this.drawNode(point2.row, point2.col, this.THEME.accent, this.THEME.primary, 4);
+
+						this.joinNodes(
+							prevNode.row, prevNode.col,
+							node.row, node.col
+						);
+					}
+
+					return node;
+				}, null);
+
 
 			if(lastNode && this.coordinates) {
 
+				// Draw the last node
+				this.drawNode(
+					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
+					this.THEME.accent, this.THEME.primary, 8
+				);
+
+				// Draw a line between last node to the current drag position
 				this.joinNodes(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
 					this.coordinates.x, this.coordinates.y,
@@ -221,6 +246,12 @@ window.PatternLock= class {
 
 
 
+	/**
+	 * Generate the grid of nodes
+	 * 
+	 * @param  {Number} rows  The number of horizontal nodes
+	 * @param  {Number} cols  The number of vertical nodes
+	 */
 	generateGrid(rows, cols) {
 
 		this.rows= rows;
@@ -229,6 +260,10 @@ window.PatternLock= class {
 		this.renderGrid();
 	}
 
+
+	/**
+	 * Render the grid to the canvas
+	 */
 	renderGrid() {
 
 		this.ctx.fillStyle= this.THEME.bg;
@@ -239,14 +274,17 @@ window.PatternLock= class {
 			y: this.dimens.height/(this.cols + 1),
 		};
 
-		this.plotPatternHook();
-	}
-
-	plotPatternHook() {
-		this.forEachNode(this.drawHook.bind(this));		
+		// Draw all the nodes
+		this.forEachNode(this.drawNode.bind(this));
 	}
 
 
+
+	/**
+	 * ForEach iterator for all nodes on the grid
+	 * 
+	 * @param  {Function} callback
+	 */
 	forEachNode(callback) {
 
 		const xGrid= Array(this.rows).fill(this.interval.x);
@@ -260,6 +298,7 @@ window.PatternLock= class {
 
 				xGrid.reduce((x, dx) => {
 
+					// If the callback returns false, break out of the loop
 					if(callback(x, y) === false)
 						throw breakException;
 
@@ -277,23 +316,43 @@ window.PatternLock= class {
 	}
 
 
-	drawHook(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary, size=1) {
+	/**
+	 * Draw a node
+	 * 
+	 * @param  {Number} x
+	 * @param  {Number} y
+	 * @param  {String} centerColor
+	 * @param  {String} borderColor
+	 * @param  {Number} size       
+	 */
+	drawNode(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary, size=1) {
 
+		// Config
 		this.ctx.lineWidth= size;
-
 		this.ctx.fillStyle= centerColor;
 		this.ctx.strokeStyle= borderColor;
 
+		// Draw inner circle
 		this.ctx.beginPath();
 		this.ctx.arc(x, y, this.THEME.dimens.node_core, 0, Math.PI*2);
 		this.ctx.fill();
 
+		// Draw outer ring
 		this.ctx.beginPath();
 		this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI*2);
 		this.ctx.stroke();
 	}
 
 
+	/**
+	 * Join two nodes with a line
+	 * 
+	 * @param  {Number}  row1
+	 * @param  {Number}  col1
+	 * @param  {Number}  row2
+	 * @param  {Number}  col2
+	 * @param  {Boolean} isCoordinates  If true, will calculate as pixels
+	 */
 	joinNodes(row1, col1, row2, col2, isCoordinates=false) {
 
 		let factor= this.interval;
@@ -305,15 +364,18 @@ window.PatternLock= class {
 		const point1= { x: factor.x*row1, y: factor.y*col1 };
 		const point2= { x: factor.x*row2, y: factor.y*col2 };
 
+		// Redraw the nodes if its not coordinates
 		if(!isCoordinates) {
-			this.drawHook(point1.x, point1.y, this.THEME.accent, this.THEME.primary, 5);
-			this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary, 5);
+			
 		}
 
-		this.ctx.beginPath();
+		// Config
 		this.ctx.lineWidth= this.THEME.dimens.line_width;
 		this.ctx.strokeStyle= this.THEME.accent;
 		this.ctx.lineCap= 'round';
+
+		// Draw line
+		this.ctx.beginPath();
 		this.ctx.moveTo(point1.x, point1.y);
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
