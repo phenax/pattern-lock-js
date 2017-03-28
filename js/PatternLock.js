@@ -29,7 +29,6 @@ window.PatternLock= class {
 		};
 
 		this.setInitialState();
-		this._attachListeners();
 	}
 
 
@@ -53,7 +52,7 @@ window.PatternLock= class {
 	/**
 	 * Attach event listeners and start frame loops
 	 */
-	_attachListeners() {
+	start() {
 
 		// Binding context
 		this._mouseStartHandler= this._mouseStartHandler.bind(this);
@@ -66,7 +65,7 @@ window.PatternLock= class {
 		// Attach event handlers
 		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
 		this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
-		this.$canvas.addEventListener('mousemove', this._mouseMoveHandler);
+		window.addEventListener('mousemove', this._mouseMoveHandler);
 
 		// Start frame loops
 		requestAnimationFrame(this.renderLoop);
@@ -87,7 +86,7 @@ window.PatternLock= class {
 	 * Mouse start handler
 	 */
 	_mouseStartHandler(e) {
-		e.preventDefault();
+		if(e) e.preventDefault();
 
 		this.setInitialState();
 		this.calculationLoop(false);
@@ -100,7 +99,7 @@ window.PatternLock= class {
 	 * Mouse end handler
 	 */
 	_mouseEndHandler(e) {
-		e.preventDefault();
+		if(e) e.preventDefault();
 
 		this.coordinates= null;
 		this.renderLoop(false);
@@ -131,6 +130,8 @@ window.PatternLock= class {
 				mousePoint.y <= this.dimens.height && mousePoint.y > 0
 			) {
 				this.coordinates= mousePoint;
+			} else {
+				this._mouseEndHandler();
 			}
 		}
 	}

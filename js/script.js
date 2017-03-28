@@ -16,4 +16,6 @@
 
 	patternLock.generateGrid(3, 3);
 
+	patternLock.start();
+
 })(window.PatternLock);
