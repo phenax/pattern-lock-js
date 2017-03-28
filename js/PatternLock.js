@@ -15,26 +15,39 @@ window.PatternLock= class {
 
 		this.coordinates= { x: 0, y: 0 };
 
+		this.NODE_RADIUS= 25;
+
 		this.THEME= {
 			accent: '#1abc9c',
 			primary: '#ffffff',
 			bg: '#2c3e50',
 		};
+
+		this._attachListeners();
+		this.setInitialState();
 	}
 
 
-	attachListeners() {
+	_attachListeners() {
 
 		this._mouseStart= this._mouseStart.bind(this);
 		this._mouseEnd= this._mouseEnd.bind(this);
 		this._mouseMove= this._mouseMove.bind(this);
 		this.renderLoop= this.renderLoop.bind(this);
+		this.calculationLoop= this.calculationLoop.bind(this);
 
 		this.$canvas.addEventListener('mousedown', this._mouseStart);
 		this.$canvas.addEventListener('mouseup', this._mouseEnd);
 		this.$canvas.addEventListener('mousemove', this._mouseMove);
 
 		requestAnimationFrame(this.renderLoop);
+		requestAnimationFrame(this.calculationLoop);
+	}
+
+	setInitialState() {
+
+		this.pickedNodes= [];
+		this.renderLoop(false);
 	}
 
 
@@ -43,25 +56,39 @@ window.PatternLock= class {
 	}
 
 	_mouseEnd() {
+		this.setInitialState();
 		this._isDragging= false;
 	}
 
 	_mouseMove(e) {
-		console.log('move');
 
 		if(this._isDragging) {
 
-			this.coordinates= {
-				x: e.pageX - this.bounds.left,
-				y: e.pageY - this.bounds.top,
+			const point= {
+				x: e.pageX,
+				y: e.pageY,
 			};
+
+			point.x-= this.bounds.left;
+			point.y-= this.bounds.top;
+
+			if(
+				point.x <= this.dimens.width && point.x > 0 &&
+				point.y <= this.dimens.height && point.y > 0
+			) {
+				this.coordinates= point;
+			}
 		}
 	}
 
 
-	renderLoop() {
+	getNode(node) {
 
-		const nodeRadius= 10;
+		return this.pickedNodes
+			.find((p) => p.row == node.row && p.col == node.col);
+	}
+
+	calculationLoop() {
 
 		if(this._isDragging) {
 
@@ -72,16 +99,56 @@ window.PatternLock= class {
 					Math.pow(this.coordinates.y - y, 2)
 				);
 
-				console.log(dist);
+				if(dist < this.NODE_RADIUS) {
+					const row= x/this.interval.x;
+					const col= y/this.interval.y;
 
-				if(dist < nodeRadius) {
-					console.log(x, y);
+					const node= { row, col };
+
+					const nodeExists= this.getNode(node);
+
+					if(!nodeExists) {
+
+						this.pickedNodes.push(node);
+
+						return false;
+					}
 				}
 			});
 		}
 
-		requestAnimationFrame(this.renderLoop);
+		requestAnimationFrame(this.calculationLoop);
 	}
+
+
+
+	renderLoop(runLoop= true) {
+
+		if(this._isDragging) {
+
+			this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
+
+			this.renderGrid();
+
+			this.pickedNodes
+				.reduce((prevNode, node) => {
+
+					if(prevNode) {
+						this.joinNodes(
+							prevNode.row, prevNode.col,
+							node.row, node.col
+						);
+					}
+
+					return node;
+				}, null);
+		}
+
+		if(runLoop) {
+			requestAnimationFrame(this.renderLoop);
+		}
+	}
+
 
 
 	generateGrid(rows, cols) {
@@ -89,12 +156,17 @@ window.PatternLock= class {
 		this.rows= rows;
 		this.cols= cols;
 
+		this.renderGrid();
+	}
+
+	renderGrid() {
+
 		this.ctx.fillStyle= this.THEME.bg;
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
 		this.interval= {
-			x: this.dimens.width/(cols + 1),
-			y: this.dimens.height/(rows + 1),
+			x: this.dimens.width/(this.cols + 1),
+			y: this.dimens.height/(this.rows + 1),
 		};
 
 		this.plotPatternHook();
@@ -110,24 +182,36 @@ window.PatternLock= class {
 		const xGrid= Array(this.rows).fill(this.interval.x);
 		const yGrid= Array(this.cols).fill(this.interval.y);
 
+		const breakException= new Error('Break Exception');
 		
-		yGrid.reduce((y, dy) => {
+		try {
 
-			xGrid.reduce((x, dx) => {
+			yGrid.reduce((y, dy) => {
 
-				fn(x, y);
+				xGrid.reduce((x, dx) => {
 
-				return x + dx;
+					if(fn(x, y) === false) {
+						throw breakException;
+					}
 
-			}, this.interval.x);
+					return x + dx;
 
-			return y + dy;
+				}, this.interval.x);
 
-		}, this.interval.y);
+				return y + dy;
+
+			}, this.interval.y);
+
+		} catch(e) {
+			if(e !== breakException)
+				throw e;
+		}
 	}
 
 
-	drawHook(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary) {
+	drawHook(x, y, centerColor=this.THEME.primary, borderColor=this.THEME.primary, size=1) {
+
+		this.ctx.lineWidth= size;
 
 		this.ctx.fillStyle= centerColor;
 		this.ctx.strokeStyle= borderColor;
@@ -137,27 +221,31 @@ window.PatternLock= class {
 		this.ctx.fill();
 
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, 20, 0, Math.PI*2);
+		this.ctx.arc(x, y, this.NODE_RADIUS, 0, Math.PI*2);
 		this.ctx.stroke();
 	}
 
 
-	joinNodes(row1, col1, row2, col2) {
+	joinNodes(row1, col1, row2, col2, isCoordinates=false) {
+
+		let factor= this.interval;
+
+		if(isCoordinates) {
+			factor= { x: 1, y: 1 };
+		}
 
 		const point1= {
-			x: this.interval.x*row1,
-			y: this.interval.y*col1,
+			x: factor.x*row1,
+			y: factor.y*col1,
 		};
 
 		const point2= {
-			x: this.interval.x*row2,
-			y: this.interval.y*col2,
+			x: factor.x*row2,
+			y: factor.y*col2,
 		};
 
-		this.ctx.lineWidth= 3;
-
-		this.drawHook(point1.x, point1.y, this.THEME.accent, this.THEME.primary);
-		this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary);
+		this.drawHook(point1.x, point1.y, this.THEME.accent, this.THEME.primary, 5);
+		this.drawHook(point2.x, point2.y, this.THEME.accent, this.THEME.primary, 5);
 
 		this.ctx.beginPath();
 		this.ctx.lineWidth= 7;
@@ -167,5 +255,4 @@ window.PatternLock= class {
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
 	}
-
 };
