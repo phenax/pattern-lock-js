@@ -6,15 +6,19 @@ A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock
 [![forthebadge](http://forthebadge.com/images/badges/no-ragrets.svg)](http://forthebadge.com)
 
 
-### If you wanna use it
-Import the library with
-```html
-<script src='https://rawgit.com/phenax/pattern-lock-js/master/js/PatternLock.js'></script>
+### Installation
+
+Install the library with
+```bash
+yarn add @phenax/pattern-lock-js
 ```
 
-NOTE: The library is currently written in es2015 so if you want to use it for production, build it to es5 with babel.
+Import the library with
+```html
+import PatternLock from '@phenax/pattern-lock-js';
+```
 
-### Instantiation
+### Get started
 ```javascript
 const patternLock= new PatternLock({
     el: '#patternLock',
