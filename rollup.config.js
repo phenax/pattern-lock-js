@@ -18,4 +18,16 @@ export default [
 			babel({ exclude: 'node_modules/**' }),
 		],
 	},
+	{
+		input: 'js/example.js',
+		output: {
+			name: 'example',
+			file: 'build/example.js',
+			format: 'iife'
+		},
+		plugins: [
+            resolveModules({ extensions: ['.js', '.json', '.jsx'], preferBuiltins: true }),
+			babel({ exclude: 'node_modules/**' }),
+		],
+	}
 ];
