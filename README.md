@@ -14,13 +14,13 @@ yarn add @phenax/pattern-lock-js
 ```
 
 Import the library with
-```html
+```js
 import PatternLock from '@phenax/pattern-lock-js';
 ```
 
 ### Get started
 ```javascript
-const patternLock= new PatternLock({
+const patternLock = new PatternLock({
     el: '#patternLock',
     dimens: { width: 300, height: 430 },
 });
@@ -29,14 +29,14 @@ const patternLock= new PatternLock({
 ### Customize the theme
 ```javascript
 patternLock.setTheme({
-    accent: '#1abc9c',
-    primary: '#ffffff',
-    bg: '#2c3e50',
+    accent: '#1abc9c',     // Accent color for node
+    primary: '#ffffff',    // Primary node and line color
+    bg: '#2c3e50',         // Canvas background color
     dimens: {
-        node_radius: 20,
-        line_width: 6,
-        node_core: 8,
-        node_ring: 1,
+        node_radius: 20,   // Radius of the outer ring of a node
+        line_width: 6,     // Thickness of the line joining nodes
+        node_core: 8,      // Radius of the inner circle of a node
+        node_ring: 1,      // Outer ring thickness
     }
 });
 ```
@@ -53,7 +53,7 @@ patternLock.start();
 
 ### Callback for when the pattern is complete
 ```javascript
-patternLock.onPatternComplete= nodes => {
+patternLock.onPatternComplete = nodes => {
     // Check if the pattern is right
 };
 ```
@@ -61,7 +61,7 @@ patternLock.onPatternComplete= nodes => {
 ### Converting pattern to mapped words and hashing
 ```javascript
 patternLock.onPatternComplete= nodes => {
-    const password= PatternLock.patternToWords(nodes);
+    const password = PatternLock.patternToWords(nodes);
     alert('hashed password is : ' + PatternLock.hashCode(password));
 };
 ```
