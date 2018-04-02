@@ -1,35 +1,7 @@
 
-window.PatternLock= class PatternLock {
+import { patternToWords, hashCode } from './libs';
 
-
-
-	static patternToWords(nodes) {
-
-		const string= nodes.reduce((string, node) => {
-
-			return window.PatternLock.wordMap[node.row - 1][node.col - 1] + string;
-		}, '');
-
-		return string;
-	}
-
-	static hashCode(str) {
-
-		if(!str.length)
-			return '';
-
-		const hash=
-			str
-				.split('')
-				.reduce((a, b) => {
-					a= ( (a << 5) - a ) + b.charCodeAt(0);
-					return a & a;
-				}, 0);
-
-		return btoa(hash + '');
-	}
-
-
+export default class PatternLock {
 
 	constructor(config) {
 
@@ -435,39 +407,7 @@ window.PatternLock= class PatternLock {
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
 	}
-};
+}
 
-
-window.PatternLock.wordMap=
-[ [
-	'lorem',
-	'ipsum',
-	'dolor',
-	'sit',
-	'amet',
-], [
-	'fo^$*@!#x',
-	'jum[.,]ps',
-	'ov#$^er',
-	'bri;24dge',
-	'dea=-=th',
-], [
-	'fancy',
-	'planes',
-	'foolish',
-	'man',
-	'juice',
-], [
-	'nunc',
-	'vehicula',
-	'lectus',
-	'fermentum',
-	'suscipit',
-], [
-	'adipiscing',
-	'erat',
-	'porta',
-	'lobortis',
-	'ullamcorper',
-] ];
-
+PatternLock.patternToWords = patternToWords;
+PatternLock.hashCode = hashCode;

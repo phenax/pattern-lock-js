@@ -6,7 +6,8 @@
   "repository": "https://github.com/phenax/pattern-lock-js.git",
   "author": "Akshay Nair <phenax5@gmail.com>",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "watch": "rollup -c --watch"
   },
   "license": "Apache 2.0",
   "devDependencies": {

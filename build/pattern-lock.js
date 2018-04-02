@@ -1,40 +1,52 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? factory() :
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(factory());
+	(global['patten-lock'] = factory());
 }(this, (function () { 'use strict';
+
+	var wordMap = [['lorem', 'ipsum', 'dolor', 'sit', 'amet'], ['fo^$*@!#x', 'jum[.,]ps', 'ov#$^er', 'bri;24dge', 'dea=-=th'], ['fancy', 'planes', 'foolish', 'man', 'juice'], ['nunc', 'vehicula', 'lectus', 'fermentum', 'suscipit'], ['adipiscing', 'erat', 'porta', 'lobortis', 'ullamcorper']];
+
+	/**
+	 * Convert pattern to a string of random words
+	 * 
+	 * @param {Array<{ row: Number, col: Number }>} nodes
+	 * 
+	 * @returns {String}
+	 */
+	var patternToWords = function patternToWords(nodes) {
+	  return nodes.reduce(function () {
+	    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+	    var node = arguments[1];
+	    return wordMap[node.row - 1][node.col - 1] + string;
+	  });
+	};
+
+	/**
+	 * Hashcode algorithm implementation
+	 * 
+	 * @param {String} str
+	 * 
+	 * @returns {String}
+	 */
+	var hashCode = function hashCode(str) {
+	  if (!str.length) return '';
+
+	  var hash = str.split('').reduce(function () {
+	    var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+	    var b = arguments[1];
+
+	    a = (a << 5) - a + b.charCodeAt(0);
+	    return a & a;
+	  });
+
+	  return btoa(hash + '');
+	};
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	window.PatternLock = function () {
-		_createClass(PatternLock, null, [{
-			key: 'patternToWords',
-			value: function patternToWords(nodes) {
-
-				var string = nodes.reduce(function (string, node) {
-
-					return window.PatternLock.wordMap[node.row - 1][node.col - 1] + string;
-				}, '');
-
-				return string;
-			}
-		}, {
-			key: 'hashCode',
-			value: function hashCode(str) {
-
-				if (!str.length) return '';
-
-				var hash = str.split('').reduce(function (a, b) {
-					a = (a << 5) - a + b.charCodeAt(0);
-					return a & a;
-				}, 0);
-
-				return btoa(hash + '');
-			}
-		}]);
-
+	var PatternLock = function () {
 		function PatternLock(config) {
 			_classCallCheck(this, PatternLock);
 
@@ -454,6 +466,10 @@
 		return PatternLock;
 	}();
 
-	window.PatternLock.wordMap = [['lorem', 'ipsum', 'dolor', 'sit', 'amet'], ['fo^$*@!#x', 'jum[.,]ps', 'ov#$^er', 'bri;24dge', 'dea=-=th'], ['fancy', 'planes', 'foolish', 'man', 'juice'], ['nunc', 'vehicula', 'lectus', 'fermentum', 'suscipit'], ['adipiscing', 'erat', 'porta', 'lobortis', 'ullamcorper']];
+
+	PatternLock.patternToWords = patternToWords;
+	PatternLock.hashCode = hashCode;
+
+	return PatternLock;
 
 })));
