@@ -1,0 +1,19 @@
+{
+  "name": "pattern-lock-js",
+  "version": "0.0.0",
+  "description": "__",
+  "main": "build/pattern-lock.js",
+  "repository": "https://github.com/phenax/pattern-lock-js.git",
+  "author": "Akshay Nair <phenax5@gmail.com>",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "rollup": "^0.57.1",
+    "rollup-plugin-babel": "^3.0.3",
+    "rollup-plugin-node-resolve": "^3.3.0"
+  }
+}
