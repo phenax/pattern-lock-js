@@ -7,7 +7,8 @@
   "author": "Akshay Nair <phenax5@gmail.com>",
   "scripts": {
     "build": "rollup -c",
-    "watch": "rollup -c --watch"
+    "watch": "rollup -c --watch",
+    "test": "NODE_ENV=test mocha ./tests/**/*.js --require babel-core/register"
   },
   "license": "Apache 2.0",
   "devDependencies": {
@@ -16,5 +17,9 @@
     "rollup": "^0.57.1",
     "rollup-plugin-babel": "^3.0.3",
     "rollup-plugin-node-resolve": "^3.3.0"
+  },
+  "dependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.0.5"
   }
 }

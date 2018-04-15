@@ -5,7 +5,12 @@ export default class PatternLock {
 
 	constructor(config) {
 
-		this.$canvas= document.querySelector(config.el);
+		this.$canvas = document.querySelector(config.el);
+
+		if(!this.$canvas) {
+			throw new Error(`Cannot find canvas element ${config.el}`);
+		}
+
 		this.dimens= Object.assign({}, config.dimens);
 
 		this.$canvas.width= this.dimens.width;

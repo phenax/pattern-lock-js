@@ -1,5 +1,5 @@
 
-import wordMap from './word-map.js';
+import {wordMap} from './constants';
 
 
 /**
