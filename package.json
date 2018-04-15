@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "chai": "^4.1.2",
-    "mocha": "^5.0.5"
+    "mocha": "^5.0.5",
+    "rambda": "^1.1.0"
   }
 }

@@ -6,41 +6,150 @@
 
 	var wordMap = [['lorem', 'ipsum', 'dolor', 'sit', 'amet'], ['fo^$*@!#x', 'jum[.,]ps', 'ov#$^er', 'bri;24dge', 'dea=-=th'], ['fancy', 'planes', 'foolish', 'man', 'juice'], ['nunc', 'vehicula', 'lectus', 'fermentum', 'suscipit'], ['adipiscing', 'erat', 'porta', 'lobortis', 'ullamcorper']];
 
-	/**
-	 * Convert pattern to a string of random words
-	 * 
-	 * @param {Array<{ row: Number, col: Number }>} nodes
-	 * 
-	 * @returns {String}
-	 */
+	function add(x, y) {
+	  if (y === undefined) {
+	    return yHolder => add(x, yHolder);
+	  }
+
+	  return x + y;
+	}
+
+	function mapObject(fn, obj) {
+	  const willReturn = {};
+
+	  for (const prop in obj) {
+	    willReturn[prop] = fn(obj[prop], prop);
+	  }
+
+	  return willReturn;
+	}
+
+	function map(fn, arr) {
+	  if (arr === undefined) {
+	    return arrHolder => map(fn, arrHolder);
+	  }
+	  if (arr.length === undefined) {
+	    return mapObject(fn, arr);
+	  }
+	  let index = -1;
+	  const len = arr.length;
+	  const willReturn = Array(len);
+
+	  while (++index < len) {
+	    willReturn[index] = fn(arr[index]);
+	  }
+
+	  return willReturn;
+	}
+
+	function reduce(fn, initialValue, arr) {
+	  if (initialValue === undefined) {
+	    return (initialValueHolder, arrHolder) => reduce(fn, initialValueHolder, arrHolder);
+	  } else if (arr === undefined) {
+	    return arrHolder => reduce(fn, initialValue, arrHolder);
+	  }
+
+	  return arr.reduce(fn, initialValue);
+	}
+
+	function split(glue, str) {
+	  if (str === undefined) {
+	    return strHolder => split(glue, strHolder);
+	  }
+
+	  return str.split(glue);
+	}
+	//# sourceMappingURL=rambda.esm.js.map
+
+	var Container = function Container(x) {
+		return {
+			map: function map(fn) {
+				return Container(fn(x));
+			},
+			fold: function fold(fn) {
+				return fn(x);
+			},
+			getValue: function getValue() {
+				return x;
+			},
+			inspect: function inspect() {
+				return "Container(" + x + ")";
+			}
+		};
+	};
+
+	var Just = function Just(x) {
+		return {
+			map: function map(fn) {
+				return Just(fn(x));
+			},
+			fold: function fold(fn) {
+				return fn(x);
+			},
+			getValue: function getValue() {
+				return x;
+			},
+			inspect: function inspect() {
+				return "Just(" + x + ")";
+			}
+		};
+	};
+	var Nothing = function Nothing(x) {
+		return {
+			map: function map() {
+				return Nothing(x);
+			},
+			fold: function fold() {
+				return x;
+			},
+			getValue: function getValue() {
+				return x;
+			},
+			inspect: function inspect() {
+				return "Nothing(" + x + ")";
+			}
+		};
+	};
+
+	var Maybe = function Maybe(x) {
+		return !!x ? Just(x) : Nothing(x);
+	};
+
+	// nodeToWord :: ({ row: Number, col: Number }) -> String
+	var nodeToWord = function nodeToWord(_ref) {
+	    var row = _ref.row,
+	        col = _ref.col;
+	    return wordMap[row - 1][col - 1];
+	};
+
+	// hashCharacter :: Number -> Number
+	var hashCharacter = function hashCharacter(a) {
+	    return (a << 5) - a;
+	};
+
+	// getCharCode :: String -> Number
+	var getCharCode = function getCharCode(c) {
+	    return c.charCodeAt(0);
+	};
+
+	// patternToWords :: Array<Array<String>> -> String
 	var patternToWords = function patternToWords(nodes) {
-	  return nodes.reduce(function () {
-	    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	    var node = arguments[1];
-	    return wordMap[node.row - 1][node.col - 1] + string;
-	  });
+	    return Container(nodes).map(map(nodeToWord)).fold(reduce(add, ''));
 	};
 
-	/**
-	 * Hashcode algorithm implementation
-	 * 
-	 * @param {String} str
-	 * 
-	 * @returns {String}
-	 */
-	var hashCode = function hashCode(str) {
-	  if (!str.length) return '';
-
-	  var hash = str.split('').reduce(function () {
-	    var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-	    var b = arguments[1];
-
-	    a = (a << 5) - a + b.charCodeAt(0);
-	    return a & a;
-	  });
-
-	  return btoa(hash + '');
+	// hashReduceFn :: (Number, Number) -> Number
+	var hashReduceFn = function hashReduceFn(a, b) {
+	    return Container(a).map(hashCharacter).map(add(b)).fold(function (a) {
+	        return a & a;
+	    });
 	};
+
+	// hashCode :: String -> String
+	var hashCode = function hashCode(inputStr) {
+	    return Maybe(inputStr || '').map(split('')).map(map(getCharCode)).map(reduce(hashReduceFn, 0)).fold(btoa);
+	};
+
+	console.log('MTc5NDEwNjA1Mg==', hashCode('hello world'));
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
