@@ -1,4 +1,6 @@
 # PatternLockJS
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/phenax/pattern-lock-js.svg)](https://greenkeeper.io/)
 A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock-js/)
 
 [![forthebadge](http://forthebadge.com/images/badges/uses-js.svg)](http://forthebadge.com)
