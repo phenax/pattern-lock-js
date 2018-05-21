@@ -84,7 +84,7 @@
 
 			/**
 	   * Set the pattern lock screen theme
-	   * 
+	   *
 	   * @param {Object}   theme    Theme to add to defaults
 	   *
 	   * @return {Object}           Full theme
@@ -136,6 +136,7 @@
 
 				this.coordinates = null;
 				this.selectedNodes = [];
+				this.lastSelectedNode = null;
 			}
 
 			/**
@@ -203,9 +204,9 @@
 
 			/**
 	   * Check if the given node is already selected
-	   * 
+	   *
 	   * @param  {Object}  targetNode  Node to check
-	   * 
+	   *
 	   * @return {Boolean}             True if the node is selected
 	   */
 
@@ -219,8 +220,87 @@
 			}
 
 			/**
+	   * Returns the greatest common divisor of two numbers
+	   */
+
+		}, {
+			key: 'gcd',
+			value: function gcd(x, y) {
+				while (y != 0) {
+					var tmp = x;
+					x = y;
+					y = tmp % y;
+				}
+				return x;
+			}
+
+			/**
+	   * Adds intermediary nodes between lastSelectedNode to a targetNode
+	   *
+	   * @param  {Object}  targetNode  Node to select
+	   */
+
+		}, {
+			key: 'addIntermediaryNodes',
+			value: function addIntermediaryNodes(targetNode) {
+				var stepNode = this.intermediaryNodesStep(targetNode);
+				if (stepNode.row !== 0 || stepNode.col !== 0) {
+					var currentNode = { row: this.lastSelectedNode.row + stepNode.row, col: this.lastSelectedNode.col + stepNode.col };
+					var maxIterations = Math.max(this.rows, this.cols);
+					var i = 0;
+					while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
+						this.selectedNodes.push(currentNode);
+						currentNode = { row: currentNode.row + stepNode.row, col: currentNode.col + stepNode.col };
+					}
+				}
+				this.lastSelectedNode = targetNode;
+			}
+
+			/**
+	   * Returns the steps to perform to select intermediary nodes between lastSelectedNode and a targetNode
+	   *
+	   * @param  {Object}  targetNode  Node to select
+	   *
+	   * @return {Object}             { row: stepForRows, col: StepForCols }
+	   */
+
+		}, {
+			key: 'intermediaryNodesStep',
+			value: function intermediaryNodesStep(targetNode) {
+				var finalStep = { row: 0, col: 0 };
+				if (!this.lastSelectedNode) {
+					return finalStep;
+				}
+
+				var dRow = Math.abs(this.lastSelectedNode.row - targetNode.row);
+				var dCol = Math.abs(this.lastSelectedNode.col - targetNode.col);
+
+				if (dRow === 1 || dCol === 1) {
+					return finalStep;
+				}
+
+				var dRsign = this.lastSelectedNode.row - targetNode.row < 0 ? 1 : -1;
+				var dCsign = this.lastSelectedNode.col - targetNode.col < 0 ? 1 : -1;
+
+				if (dRow === 0) {
+					if (dCol !== 0) finalStep.col = dCsign;
+				} else if (dCol === 0) {
+					finalStep.row = dRsign;
+				} else {
+					var max = Math.max(dRow, dCol);
+					var min = Math.min(dRow, dCol);
+					var gcd = this.gcd(max, min);
+					if (max % min === 0) {
+						finalStep.col = dCol / gcd * dCsign;
+						finalStep.row = dRow / gcd * dRsign;
+					}
+				}
+				return finalStep;
+			}
+
+			/**
 	   * Calculate the state of the lock for the next frame
-	   * 
+	   *
 	   * @param  {Boolean} runLoop  Start it as a loop if true
 	   */
 
@@ -246,6 +326,7 @@
 							var currentNode = { row: row, col: col };
 
 							if (!_this.isSelected(currentNode)) {
+								_this.addIntermediaryNodes(currentNode);
 								_this.selectedNodes.push(currentNode);
 								return false;
 							}
@@ -260,7 +341,7 @@
 
 			/**
 	   * Render the state of the lock
-	   * 
+	   *
 	   * @param  {Boolean} runLoop  Start it as a loop if true
 	   */
 
@@ -316,7 +397,7 @@
 
 			/**
 	   * Generate the grid of nodes
-	   * 
+	   *
 	   * @param  {Number} rows  The number of horizontal nodes
 	   * @param  {Number} cols  The number of vertical nodes
 	   */
@@ -353,7 +434,7 @@
 
 			/**
 	   * ForEach iterator for all nodes on the grid
-	   * 
+	   *
 	   * @param  {Function} callback
 	   */
 
@@ -388,12 +469,12 @@
 
 			/**
 	   * Draw a node
-	   * 
+	   *
 	   * @param  {Number} x
 	   * @param  {Number} y
 	   * @param  {String} centerColor
 	   * @param  {String} borderColor
-	   * @param  {Number} size       
+	   * @param  {Number} size
 	   */
 
 		}, {
@@ -422,7 +503,7 @@
 
 			/**
 	   * Join two nodes with a line
-	   * 
+	   *
 	   * @param  {Number}  row1
 	   * @param  {Number}  col1
 	   * @param  {Number}  row2
