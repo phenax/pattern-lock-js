@@ -56,8 +56,7 @@
 			// Canvas context
 			this.ctx = this.$canvas.getContext('2d');
 
-			// Canvas position and dimens
-			this.bounds = this.$canvas.getBoundingClientRect();
+			this._resizeHandler();
 
 			// Default themes
 			this.THEME = {
@@ -76,8 +75,11 @@
 		}
 
 		_createClass(PatternLock, [{
-			key: 'setTheme',
-
+			key: '_resizeHandler',
+			value: function _resizeHandler() {
+				// Canvas position and dimens
+				this.bounds = this.$canvas.getBoundingClientRect();
+			}
 
 			/**
 	   * Set the pattern lock screen theme
@@ -86,6 +88,9 @@
 	   *
 	   * @return {Object}           Full theme
 	   */
+
+		}, {
+			key: 'setTheme',
 			value: function setTheme(theme) {
 
 				this.THEME.dimens = Object.assign({}, this.THEME.dimens, theme.dimens || {});
@@ -109,6 +114,7 @@
 				this._mouseMoveHandler = this._mouseMoveHandler.bind(this);
 				this.renderLoop = this.renderLoop.bind(this);
 				this.calculationLoop = this.calculationLoop.bind(this);
+				this._resizeHandler = this._resizeHandler.bind(this);
 
 				// Attach event handlers
 				this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
@@ -117,6 +123,8 @@
 				this.$canvas.addEventListener('touchstart', this._mouseStartHandler);
 				this.$canvas.addEventListener('touchend', this._mouseEndHandler);
 				window.addEventListener('touchmove', this._mouseMoveHandler);
+
+				window.addEventListener('resize', this._resizeHandler);
 
 				// Start frame loops
 				requestAnimationFrame(this.renderLoop);
