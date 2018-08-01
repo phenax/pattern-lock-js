@@ -13,8 +13,7 @@ export default class PatternLock {
 		// Canvas context
 		this.ctx = this.$canvas.getContext('2d');
 
-		// Canvas position and dimens
-		this.bounds = this.$canvas.getBoundingClientRect();
+		this._resizeHandler();
 
 		// Default themes
 		this.THEME = {
@@ -35,6 +34,11 @@ export default class PatternLock {
 
 	set onPatternComplete(cb) {
 		this._patternCompleteHandler = cb;
+	}
+
+	_resizeHandler() {
+		// Canvas position and dimens
+		this.bounds = this.$canvas.getBoundingClientRect();
 	}
 
 
@@ -66,7 +70,7 @@ export default class PatternLock {
 		this._mouseMoveHandler = this._mouseMoveHandler.bind(this);
 		this.renderLoop = this.renderLoop.bind(this);
 		this.calculationLoop = this.calculationLoop.bind(this);
-
+		this._resizeHandler = this._resizeHandler.bind(this);
 
 		// Attach event handlers
 		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
@@ -75,6 +79,8 @@ export default class PatternLock {
 		this.$canvas.addEventListener('touchstart', this._mouseStartHandler);
 		this.$canvas.addEventListener('touchend', this._mouseEndHandler);
 		window.addEventListener('touchmove', this._mouseMoveHandler);
+
+		window.addEventListener('resize', this._resizeHandler);
 
 		// Start frame loops
 		requestAnimationFrame(this.renderLoop);
