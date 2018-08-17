@@ -1,10 +1,11 @@
+import NanoEvents from './utils/nanoevents';
 import { patternToWords, hashCode } from './utils/libs';
 import THEMES from './utils/themes';
 
-const bind = (target, events, fn) =>
-	events.forEach(ev => target.addEventListener(ev, fn));
-const unbind = (target, events, fn) =>
-	events.forEach(ev => target.removeEventListener(ev, fn));
+const bind = (target, eventList, fn) =>
+	eventList.forEach(ev => target.addEventListener(ev, fn));
+const unbind = (target, eventList, fn) =>
+	eventList.forEach(ev => target.removeEventListener(ev, fn));
 
 const raf = requestAnimationFrame;
 
@@ -18,6 +19,10 @@ const gcd = (x, y) => {
 }
 
 const createInvalidOptionError = option => new Error(`Need to specify ${option} option`);
+
+const events = {
+	PATTERN_COMPLETE: 'complete',
+};
 
 const defaultConfig = {
 	theme: 'default',
@@ -43,7 +48,10 @@ export class PatternLock {
 		// Canvas context
 		this.ctx = this.$canvas.getContext('2d');
 
+		this.initialize();
+	}
 
+	initialize() {
 		this._onTouchStart = this._onTouchStart.bind(this);
 		this._onTouchStop = this._onTouchStop.bind(this);
 		this._onTouchMove = this._onTouchMove.bind(this);
@@ -51,6 +59,7 @@ export class PatternLock {
 		this.renderLoop = this.renderLoop.bind(this);
 		this.calculationLoop = this.calculationLoop.bind(this);
 
+		this.initializeEventBus();
 
 		this.setTheme(config.theme);
 
@@ -67,7 +76,7 @@ export class PatternLock {
 	 * @param {Object|string}   theme
 	 * @return {Object}                  New theme
 	 */
-	setTheme(theme) {
+	setTheme(theme, forceUpdate = true) {
 
 		const defaultTheme = THEMES.default;
 
@@ -79,7 +88,7 @@ export class PatternLock {
 		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
 		this.THEME.dimens = { ...defaultTheme.dimens, ...theme.dimens };
 
-		this.forceUpdate();
+		forceUpdate && this.forceUpdate();
 
 		return this.THEME;
 	}
@@ -99,6 +108,10 @@ export class PatternLock {
 		raf(this.calculationLoop);
 	}
 
+	initializeEventBus() { this.eventBus = new NanoEvents(); }
+	on(event, fn) { return this.eventBus.on(event, fn); }
+	off(event, fn) { return this.eventBus.off(event, fn); }
+	emit(event, ...args) { return this.eventBus.emit(event, ...args); }
 
 	/**
 	 * Set the initial state
@@ -144,9 +157,8 @@ export class PatternLock {
 
 		this._isDragging = false;
 
-		if (typeof this._patternCompleteHandler === 'function') {
-			this._patternCompleteHandler(this.selectedNodes.slice(0));
-		}
+		const nodes = this.selectedNodes.slice(0);
+		this.emit(events.PATTERN_COMPLETE, { nodes });
 	}
 
 

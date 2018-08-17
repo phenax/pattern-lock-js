@@ -16,9 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	// 	.onSuccess(() => lock.setTheme('success'))
 	// 	.onFailure(() => lock.setTheme('failure'));
 
-	// const $password = document.querySelector('.js-password');
-	// lock.on('complete', ({ nodes, hash, password }) => {
-	// 	$password.value = hash;
-	// });
+	const $password = document.querySelector('.js-password');
+	lock.on('complete', ({ nodes, hash, password } = {}) => {
+		console.log(nodes, hash, password);
+		$password.value = hash;
+	});
 });
 
