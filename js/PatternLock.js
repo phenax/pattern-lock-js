@@ -33,7 +33,7 @@ const defaultConfig = {
 };
 
 
-const Matcher = (...values) => {
+const Matcher = values => {
 	let _onSuccess = () => {};
 	let _onFailure = () => {};
 	const matcher = {
@@ -506,13 +506,14 @@ export class PatternLock {
 	}
 
 
-
-
-	matchHash(...hashes) {
-		const matcher = Matcher(...hashes);
-		this.on(events.PATTERN_COMPLETE, ({ hash }) => matcher.check(hash));
+	match(type, values) {
+		const matcher = Matcher(values);
+		this.on(events.PATTERN_COMPLETE, data => matcher.check(data[type]));
 		return matcher;
 	}
+
+	matchHash(...hashes) { return this.match('hash', hashes); }
+	matchPassword(...passwords) { return this.match('password', passwords); }
 }
 
 export default (...args) => new PatternLock(...args);
