@@ -1,6 +1,6 @@
 {
   "name": "@phenax/pattern-lock-js",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A pattern lock library for the web.",
   "main": "build/pattern-lock.js",
   "repository": "https://github.com/phenax/pattern-lock-js.git",
