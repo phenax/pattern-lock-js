@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const $password = document.querySelector('.js-password');
 
-	lock.on('start', () => lock.setTheme('default'));
-	lock.on('complete', ({ hash } = {}) => $password.value = hash);
+	lock.onStart(() => lock.setTheme('default'));
+	lock.onComplete(({ hash } = {}) => $password.value = hash);
 });
 

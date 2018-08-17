@@ -127,6 +127,8 @@ export class PatternLock {
 	on(event, fn) { return this.eventBus.on(event, fn); }
 	off(event, fn) { return this.eventBus.off(event, fn); }
 	emit(event, ...args) { return this.eventBus.emit(event, ...args); }
+	onStart(fn) { this.on(events.PATTERN_START, fn); return this; }
+	onComplete(fn) { this.on(events.PATTERN_COMPLETE, fn); return this; }
 
 	/**
 	 * Set the initial state
