@@ -1,57 +1,67 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global['patten-lock'] = factory());
-}(this, (function () { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
+	(factory((global['patten-lock'] = {})));
+}(this, (function (exports) { 'use strict';
 
-	var wordMap = [['lorem', 'ipsum', 'dolor', 'sit', 'amet'], ['fo^$*@!#x', 'jum[.,]ps', 'ov#$^er', 'bri;24dge', 'dea=-=th'], ['fancy', 'planes', 'foolish', 'man', 'juice'], ['nunc', 'vehicula', 'lectus', 'fermentum', 'suscipit'], ['adipiscing', 'erat', 'porta', 'lobortis', 'ullamcorper']];
-
-	/**
-	 * Convert pattern to a string of random words
-	 * 
-	 * @param {Array<{ row: Number, col: Number }>} nodes
-	 * 
-	 * @returns {String}
-	 */
-	var patternToWords = function patternToWords(nodes) {
-	  return nodes.reduce(function () {
-	    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	    var node = arguments[1];
-	    return wordMap[node.row - 1][node.col - 1] + string;
-	  });
+	var THEMES = {
+		default: {
+			colors: {
+				accent: '#ae64cd',
+				primary: '#ffffff',
+				bg: '#2c3e50'
+			},
+			dimens: {
+				line_width: 6,
+				node_radius: 20,
+				node_core: 8,
+				node_ring: 1
+			}
+		},
+		success: {
+			colors: {
+				accent: '#51e980'
+			}
+		}
 	};
 
-	/**
-	 * Hashcode algorithm implementation
-	 * 
-	 * @param {String} str
-	 * 
-	 * @returns {String}
-	 */
-	var hashCode = function hashCode(str) {
-	  if (!str.length) return '';
-
-	  var hash = str.split('').reduce(function () {
-	    var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-	    var b = arguments[1];
-
-	    a = (a << 5) - a + b.charCodeAt(0);
-	    return a & a;
-	  });
-
-	  return btoa(hash + '');
-	};
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var bind = function bind(target, events, fn) {
+		return events.forEach(function (ev) {
+			return target.addEventListener(ev, fn);
+		});
+	};
+
+	var raf = requestAnimationFrame;
+
+	var createInvalidOptionError = function createInvalidOptionError(option) {
+		return new Error('Need to specify ' + option + ' option');
+	};
+
+	var defaultConfig = {
+		theme: 'default',
+		grid: [3, 3],
+		width: 300,
+		height: 430
+	};
 
 	var PatternLock = function () {
 		function PatternLock(config) {
 			_classCallCheck(this, PatternLock);
 
-			this.$canvas = document.querySelector(config.el);
-			this.dimens = Object.assign({}, config.dimens);
+			if (!config.$canvas) throw createInvalidOptionError('$canvas');
+
+			config = _extends({}, defaultConfig, config);
+
+			this.$canvas = config.$canvas;
+			this.dimens = { width: config.width, height: config.height };
 
 			this.$canvas.width = this.dimens.width;
 			this.$canvas.height = this.dimens.height;
@@ -59,46 +69,45 @@
 			// Canvas context
 			this.ctx = this.$canvas.getContext('2d');
 
-			this._resizeHandler();
+			this._onTouchStart = this._onTouchStart.bind(this);
+			this._onTouchStop = this._onTouchStop.bind(this);
+			this._onTouchMove = this._onTouchMove.bind(this);
+			this._onResize = this._onResize.bind(this);
+			this.renderLoop = this.renderLoop.bind(this);
+			this.calculationLoop = this.calculationLoop.bind(this);
 
-			// Default themes
-			this.THEME = {
-				accent: '#1abc9c',
-				primary: '#ffffff',
-				bg: '#2c3e50',
-				dimens: {
-					line_width: 6,
-					node_radius: 28,
-					node_core: 8,
-					node_ring: 1
-				}
-			};
+			this.setTheme(config.theme);
+
+			this._onResize();
 
 			this.setInitialState();
+			this.generateGrid.apply(this, _toConsumableArray(config.grid));
+
+			this.attachEventHandlers();
 		}
 
+		/**
+	  * Set the pattern lock screen theme
+	  * @param {Object|string}   theme
+	  * @return {Object}                  New theme
+	  */
+
+
 		_createClass(PatternLock, [{
-			key: '_resizeHandler',
-			value: function _resizeHandler() {
-				// Canvas position and dimens
-				this.bounds = this.$canvas.getBoundingClientRect();
-			}
-
-			/**
-	   * Set the pattern lock screen theme
-	   *
-	   * @param {Object}   theme    Theme to add to defaults
-	   *
-	   * @return {Object}           Full theme
-	   */
-
-		}, {
 			key: 'setTheme',
 			value: function setTheme(theme) {
 
-				this.THEME.dimens = Object.assign({}, this.THEME.dimens, theme.dimens || {});
-				theme.dimens = this.THEME.dimens;
-				this.THEME = Object.assign({}, this.THEME, theme);
+				var defaultTheme = THEMES.default;
+
+				if (typeof theme === 'string') {
+					theme = THEMES[theme];
+				}
+
+				this.THEME = this.THEME || {};
+				this.THEME.colors = _extends({}, defaultTheme.colors, theme.colors);
+				this.THEME.dimens = _extends({}, defaultTheme.dimens, theme.dimens);
+
+				this.forceUpdate();
 
 				return this.THEME;
 			}
@@ -108,30 +117,16 @@
 	   */
 
 		}, {
-			key: 'start',
-			value: function start() {
-
-				// Binding context
-				this._mouseStartHandler = this._mouseStartHandler.bind(this);
-				this._mouseEndHandler = this._mouseEndHandler.bind(this);
-				this._mouseMoveHandler = this._mouseMoveHandler.bind(this);
-				this.renderLoop = this.renderLoop.bind(this);
-				this.calculationLoop = this.calculationLoop.bind(this);
-				this._resizeHandler = this._resizeHandler.bind(this);
-
-				// Attach event handlers
-				this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
-				this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
-				window.addEventListener('mousemove', this._mouseMoveHandler);
-				this.$canvas.addEventListener('touchstart', this._mouseStartHandler);
-				this.$canvas.addEventListener('touchend', this._mouseEndHandler);
-				window.addEventListener('touchmove', this._mouseMoveHandler);
-
-				window.addEventListener('resize', this._resizeHandler);
+			key: 'attachEventHandlers',
+			value: function attachEventHandlers() {
+				bind(this.$canvas, ['mousedown', 'touchstart'], this._onTouchStart);
+				bind(this.$canvas, ['mouseup', 'touchend'], this._onTouchStop);
+				bind(window, ['mousemove', 'touchmove'], this._onTouchMove);
+				bind(window, ['resize'], this._onResize);
 
 				// Start frame loops
-				requestAnimationFrame(this.renderLoop);
-				requestAnimationFrame(this.calculationLoop);
+				raf(this.renderLoop);
+				raf(this.calculationLoop);
 			}
 
 			/**
@@ -141,10 +136,15 @@
 		}, {
 			key: 'setInitialState',
 			value: function setInitialState() {
-
 				this.coordinates = null;
 				this.selectedNodes = [];
 				this.lastSelectedNode = null;
+			}
+		}, {
+			key: '_onResize',
+			value: function _onResize() {
+				// Canvas position and dimens
+				this.bounds = this.$canvas.getBoundingClientRect();
 			}
 
 			/**
@@ -152,8 +152,8 @@
 	   */
 
 		}, {
-			key: '_mouseStartHandler',
-			value: function _mouseStartHandler(e) {
+			key: '_onTouchStart',
+			value: function _onTouchStart(e) {
 				if (e) e.preventDefault();
 
 				this.setInitialState();
@@ -168,8 +168,8 @@
 	   */
 
 		}, {
-			key: '_mouseEndHandler',
-			value: function _mouseEndHandler(e) {
+			key: '_onTouchStop',
+			value: function _onTouchStop(e) {
 				if (e) e.preventDefault();
 
 				this.coordinates = null;
@@ -187,10 +187,9 @@
 	   */
 
 		}, {
-			key: '_mouseMoveHandler',
-			value: function _mouseMoveHandler(e) {
-
-				e.preventDefault();
+			key: '_onTouchMove',
+			value: function _onTouchMove(e) {
+				if (e) e.preventDefault();
 
 				if (this._isDragging) {
 
@@ -205,41 +204,23 @@
 					if (mousePoint.x <= this.dimens.width && mousePoint.x > 0 && mousePoint.y <= this.dimens.height && mousePoint.y > 0) {
 						this.coordinates = mousePoint;
 					} else {
-						this._mouseEndHandler();
+						this._onTouchStop();
 					}
 				}
 			}
 
 			/**
 	   * Check if the given node is already selected
-	   *
 	   * @param  {Object}  targetNode  Node to check
-	   *
 	   * @return {Boolean}             True if the node is selected
 	   */
 
 		}, {
 			key: 'isSelected',
 			value: function isSelected(targetNode) {
-
 				return !!this.selectedNodes.find(function (node) {
 					return node.row == targetNode.row && node.col == targetNode.col;
 				});
-			}
-
-			/**
-	   * Returns the greatest common divisor of two numbers
-	   */
-
-		}, {
-			key: 'gcd',
-			value: function gcd(x, y) {
-				while (y != 0) {
-					var tmp = x;
-					x = y;
-					y = tmp % y;
-				}
-				return x;
 			}
 
 			/**
@@ -297,10 +278,10 @@
 				} else {
 					var max = Math.max(dRow, dCol);
 					var min = Math.min(dRow, dCol);
-					var gcd = this.gcd(max, min);
+					var _gcd = this.gcd(max, min);
 					if (max % min === 0) {
-						finalStep.col = dCol / gcd * dCsign;
-						finalStep.row = dRow / gcd * dRsign;
+						finalStep.col = dCol / _gcd * dCsign;
+						finalStep.row = dRow / _gcd * dRsign;
 					}
 				}
 				return finalStep;
@@ -343,8 +324,22 @@
 				}
 
 				if (runLoop) {
-					requestAnimationFrame(this.calculationLoop);
+					raf(this.calculationLoop);
 				}
+			}
+		}, {
+			key: 'forceUpdate',
+			value: function forceUpdate() {
+				var _this2 = this;
+
+				raf(function () {
+					_this2._isDragging = true;
+					_this2.calculationLoop(false);
+					raf(function () {
+						return _this2.renderLoop(false);
+					});
+					_this2._isDragging = false;
+				});
 			}
 
 			/**
@@ -356,32 +351,35 @@
 		}, {
 			key: 'renderLoop',
 			value: function renderLoop() {
-				var _this2 = this;
+				var _this3 = this;
 
 				var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
 
 				if (this._isDragging) {
+					var _THEME$colors = this.THEME.colors,
+					    accent = _THEME$colors.accent,
+					    primary = _THEME$colors.primary;
 
 					// Clear the canvas(Redundant)
+
 					this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
 
 					this.renderGrid();
 
 					// Plot all the selected nodes
 					var lastNode = this.selectedNodes.reduce(function (prevNode, node) {
-
 						if (prevNode) {
 
-							var point1 = { x: node.row * _this2.interval.x, y: node.col * _this2.interval.y };
-							var point2 = { x: prevNode.row * _this2.interval.x, y: prevNode.col * _this2.interval.y };
+							var point1 = { x: node.row * _this3.interval.x, y: node.col * _this3.interval.y };
+							var point2 = { x: prevNode.row * _this3.interval.x, y: prevNode.col * _this3.interval.y };
 
 							// Make the two selected nodes bigger
-							_this2.drawNode(point1.x, point1.y, _this2.THEME.accent, _this2.THEME.primary, _this2.THEME.dimens.node_ring + 3);
-							_this2.drawNode(point2.x, point2.y, _this2.THEME.accent, _this2.THEME.primary, _this2.THEME.dimens.node_ring + 3);
+							_this3.drawNode(point1.x, point1.y, accent, primary, _this3.THEME.dimens.node_ring + 3);
+							_this3.drawNode(point2.x, point2.y, accent, primary, _this3.THEME.dimens.node_ring + 3);
 
 							// Join the nodes
-							_this2.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
+							_this3.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
 						}
 
 						return node;
@@ -390,7 +388,7 @@
 					if (lastNode && this.coordinates) {
 
 						// Draw the last node
-						this.drawNode(lastNode.row * this.interval.x, lastNode.col * this.interval.y, this.THEME.accent, this.THEME.primary, this.THEME.dimens.node_ring + 6);
+						this.drawNode(lastNode.row * this.interval.x, lastNode.col * this.interval.y, accent, primary, this.THEME.dimens.node_ring + 6);
 
 						// Draw a line between last node to the current drag position
 						this.joinNodes(lastNode.row * this.interval.x, lastNode.col * this.interval.y, this.coordinates.x, this.coordinates.y, true // IsCoordinates instead of row and column position
@@ -399,7 +397,7 @@
 				}
 
 				if (runLoop) {
-					requestAnimationFrame(this.renderLoop);
+					raf(this.renderLoop);
 				}
 			}
 
@@ -428,7 +426,7 @@
 			key: 'renderGrid',
 			value: function renderGrid() {
 
-				this.ctx.fillStyle = this.THEME.bg;
+				this.ctx.fillStyle = this.THEME.colors.bg;
 				this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
 				this.interval = {
@@ -449,7 +447,7 @@
 		}, {
 			key: 'forEachNode',
 			value: function forEachNode(callback) {
-				var _this3 = this;
+				var _this4 = this;
 
 				var xGrid = Array(this.rows).fill(this.interval.x);
 				var yGrid = Array(this.cols).fill(this.interval.y);
@@ -466,7 +464,7 @@
 							if (callback(x, y) === false) throw breakException;
 
 							return x + dx;
-						}, _this3.interval.x);
+						}, _this4.interval.x);
 
 						return y + dy;
 					}, this.interval.y);
@@ -488,8 +486,8 @@
 		}, {
 			key: 'drawNode',
 			value: function drawNode(x, y) {
-				var centerColor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.THEME.primary;
-				var borderColor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.THEME.primary;
+				var centerColor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.THEME.colors.primary;
+				var borderColor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.THEME.colors.primary;
 				var size = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : this.THEME.dimens.node_ring;
 
 
@@ -536,7 +534,7 @@
 
 				// Config
 				this.ctx.lineWidth = this.THEME.dimens.line_width;
-				this.ctx.strokeStyle = this.THEME.accent;
+				this.ctx.strokeStyle = this.THEME.colors.accent;
 				this.ctx.lineCap = 'round';
 
 				// Draw line
@@ -555,10 +553,17 @@
 		return PatternLock;
 	}();
 
+	var PatternLock$1 = (function () {
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
 
-	PatternLock.patternToWords = patternToWords;
-	PatternLock.hashCode = hashCode;
+		return new (Function.prototype.bind.apply(PatternLock, [null].concat(args)))();
+	});
 
-	return PatternLock;
+	exports.PatternLock = PatternLock;
+	exports.default = PatternLock$1;
+
+	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
