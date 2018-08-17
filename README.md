@@ -20,55 +20,51 @@ import PatternLock from '@phenax/pattern-lock-js';
 
 ### Get started
 ```javascript
-const patternLock = new PatternLock({
-    el: '#patternLock',
-    dimens: { width: 300, height: 430 },
+const lock = PatternLock({
+    $canvas: document.querySelector('#patternLock'),
+    width: 300,
+    height: 430,
+    grid: [ 3, 3 ],
 });
 ```
 
 ### Customize the theme
 ```javascript
+patternLock.setTheme('default');
+patternLock.setTheme('success');
+patternLock.setTheme('failure');
+
+// Or pass a custom theme
+
 patternLock.setTheme({
-    accent: '#1abc9c',     // Accent color for node
-    primary: '#ffffff',    // Primary node and line color
-    bg: '#2c3e50',         // Canvas background color
+    colors: {
+        accent: '#1abc9c',     // Accent color for node
+        primary: '#ffffff',    // Primary node and line color
+        bg: '#2c3e50',         // Canvas background color
+    },
     dimens: {
-        node_radius: 20,   // Radius of the outer ring of a node
-        line_width: 6,     // Thickness of the line joining nodes
-        node_core: 8,      // Radius of the inner circle of a node
-        node_ring: 1,      // Outer ring thickness
+        node_radius: 20,       // Radius of the outer ring of a node
+        line_width: 6,         // Thickness of the line joining nodes
+        node_core: 8,          // Radius of the inner circle of a node
+        node_ring: 1,          // Outer ring thickness
     }
 });
 ```
 
-### Create the grid
-```javascript
-patternLock.generateGrid(3, 3);
-```
-
-### Start
-```javascript
-patternLock.start();
-```
-
 ### Callback for when the pattern is complete
 ```javascript
-patternLock.onPatternComplete = nodes => {
-    // Check if the pattern is right
-};
+lock.onComplete(({ hash }) => (myRealHash === hash) ? success() : failure());
 ```
 
-### Converting pattern to mapped words and hashing
+### Check if the hash matches your set of passwords
 ```javascript
-patternLock.onPatternComplete= nodes => {
-    const password = PatternLock.patternToWords(nodes);
-    alert('hashed password is : ' + PatternLock.hashCode(password));
-};
+// If the pattern drawn is a Right L or a Diagonal L,
+//    then turn the pattern green
+//    else turn it red
+lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==')
+    .onSuccess(() => lock.setTheme('success'))
+    .onFailure(() => lock.setTheme('failure'));
 ```
 
 
 <br />
-<br />
-
-
-
