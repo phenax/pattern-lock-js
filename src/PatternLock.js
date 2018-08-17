@@ -1,11 +1,59 @@
-import { patternToWords, hashCode } from './libs';
+import NanoEvents from './utils/nanoevents';
+import { patternToWords, hashCode } from './utils/libs';
+import THEMES from './utils/themes';
 
-export default class PatternLock {
+const bind = (target, eventList, fn) =>
+	eventList.forEach(ev => target.addEventListener(ev, fn));
+const unbind = (target, eventList, fn) =>
+	eventList.forEach(ev => target.removeEventListener(ev, fn));
+
+const raf = requestAnimationFrame;
+
+const gcd = (x, y) => {
+	while (y != 0) {
+		let tmp = x;
+		x = y;
+		y = tmp % y;
+	}
+	return x;
+}
+
+const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
+
+const events = {
+	PATTERN_COMPLETE: 'complete',
+	PATTERN_START: 'start',
+};
+
+const defaultConfig = {
+	theme: 'default',
+	grid: [ 3, 3 ],
+	width: 300,
+	height: 430,
+};
+
+
+const Matcher = values => {
+	let _onSuccess = () => {};
+	let _onFailure = () => {};
+	const matcher = {
+		check: val => (values.indexOf(val) !== -1) ? _onSuccess() : _onFailure(),
+		onSuccess(fn) { _onSuccess = fn; return matcher; },
+		onFailure(fn) { _onFailure = fn; return matcher; },
+	};
+	return matcher;
+};
+
+
+export class PatternLock {
 
 	constructor(config) {
+		if(!config.$canvas) throw createInvalidOptionError('$canvas');
 
-		this.$canvas = document.querySelector(config.el);
-		this.dimens = Object.assign({}, config.dimens);
+		config = { ...defaultConfig, ...config };
+
+		this.$canvas = config.$canvas;
+		this.dimens = { width: config.width, height: config.height };
 
 		this.$canvas.width = this.dimens.width;
 		this.$canvas.height = this.dimens.height;
@@ -13,47 +61,48 @@ export default class PatternLock {
 		// Canvas context
 		this.ctx = this.$canvas.getContext('2d');
 
-		this._resizeHandler();
+		this.initialize(config);
+	}
 
-		// Default themes
-		this.THEME = {
-			accent: '#1abc9c',
-			primary: '#ffffff',
-			bg: '#2c3e50',
-			dimens: {
-				line_width: 6,
-				node_radius: 28,
-				node_core: 8,
-				node_ring: 1,
-			}
-		};
+	initialize(config) {
+		this._onTouchStart = this._onTouchStart.bind(this);
+		this._onTouchStop = this._onTouchStop.bind(this);
+		this._onTouchMove = this._onTouchMove.bind(this);
+		this._onResize = this._onResize.bind(this);
+		this.renderLoop = this.renderLoop.bind(this);
+		this.calculationLoop = this.calculationLoop.bind(this);
+
+		this.initializeEventBus();
+
+		this.setTheme(config.theme);
+
+		this._onResize();
 
 		this.setInitialState();
+		this.generateGrid(...config.grid);
+
+		this.attachEventHandlers();
 	}
-
-
-	set onPatternComplete(cb) {
-		this._patternCompleteHandler = cb;
-	}
-
-	_resizeHandler() {
-		// Canvas position and dimens
-		this.bounds = this.$canvas.getBoundingClientRect();
-	}
-
 
 	/**
 	 * Set the pattern lock screen theme
-	 *
-	 * @param {Object}   theme    Theme to add to defaults
-	 *
-	 * @return {Object}           Full theme
+	 * @param {Object|string}   theme
 	 */
-	setTheme(theme) {
+	setTheme(theme, forceUpdate = true) {
 
-		this.THEME.dimens = Object.assign({}, this.THEME.dimens, theme.dimens || {});
-		theme.dimens = this.THEME.dimens;
-		this.THEME = Object.assign({}, this.THEME, theme);
+		const defaultTheme = THEMES.default;
+
+		if(typeof theme === 'string') {
+			theme = THEMES[theme];
+		}
+
+		if(!theme) throw createInvalidOptionError(`theme`);
+
+		this.THEME = this.THEME || {};
+		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
+		this.THEME.dimens = { ...defaultTheme.dimens, ...theme.dimens };
+
+		forceUpdate && this.forceUpdate();
 
 		return this.THEME;
 	}
@@ -62,79 +111,73 @@ export default class PatternLock {
 	/**
 	 * Attach event listeners and start frame loops
 	 */
-	start() {
-
-		// Binding context
-		this._mouseStartHandler = this._mouseStartHandler.bind(this);
-		this._mouseEndHandler = this._mouseEndHandler.bind(this);
-		this._mouseMoveHandler = this._mouseMoveHandler.bind(this);
-		this.renderLoop = this.renderLoop.bind(this);
-		this.calculationLoop = this.calculationLoop.bind(this);
-		this._resizeHandler = this._resizeHandler.bind(this);
-
-		// Attach event handlers
-		this.$canvas.addEventListener('mousedown', this._mouseStartHandler);
-		this.$canvas.addEventListener('mouseup', this._mouseEndHandler);
-		window.addEventListener('mousemove', this._mouseMoveHandler);
-		this.$canvas.addEventListener('touchstart', this._mouseStartHandler);
-		this.$canvas.addEventListener('touchend', this._mouseEndHandler);
-		window.addEventListener('touchmove', this._mouseMoveHandler);
-
-		window.addEventListener('resize', this._resizeHandler);
+	attachEventHandlers() {
+		bind(this.$canvas, ['mousedown','touchstart'], this._onTouchStart);
+		bind(this.$canvas, ['mouseup','touchend'], this._onTouchStop);
+		bind(window, ['mousemove','touchmove'], this._onTouchMove);
+		bind(window, ['resize'], this._onResize);
 
 		// Start frame loops
-		requestAnimationFrame(this.renderLoop);
-		requestAnimationFrame(this.calculationLoop);
+		raf(this.renderLoop);
+		raf(this.calculationLoop);
 	}
 
+	initializeEventBus() { this.eventBus = new NanoEvents(); }
+	on(event, fn) { return this.eventBus.on(event, fn); }
+	off(event, fn) { return this.eventBus.off(event, fn); }
+	emit(event, ...args) { return this.eventBus.emit(event, ...args); }
+	onStart(fn) { this.on(events.PATTERN_START, fn); return this; }
+	onComplete(fn) { this.on(events.PATTERN_COMPLETE, fn); return this; }
 
 	/**
 	 * Set the initial state
 	 */
 	setInitialState() {
-
 		this.coordinates = null;
 		this.selectedNodes = [];
 		this.lastSelectedNode = null;
 	}
 
-	/**
-	 * Mouse start handler
-	 */
-	_mouseStartHandler(e) {
-		if (e) e.preventDefault();
 
+
+	onPatternStart() {
+		this.emit(events.PATTERN_START, {});
+	}
+	onPatternComplete() {
+		const nodes = this.selectedNodes.slice(0);
+		const password = patternToWords(nodes);
+		const hash = hashCode(password);
+		this.emit(events.PATTERN_COMPLETE, { nodes, hash, password });
+	}
+
+	_onResize() {
+		this.bounds = this.$canvas.getBoundingClientRect();
+	}
+
+	_onTouchStart(e) {
+		if (e) e.preventDefault();
+		
 		this.setInitialState();
 		this.calculationLoop(false);
 		this.renderLoop(false);
 
+		
+		this.onPatternStart();
 		this._isDragging = true;
 	}
 
-	/**
-	 * Mouse end handler
-	 */
-	_mouseEndHandler(e) {
+	_onTouchStop(e) {
 		if (e) e.preventDefault();
 
 		this.coordinates = null;
 		this.renderLoop(false);
 
+		this.onPatternComplete();
 		this._isDragging = false;
-
-		if (typeof this._patternCompleteHandler === 'function') {
-			this._patternCompleteHandler(this.selectedNodes.slice(0));
-		}
 	}
 
-
-	/**
-	 * Mouse move handler
-	 */
-	_mouseMoveHandler(e) {
-
-		e.preventDefault();
-
+	_onTouchMove(e) {
+		if (e) e.preventDefault();
 
 		if (this._isDragging) {
 
@@ -152,7 +195,7 @@ export default class PatternLock {
 			) {
 				this.coordinates = mousePoint;
 			} else {
-				this._mouseEndHandler();
+				this._onTouchStop();
 			}
 		}
 	}
@@ -160,32 +203,16 @@ export default class PatternLock {
 
 	/**
 	 * Check if the given node is already selected
-	 *
 	 * @param  {Object}  targetNode  Node to check
-	 *
 	 * @return {Boolean}             True if the node is selected
 	 */
 	isSelected(targetNode) {
-
 		return !!this.selectedNodes.find(
 			node => (
 				node.row == targetNode.row &&
 				node.col == targetNode.col
 			)
 		);
-	}
-
-
-	/**
-	 * Returns the greatest common divisor of two numbers
-	 */
-	gcd(x, y) {
-		while (y != 0) {
-			let tmp = x;
-			x = y;
-			y = tmp % y;
-		}
-		return x;
 	}
 
 
@@ -239,10 +266,10 @@ export default class PatternLock {
 		} else {
 			const max = Math.max(dRow, dCol);
 			const min = Math.min(dRow, dCol);
-			const gcd = this.gcd(max, min);
+			const gcdValue = gcd(max, min);
 			if (max % min === 0) {
-				finalStep.col = (dCol / gcd) * dCsign;
-				finalStep.row = (dRow / gcd) * dRsign;
+				finalStep.col = (dCol / gcdValue) * dCsign;
+				finalStep.row = (dRow / gcdValue) * dRsign;
 			}
 		}
 		return finalStep;
@@ -282,10 +309,22 @@ export default class PatternLock {
 		}
 
 		if (runLoop) {
-			requestAnimationFrame(this.calculationLoop);
+			raf(this.calculationLoop);
 		}
 	}
 
+	forceUpdate() {
+		raf(() => {
+			const previousDragState = this._isDragging;
+			this._isDragging = true;
+			this.calculationLoop(false);
+
+			raf(() => {
+				this.renderLoop(false);
+				this._isDragging = previousDragState;
+			});
+		});
+	}
 
 	/**
 	 * Render the state of the lock
@@ -295,6 +334,7 @@ export default class PatternLock {
 	renderLoop(runLoop = true) {
 
 		if (this._isDragging) {
+			const { accent, primary } = this.THEME.colors;
 
 			// Clear the canvas(Redundant)
 			this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
@@ -302,35 +342,33 @@ export default class PatternLock {
 			this.renderGrid();
 
 			// Plot all the selected nodes
-			const lastNode =
-				this.selectedNodes.reduce((prevNode, node) => {
+			const lastNode = this.selectedNodes.reduce((prevNode, node) => {
+				if (prevNode) {
 
-					if (prevNode) {
+					const point1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
+					const point2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
 
-						const point1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
-						const point2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
+					// Make the two selected nodes bigger
+					this.drawNode(
+						point1.x, point1.y,
+						accent, primary,
+						this.THEME.dimens.node_ring + 3
+					);
+					this.drawNode(
+						point2.x, point2.y,
+						accent, primary,
+						this.THEME.dimens.node_ring + 3
+					);
 
-						// Make the two selected nodes bigger
-						this.drawNode(
-							point1.x, point1.y,
-							this.THEME.accent, this.THEME.primary,
-							this.THEME.dimens.node_ring + 3
-						);
-						this.drawNode(
-							point2.x, point2.y,
-							this.THEME.accent, this.THEME.primary,
-							this.THEME.dimens.node_ring + 3
-						);
+					// Join the nodes
+					this.joinNodes(
+						prevNode.row, prevNode.col,
+						node.row, node.col
+					);
+				}
 
-						// Join the nodes
-						this.joinNodes(
-							prevNode.row, prevNode.col,
-							node.row, node.col
-						);
-					}
-
-					return node;
-				}, null);
+				return node;
+			}, null);
 
 
 			if (lastNode && this.coordinates) {
@@ -338,7 +376,7 @@ export default class PatternLock {
 				// Draw the last node
 				this.drawNode(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
-					this.THEME.accent, this.THEME.primary,
+					accent, primary,
 					this.THEME.dimens.node_ring + 6
 				);
 
@@ -346,13 +384,13 @@ export default class PatternLock {
 				this.joinNodes(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
 					this.coordinates.x, this.coordinates.y,
-					true  // IsCoordinates instead of row and column position
+					true
 				);
 			}
 		}
 
 		if (runLoop) {
-			requestAnimationFrame(this.renderLoop);
+			raf(this.renderLoop);
 		}
 	}
 
@@ -378,7 +416,7 @@ export default class PatternLock {
 	 */
 	renderGrid() {
 
-		this.ctx.fillStyle = this.THEME.bg;
+		this.ctx.fillStyle = this.THEME.colors.bg;
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
 		this.interval = {
@@ -427,22 +465,12 @@ export default class PatternLock {
 		}
 	}
 
-
-	/**
-	 * Draw a node
-	 *
-	 * @param  {Number} x
-	 * @param  {Number} y
-	 * @param  {String} centerColor
-	 * @param  {String} borderColor
-	 * @param  {Number} size
-	 */
-	drawNode(x, y, centerColor = this.THEME.primary, borderColor = this.THEME.primary, size = this.THEME.dimens.node_ring) {
+	drawNode(x, y, centerColor, borderColor, size) {
 
 		// Config
-		this.ctx.lineWidth = size;
-		this.ctx.fillStyle = centerColor;
-		this.ctx.strokeStyle = borderColor;
+		this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
+		this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
+		this.ctx.strokeStyle = borderColor || this.THEME.colors.primary;
 
 		// Draw inner circle
 		this.ctx.beginPath();
@@ -455,16 +483,6 @@ export default class PatternLock {
 		this.ctx.stroke();
 	}
 
-
-	/**
-	 * Join two nodes with a line
-	 *
-	 * @param  {Number}  row1
-	 * @param  {Number}  col1
-	 * @param  {Number}  row2
-	 * @param  {Number}  col2
-	 * @param  {Boolean} isCoordinates  If true, will calculate as pixels
-	 */
 	joinNodes(row1, col1, row2, col2, isCoordinates = false) {
 
 		let factor = this.interval;
@@ -478,7 +496,7 @@ export default class PatternLock {
 
 		// Config
 		this.ctx.lineWidth = this.THEME.dimens.line_width;
-		this.ctx.strokeStyle = this.THEME.accent;
+		this.ctx.strokeStyle = this.THEME.colors.accent;
 		this.ctx.lineCap = 'round';
 
 		// Draw line
@@ -487,7 +505,16 @@ export default class PatternLock {
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
 	}
+
+
+	match(type, values) {
+		const matcher = Matcher(values);
+		this.on(events.PATTERN_COMPLETE, data => matcher.check(data[type]));
+		return matcher;
+	}
+
+	matchHash(...hashes) { return this.match('hash', hashes); }
+	matchPassword(...passwords) { return this.match('password', passwords); }
 }
 
-PatternLock.patternToWords = patternToWords;
-PatternLock.hashCode = hashCode;
+export default (...args) => new PatternLock(...args);

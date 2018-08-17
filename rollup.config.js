@@ -7,27 +7,27 @@ import pkg from './package.json';
 
 export default [
 	{
-		input: 'js/PatternLock.js',
+		input: 'src/PatternLock.js',
 		output: {
 			name: 'patten-lock',
 			file: pkg.main,
 			format: 'umd'
 		},
 		plugins: [
-            resolveModules({ extensions: ['.js', '.json', '.jsx'], preferBuiltins: true }),
-			babel({ exclude: 'node_modules/**' }),
+            resolveModules({ extensions: ['.js', '.json', '.jsx'] }),
+			babel(pkg.babel),
 		],
 	},
 	{
-		input: 'js/example.js',
+		input: 'src/example.js',
 		output: {
 			name: 'example',
 			file: 'build/example.js',
 			format: 'iife'
 		},
 		plugins: [
-            resolveModules({ extensions: ['.js', '.json', '.jsx'], preferBuiltins: true }),
-			babel({ exclude: 'node_modules/**' }),
+            resolveModules({ extensions: ['.js', '.json', '.jsx'] }),
+			babel(pkg.babel),
 		],
 	}
 ];
