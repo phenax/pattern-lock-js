@@ -13,12 +13,17 @@
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
     "rollup": "^0.64.1",
     "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-node-resolve": "^3.3.0"
+    "rollup-plugin-node-resolve": "^3.3.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0"
   },
   "babel": {
     "presets": [
+      "react",
       [
         "env",
         {
@@ -37,7 +42,6 @@
     ]
   },
   "dependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "nanoevents": "^1.0.5"
   }
 }

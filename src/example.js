@@ -1,4 +1,3 @@
-
 import PatternLock from './PatternLock';
 
 document.addEventListener('DOMContentLoaded', () => {
