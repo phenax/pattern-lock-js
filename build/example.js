@@ -558,27 +558,37 @@
 
 	document.addEventListener('DOMContentLoaded', function () {
 
-		var patternLock = new PatternLock({
-			el: '#patternLock',
-			dimens: { width: 300, height: 430 }
-		});
-
-		patternLock.setTheme({
-			accent: '#1abc9c',
-			dimens: {
-				node_radius: 20
+		var lock = PatternLock({
+			$canvas: document.querySelector('#patternLock'),
+			dimens: { width: 300, height: 430 },
+			grid: [3, 3],
+			theme: {
+				colors: {
+					accent: '#1abc9c'
+				},
+				dimens: {
+					line_width: 6,
+					node_radius: 28,
+					node_core: 8,
+					node_ring: 1
+				}
 			}
 		});
 
-		patternLock.generateGrid(3, 3);
-		patternLock.start();
+		lock.matchHash('somepasshash').onSuccess(function () {
+			return lock.setTheme('success');
+		}).onFailure(function () {
+			return lock.setTheme('failure');
+		});
 
 		var $password = document.querySelector('.js-password');
+		lock.on('complete', function (_ref) {
+			var nodes = _ref.nodes,
+			    hash = _ref.hash,
+			    password = _ref.password;
 
-		patternLock.onPatternComplete = function (nodes) {
-			var password = PatternLock.patternToWords(nodes);
-			$password.value = PatternLock.hashCode(password);
-		};
+			$password.value = hash;
+		});
 	});
 
 }());

@@ -1,4 +1,4 @@
-import { patternToWords, hashCode } from './libs';
+import { patternToWords, hashCode } from './utils/libs';
 
 export default class PatternLock {
 
