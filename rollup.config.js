@@ -14,8 +14,8 @@ export default [
 			format: 'umd'
 		},
 		plugins: [
-            resolveModules({ extensions: ['.js', '.json', '.jsx'], preferBuiltins: true }),
-			babel({ exclude: 'node_modules/**' }),
+            resolveModules({ extensions: ['.js', '.json', '.jsx'] }),
+			babel(pkg.babel),
 		],
 	},
 	{
@@ -26,8 +26,8 @@ export default [
 			format: 'iife'
 		},
 		plugins: [
-            resolveModules({ extensions: ['.js', '.json', '.jsx'], preferBuiltins: true }),
-			babel({ exclude: 'node_modules/**' }),
+            resolveModules({ extensions: ['.js', '.json', '.jsx'] }),
+			babel(pkg.babel),
 		],
 	}
 ];

@@ -11,10 +11,33 @@
   },
   "license": "Apache 2.0",
   "devDependencies": {
-    "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "rollup": "^0.57.1",
-    "rollup-plugin-babel": "^3.0.3",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "rollup": "^0.64.1",
+    "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-node-resolve": "^3.3.0"
+  },
+  "babel": {
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "browsers": [
+              "last 5 versions"
+            ]
+          },
+          "modules": false,
+          "useBuiltIns": false
+        }
+      ]
+    ],
+    "plugins": [
+      "transform-object-rest-spread"
+    ]
+  },
+  "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "nanoevents": "^1.0.5"
   }
 }
