@@ -7,7 +7,7 @@ import pkg from './package.json';
 
 export default [
 	{
-		input: 'js/PatternLock.js',
+		input: 'src/PatternLock.js',
 		output: {
 			name: 'patten-lock',
 			file: pkg.main,
@@ -19,7 +19,7 @@ export default [
 		],
 	},
 	{
-		input: 'js/example.js',
+		input: 'src/example.js',
 		output: {
 			name: 'example',
 			file: 'build/example.js',

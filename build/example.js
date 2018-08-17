@@ -136,37 +136,22 @@
     	height: 430
     };
 
-    var Matcher = function () {
-    	function Matcher() {
-    		_classCallCheck(this, Matcher);
-
-    		for (var _len = arguments.length, values = Array(_len), _key = 0; _key < _len; _key++) {
-    			values[_key] = arguments[_key];
+    var Matcher = function Matcher(values) {
+    	var _onSuccess = function _onSuccess() {};
+    	var _onFailure = function _onFailure() {};
+    	var matcher = {
+    		check: function check(val) {
+    			return values.indexOf(val) !== -1 ? _onSuccess() : _onFailure();
+    		},
+    		onSuccess: function onSuccess(fn) {
+    			_onSuccess = fn;return matcher;
+    		},
+    		onFailure: function onFailure(fn) {
+    			_onFailure = fn;return matcher;
     		}
-
-    		this.values = values;
-    	}
-
-    	_createClass(Matcher, [{
-    		key: 'check',
-    		value: function check(myValue) {
-    			if (this.values.indexOf(myValue) !== -1) return this._onSuccess();
-    			return this._onFailure();
-    		}
-    	}, {
-    		key: 'onSuccess',
-    		value: function onSuccess(fn) {
-    			this._onSuccess = fn;return this;
-    		}
-    	}, {
-    		key: 'onFailure',
-    		value: function onFailure(fn) {
-    			this._onFailure = fn;return this;
-    		}
-    	}]);
-
-    	return Matcher;
-    }();
+    	};
+    	return matcher;
+    };
 
     var PatternLock = function () {
     	function PatternLock(config) {
@@ -213,7 +198,6 @@
     		/**
        * Set the pattern lock screen theme
        * @param {Object|string}   theme
-       * @return {Object}                  New theme
        */
 
     	}, {
@@ -275,11 +259,21 @@
     		value: function emit(event) {
     			var _eventBus;
 
-    			for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    				args[_key2 - 1] = arguments[_key2];
+    			for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    				args[_key - 1] = arguments[_key];
     			}
 
     			return (_eventBus = this.eventBus).emit.apply(_eventBus, [event].concat(args));
+    		}
+    	}, {
+    		key: 'onStart',
+    		value: function onStart(fn) {
+    			this.on(events.PATTERN_START, fn);return this;
+    		}
+    	}, {
+    		key: 'onComplete',
+    		value: function onComplete(fn) {
+    			this.on(events.PATTERN_COMPLETE, fn);return this;
     		}
 
     		/**
@@ -667,18 +661,31 @@
     			this.ctx.stroke();
     		}
     	}, {
-    		key: 'matchHash',
-    		value: function matchHash() {
-    			for (var _len3 = arguments.length, hashes = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-    				hashes[_key3] = arguments[_key3];
-    			}
-
-    			var matcher = new (Function.prototype.bind.apply(Matcher, [null].concat(hashes)))();
-    			this.on(events.PATTERN_COMPLETE, function (_ref) {
-    				var hash = _ref.hash;
-    				return matcher.check(hash);
+    		key: 'match',
+    		value: function match(type, values) {
+    			var matcher = Matcher(values);
+    			this.on(events.PATTERN_COMPLETE, function (data) {
+    				return matcher.check(data[type]);
     			});
     			return matcher;
+    		}
+    	}, {
+    		key: 'matchHash',
+    		value: function matchHash() {
+    			for (var _len2 = arguments.length, hashes = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    				hashes[_key2] = arguments[_key2];
+    			}
+
+    			return this.match('hash', hashes);
+    		}
+    	}, {
+    		key: 'matchPassword',
+    		value: function matchPassword() {
+    			for (var _len3 = arguments.length, passwords = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    				passwords[_key3] = arguments[_key3];
+    			}
+
+    			return this.match('password', passwords);
     		}
     	}]);
 
@@ -699,7 +706,7 @@
     		$canvas: document.querySelector('#patternLock'),
     		width: 300,
     		height: 430,
-    		grid: [3, 3]
+    		grid: [4, 3]
     	});
 
     	// Right L, Diagonal L
@@ -711,10 +718,10 @@
 
     	var $password = document.querySelector('.js-password');
 
-    	lock.on('start', function () {
+    	lock.onStart(function () {
     		return lock.setTheme('default');
     	});
-    	lock.on('complete', function () {
+    	lock.onComplete(function () {
     		var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
     		    hash = _ref.hash;
 

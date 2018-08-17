@@ -38,8 +38,8 @@ const Matcher = values => {
 	let _onFailure = () => {};
 	const matcher = {
 		check: val => (values.indexOf(val) !== -1) ? _onSuccess() : _onFailure(),
-		onSuccess(fn) { _onSuccess = fn; return matcher; }
-		onFailure(fn) { _onFailure = fn; return matcher; }
+		onSuccess(fn) { _onSuccess = fn; return matcher; },
+		onFailure(fn) { _onFailure = fn; return matcher; },
 	};
 	return matcher;
 };
@@ -87,7 +87,6 @@ export class PatternLock {
 	/**
 	 * Set the pattern lock screen theme
 	 * @param {Object|string}   theme
-	 * @return {Object}                  New theme
 	 */
 	setTheme(theme, forceUpdate = true) {
 

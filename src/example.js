@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		$canvas: document.querySelector('#patternLock'),
 		width: 300,
 		height: 430,
-		grid: [ 3, 3 ],
+		grid: [ 4, 3 ],
 	});
 
 	// Right L, Diagonal L
