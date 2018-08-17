@@ -18,7 +18,7 @@ const gcd = (x, y) => {
 	return x;
 }
 
-const createInvalidOptionError = option => new Error(`Need to specify ${option} option`);
+const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
 const events = {
 	PATTERN_COMPLETE: 'complete',
@@ -32,6 +32,17 @@ const defaultConfig = {
 	height: 430,
 };
 
+
+class Matcher {
+	constructor(...values) { this.values = values; }
+	check(myValue) {
+		if(this.values.indexOf(myValue) !== -1)
+			return this._onSuccess();
+		return this._onFailure();
+	}
+	onSuccess(fn) { this._onSuccess = fn; return this; }
+	onFailure(fn) { this._onFailure = fn; return this; }
+}
 
 export class PatternLock {
 
@@ -84,6 +95,8 @@ export class PatternLock {
 		if(typeof theme === 'string') {
 			theme = THEMES[theme];
 		}
+
+		if(!theme) throw createInvalidOptionError(`theme`);
 
 		this.THEME = this.THEME || {};
 		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
@@ -251,10 +264,10 @@ export class PatternLock {
 		} else {
 			const max = Math.max(dRow, dCol);
 			const min = Math.min(dRow, dCol);
-			const gcd = this.gcd(max, min);
+			const gcdValue = gcd(max, min);
 			if (max % min === 0) {
-				finalStep.col = (dCol / gcd) * dCsign;
-				finalStep.row = (dRow / gcd) * dRsign;
+				finalStep.col = (dCol / gcdValue) * dCsign;
+				finalStep.row = (dRow / gcdValue) * dRsign;
 			}
 		}
 		return finalStep;
@@ -509,6 +522,15 @@ export class PatternLock {
 		this.ctx.moveTo(point1.x, point1.y);
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
+	}
+
+
+
+
+	matchHash(...hashes) {
+		const matcher = new Matcher(...hashes);
+		this.on(events.PATTERN_COMPLETE, ({ hash }) => matcher.check(hash));
+		return matcher;
 	}
 }
 

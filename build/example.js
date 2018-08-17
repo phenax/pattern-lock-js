@@ -87,6 +87,11 @@
     		colors: {
     			accent: '#51e980'
     		}
+    	},
+    	failure: {
+    		colors: {
+    			accent: '#e74c3c'
+    		}
     	}
     };
 
@@ -106,8 +111,17 @@
 
     var raf = requestAnimationFrame;
 
+    var gcd = function gcd(x, y) {
+    	while (y != 0) {
+    		var tmp = x;
+    		x = y;
+    		y = tmp % y;
+    	}
+    	return x;
+    };
+
     var createInvalidOptionError = function createInvalidOptionError(option) {
-    	return new Error('Need to specify ' + option + ' option');
+    	return new Error('Invalid or empty ' + option + ' passed');
     };
 
     var events = {
@@ -121,6 +135,38 @@
     	width: 300,
     	height: 430
     };
+
+    var Matcher = function () {
+    	function Matcher() {
+    		_classCallCheck(this, Matcher);
+
+    		for (var _len = arguments.length, values = Array(_len), _key = 0; _key < _len; _key++) {
+    			values[_key] = arguments[_key];
+    		}
+
+    		this.values = values;
+    	}
+
+    	_createClass(Matcher, [{
+    		key: 'check',
+    		value: function check(myValue) {
+    			if (this.values.indexOf(myValue) !== -1) return this._onSuccess();
+    			return this._onFailure();
+    		}
+    	}, {
+    		key: 'onSuccess',
+    		value: function onSuccess(fn) {
+    			this._onSuccess = fn;return this;
+    		}
+    	}, {
+    		key: 'onFailure',
+    		value: function onFailure(fn) {
+    			this._onFailure = fn;return this;
+    		}
+    	}]);
+
+    	return Matcher;
+    }();
 
     var PatternLock = function () {
     	function PatternLock(config) {
@@ -182,6 +228,8 @@
     				theme = THEMES[theme];
     			}
 
+    			if (!theme) throw createInvalidOptionError('theme');
+
     			this.THEME = this.THEME || {};
     			this.THEME.colors = _extends({}, defaultTheme.colors, theme.colors);
     			this.THEME.dimens = _extends({}, defaultTheme.dimens, theme.dimens);
@@ -227,8 +275,8 @@
     		value: function emit(event) {
     			var _eventBus;
 
-    			for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    				args[_key - 1] = arguments[_key];
+    			for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    				args[_key2 - 1] = arguments[_key2];
     			}
 
     			return (_eventBus = this.eventBus).emit.apply(_eventBus, [event].concat(args));
@@ -378,10 +426,10 @@
     			} else {
     				var max = Math.max(dRow, dCol);
     				var min = Math.min(dRow, dCol);
-    				var _gcd = this.gcd(max, min);
+    				var gcdValue = gcd(max, min);
     				if (max % min === 0) {
-    					finalStep.col = dCol / _gcd * dCsign;
-    					finalStep.row = dRow / _gcd * dRsign;
+    					finalStep.col = dCol / gcdValue * dCsign;
+    					finalStep.row = dRow / gcdValue * dRsign;
     				}
     			}
     			return finalStep;
@@ -645,14 +693,28 @@
     			this.ctx.lineTo(point2.x, point2.y);
     			this.ctx.stroke();
     		}
+    	}, {
+    		key: 'matchHash',
+    		value: function matchHash() {
+    			for (var _len3 = arguments.length, hashes = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    				hashes[_key3] = arguments[_key3];
+    			}
+
+    			var matcher = new (Function.prototype.bind.apply(Matcher, [null].concat(hashes)))();
+    			this.on(events.PATTERN_COMPLETE, function (_ref) {
+    				var hash = _ref.hash;
+    				return matcher.check(hash);
+    			});
+    			return matcher;
+    		}
     	}]);
 
     	return PatternLock;
     }();
 
     var PatternLock$1 = (function () {
-    	for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    		args[_key2] = arguments[_key2];
+    	for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    		args[_key4] = arguments[_key4];
     	}
 
     	return new (Function.prototype.bind.apply(PatternLock, [null].concat(args)))();
@@ -669,16 +731,17 @@
 
     	window.lock = lock;
 
-    	lock.matchHash('somepasshash').onSuccess(function () {
+    	// Right L, Diagonal L
+    	lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==').onSuccess(function () {
     		return lock.setTheme('success');
     	}).onFailure(function () {
     		return lock.setTheme('failure');
     	});
 
     	var $password = document.querySelector('.js-password');
-    	// lock.on('start', () => {
-    	// 	lock.setTheme('default');
-    	// });
+    	lock.on('start', function () {
+    		return lock.setTheme('default');
+    	});
     	lock.on('complete', function () {
     		var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
     		    nodes = _ref.nodes,

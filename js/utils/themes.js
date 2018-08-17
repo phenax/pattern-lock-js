@@ -18,6 +18,11 @@ const THEMES = {
 			accent: '#51e980',
 		}
 	},
+	failure: {
+		colors: {
+			accent: '#e74c3c',
+		}
+	},
 };
 
 export default THEMES;
