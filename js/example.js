@@ -12,14 +12,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	window.lock = lock;
 
-	// lock.matchHash('somepasshash')
-	// 	.onSuccess(() => lock.setTheme('success'))
-	// 	.onFailure(() => lock.setTheme('failure'));
+	lock.matchHash('somepasshash')
+		.onSuccess(() => lock.setTheme('success'))
+		.onFailure(() => lock.setTheme('failure'));
 
 	const $password = document.querySelector('.js-password');
+	// lock.on('start', () => {
+	// 	lock.setTheme('default');
+	// });
 	lock.on('complete', ({ nodes, hash, password } = {}) => {
-		console.log(nodes, hash, password);
 		$password.value = hash;
+		// lock.setTheme('success');
 	});
 });
 

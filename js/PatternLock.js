@@ -22,6 +22,7 @@ const createInvalidOptionError = option => new Error(`Need to specify ${option} 
 
 const events = {
 	PATTERN_COMPLETE: 'complete',
+	PATTERN_START: 'start',
 };
 
 const defaultConfig = {
@@ -31,10 +32,10 @@ const defaultConfig = {
 	height: 430,
 };
 
+
 export class PatternLock {
 
 	constructor(config) {
-
 		if(!config.$canvas) throw createInvalidOptionError('$canvas');
 
 		config = { ...defaultConfig, ...config };
@@ -48,10 +49,10 @@ export class PatternLock {
 		// Canvas context
 		this.ctx = this.$canvas.getContext('2d');
 
-		this.initialize();
+		this.initialize(config);
 	}
 
-	initialize() {
+	initialize(config) {
 		this._onTouchStart = this._onTouchStart.bind(this);
 		this._onTouchStop = this._onTouchStop.bind(this);
 		this._onTouchMove = this._onTouchMove.bind(this);
@@ -124,47 +125,42 @@ export class PatternLock {
 
 
 
-	set onPatternComplete(cb) {
-		this._patternCompleteHandler = cb;
+	onPatternStart() {
+		this.emit(events.PATTERN_START, {});
+	}
+	onPatternComplete() {
+		const nodes = this.selectedNodes.slice(0);
+		const password = patternToWords(nodes);
+		const hash = hashCode(password);
+		this.emit(events.PATTERN_COMPLETE, { nodes, hash, password });
 	}
 
 	_onResize() {
-		// Canvas position and dimens
 		this.bounds = this.$canvas.getBoundingClientRect();
 	}
 
-	/**
-	 * Mouse start handler
-	 */
 	_onTouchStart(e) {
 		if (e) e.preventDefault();
-
+		
 		this.setInitialState();
 		this.calculationLoop(false);
 		this.renderLoop(false);
 
+		
+		this.onPatternStart();
 		this._isDragging = true;
 	}
 
-	/**
-	 * Mouse end handler
-	 */
 	_onTouchStop(e) {
 		if (e) e.preventDefault();
 
 		this.coordinates = null;
 		this.renderLoop(false);
 
+		this.onPatternComplete();
 		this._isDragging = false;
-
-		const nodes = this.selectedNodes.slice(0);
-		this.emit(events.PATTERN_COMPLETE, { nodes });
 	}
 
-
-	/**
-	 * Mouse move handler
-	 */
 	_onTouchMove(e) {
 		if (e) e.preventDefault();
 
@@ -304,10 +300,14 @@ export class PatternLock {
 
 	forceUpdate() {
 		raf(() => {
+			const previousDragState = this._isDragging;
 			this._isDragging = true;
 			this.calculationLoop(false);
-			raf(() => this.renderLoop(false));
-			this._isDragging = false;
+
+			raf(() => {
+				this.renderLoop(false);
+				this._isDragging = previousDragState;
+			});
 		});
 	}
 

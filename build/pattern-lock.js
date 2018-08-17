@@ -34,6 +34,44 @@
         }
     };
 
+    var wordMap = [['lorem', 'ipsum', 'dolor', 'sit', 'amet'], ['fo^$*@!#x', 'jum[.,]ps', 'ov#$^er', 'bri;24dge', 'dea=-=th'], ['fancy', 'planes', 'foolish', 'man', 'juice'], ['nunc', 'vehicula', 'lectus', 'fermentum', 'suscipit'], ['adipiscing', 'erat', 'porta', 'lobortis', 'ullamcorper']];
+
+    /**
+     * Convert pattern to a string of random words
+     * 
+     * @param {Array<{ row: Number, col: Number }>} nodes
+     * 
+     * @returns {String}
+     */
+    var patternToWords = function patternToWords(nodes) {
+      return nodes.reduce(function () {
+        var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+        var node = arguments[1];
+        return wordMap[node.row - 1][node.col - 1] + string;
+      });
+    };
+
+    /**
+     * Hashcode algorithm implementation
+     * 
+     * @param {String} str
+     * 
+     * @returns {String}
+     */
+    var hashCode = function hashCode(str) {
+      if (!str.length) return '';
+
+      var hash = str.split('').reduce(function () {
+        var a = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        var b = arguments[1];
+
+        a = (a << 5) - a + b.charCodeAt(0);
+        return a & a;
+      });
+
+      return btoa(hash + '');
+    };
+
     var THEMES = {
     	default: {
     		colors: {
@@ -76,7 +114,8 @@
     };
 
     var events = {
-    	PATTERN_COMPLETE: 'complete'
+    	PATTERN_COMPLETE: 'complete',
+    	PATTERN_START: 'start'
     };
 
     var defaultConfig = {
@@ -103,12 +142,12 @@
     		// Canvas context
     		this.ctx = this.$canvas.getContext('2d');
 
-    		this.initialize();
+    		this.initialize(config);
     	}
 
     	_createClass(PatternLock, [{
     		key: 'initialize',
-    		value: function initialize() {
+    		value: function initialize(config) {
     			this._onTouchStart = this._onTouchStart.bind(this);
     			this._onTouchStop = this._onTouchStop.bind(this);
     			this._onTouchMove = this._onTouchMove.bind(this);
@@ -210,16 +249,23 @@
     			this.lastSelectedNode = null;
     		}
     	}, {
+    		key: 'onPatternStart',
+    		value: function onPatternStart() {
+    			this.emit(events.PATTERN_START, {});
+    		}
+    	}, {
+    		key: 'onPatternComplete',
+    		value: function onPatternComplete() {
+    			var nodes = this.selectedNodes.slice(0);
+    			var password = patternToWords(nodes);
+    			var hash = hashCode(password);
+    			this.emit(events.PATTERN_COMPLETE, { nodes: nodes, hash: hash, password: password });
+    		}
+    	}, {
     		key: '_onResize',
     		value: function _onResize() {
-    			// Canvas position and dimens
     			this.bounds = this.$canvas.getBoundingClientRect();
     		}
-
-    		/**
-       * Mouse start handler
-       */
-
     	}, {
     		key: '_onTouchStart',
     		value: function _onTouchStart(e) {
@@ -229,13 +275,9 @@
     			this.calculationLoop(false);
     			this.renderLoop(false);
 
+    			this.onPatternStart();
     			this._isDragging = true;
     		}
-
-    		/**
-       * Mouse end handler
-       */
-
     	}, {
     		key: '_onTouchStop',
     		value: function _onTouchStop(e) {
@@ -244,16 +286,9 @@
     			this.coordinates = null;
     			this.renderLoop(false);
 
+    			this.onPatternComplete();
     			this._isDragging = false;
-
-    			var nodes = this.selectedNodes.slice(0);
-    			this.emit(events.PATTERN_COMPLETE, { nodes: nodes });
     		}
-
-    		/**
-       * Mouse move handler
-       */
-
     	}, {
     		key: '_onTouchMove',
     		value: function _onTouchMove(e) {
@@ -401,12 +436,14 @@
     			var _this2 = this;
 
     			raf(function () {
+    				var previousDragState = _this2._isDragging;
     				_this2._isDragging = true;
     				_this2.calculationLoop(false);
+
     				raf(function () {
-    					return _this2.renderLoop(false);
+    					_this2.renderLoop(false);
+    					_this2._isDragging = previousDragState;
     				});
-    				_this2._isDragging = false;
     			});
     		}
 
@@ -610,11 +647,6 @@
     			this.ctx.moveTo(point1.x, point1.y);
     			this.ctx.lineTo(point2.x, point2.y);
     			this.ctx.stroke();
-    		}
-    	}, {
-    		key: 'onPatternComplete',
-    		set: function set(cb) {
-    			this._patternCompleteHandler = cb;
     		}
     	}]);
 
