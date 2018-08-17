@@ -729,8 +729,6 @@
     		grid: [3, 3]
     	});
 
-    	window.lock = lock;
-
     	// Right L, Diagonal L
     	lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==').onSuccess(function () {
     		return lock.setTheme('success');
@@ -739,17 +737,15 @@
     	});
 
     	var $password = document.querySelector('.js-password');
+
     	lock.on('start', function () {
     		return lock.setTheme('default');
     	});
     	lock.on('complete', function () {
     		var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-    		    nodes = _ref.nodes,
-    		    hash = _ref.hash,
-    		    password = _ref.password;
+    		    hash = _ref.hash;
 
-    		$password.value = hash;
-    		// lock.setTheme('success');
+    		return $password.value = hash;
     	});
     });
 
