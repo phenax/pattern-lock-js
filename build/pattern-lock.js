@@ -544,8 +544,7 @@
     					this.drawNode(lastNode.row * this.interval.x, lastNode.col * this.interval.y, accent, primary, this.THEME.dimens.node_ring + 6);
 
     					// Draw a line between last node to the current drag position
-    					this.joinNodes(lastNode.row * this.interval.x, lastNode.col * this.interval.y, this.coordinates.x, this.coordinates.y, true // IsCoordinates instead of row and column position
-    					);
+    					this.joinNodes(lastNode.row * this.interval.x, lastNode.col * this.interval.y, this.coordinates.x, this.coordinates.y, true);
     				}
     			}
 
@@ -625,29 +624,14 @@
     				if (e !== breakException) throw e;
     			}
     		}
-
-    		/**
-       * Draw a node
-       *
-       * @param  {Number} x
-       * @param  {Number} y
-       * @param  {String} centerColor
-       * @param  {String} borderColor
-       * @param  {Number} size
-       */
-
     	}, {
     		key: 'drawNode',
-    		value: function drawNode(x, y) {
-    			var centerColor = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : this.THEME.colors.primary;
-    			var borderColor = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : this.THEME.colors.primary;
-    			var size = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : this.THEME.dimens.node_ring;
-
+    		value: function drawNode(x, y, centerColor, borderColor, size) {
 
     			// Config
-    			this.ctx.lineWidth = size;
-    			this.ctx.fillStyle = centerColor;
-    			this.ctx.strokeStyle = borderColor;
+    			this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
+    			this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
+    			this.ctx.strokeStyle = borderColor || this.THEME.colors.primary;
 
     			// Draw inner circle
     			this.ctx.beginPath();
@@ -659,17 +643,6 @@
     			this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI * 2);
     			this.ctx.stroke();
     		}
-
-    		/**
-       * Join two nodes with a line
-       *
-       * @param  {Number}  row1
-       * @param  {Number}  col1
-       * @param  {Number}  row2
-       * @param  {Number}  col2
-       * @param  {Boolean} isCoordinates  If true, will calculate as pixels
-       */
-
     	}, {
     		key: 'joinNodes',
     		value: function joinNodes(row1, col1, row2, col2) {

@@ -33,16 +33,17 @@ const defaultConfig = {
 };
 
 
-class Matcher {
-	constructor(...values) { this.values = values; }
-	check(myValue) {
-		if(this.values.indexOf(myValue) !== -1)
-			return this._onSuccess();
-		return this._onFailure();
-	}
-	onSuccess(fn) { this._onSuccess = fn; return this; }
-	onFailure(fn) { this._onFailure = fn; return this; }
-}
+const Matcher = (...values) => {
+	let _onSuccess = () => {};
+	let _onFailure = () => {};
+	const matcher = {
+		check: val => (values.indexOf(val) !== -1) ? _onSuccess() : _onFailure(),
+		onSuccess(fn) { _onSuccess = fn; return matcher; }
+		onFailure(fn) { _onFailure = fn; return matcher; }
+	};
+	return matcher;
+};
+
 
 export class PatternLock {
 
@@ -382,7 +383,7 @@ export class PatternLock {
 				this.joinNodes(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
 					this.coordinates.x, this.coordinates.y,
-					true  // IsCoordinates instead of row and column position
+					true
 				);
 			}
 		}
@@ -463,22 +464,12 @@ export class PatternLock {
 		}
 	}
 
-
-	/**
-	 * Draw a node
-	 *
-	 * @param  {Number} x
-	 * @param  {Number} y
-	 * @param  {String} centerColor
-	 * @param  {String} borderColor
-	 * @param  {Number} size
-	 */
-	drawNode(x, y, centerColor = this.THEME.colors.primary, borderColor = this.THEME.colors.primary, size = this.THEME.dimens.node_ring) {
+	drawNode(x, y, centerColor, borderColor, size) {
 
 		// Config
-		this.ctx.lineWidth = size;
-		this.ctx.fillStyle = centerColor;
-		this.ctx.strokeStyle = borderColor;
+		this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
+		this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
+		this.ctx.strokeStyle = borderColor || this.THEME.colors.primary;
 
 		// Draw inner circle
 		this.ctx.beginPath();
@@ -491,16 +482,6 @@ export class PatternLock {
 		this.ctx.stroke();
 	}
 
-
-	/**
-	 * Join two nodes with a line
-	 *
-	 * @param  {Number}  row1
-	 * @param  {Number}  col1
-	 * @param  {Number}  row2
-	 * @param  {Number}  col2
-	 * @param  {Boolean} isCoordinates  If true, will calculate as pixels
-	 */
 	joinNodes(row1, col1, row2, col2, isCoordinates = false) {
 
 		let factor = this.interval;
@@ -528,7 +509,7 @@ export class PatternLock {
 
 
 	matchHash(...hashes) {
-		const matcher = new Matcher(...hashes);
+		const matcher = Matcher(...hashes);
 		this.on(events.PATTERN_COMPLETE, ({ hash }) => matcher.check(hash));
 		return matcher;
 	}
