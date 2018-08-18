@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.raf = exports.registerEvent = exports.unregisterEvent = void 0;
+exports.getPixelRatio = exports.raf = exports.registerEvent = exports.unregisterEvent = void 0;
 
 var unregisterEvent = function unregisterEvent(target, event, fn) {
   return event.split(' ').forEach(function (ev) {
@@ -29,3 +29,11 @@ var raf = requestAnimationFrame || function (fn) {
 };
 
 exports.raf = raf;
+
+var getPixelRatio = function getPixelRatio(ctx) {
+  var devicePixelRatio = window.devicePixelRatio || 1;
+  var backingStorePixelRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.msBackingStorePixelRatio || ctx.oBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
+  return devicePixelRatio / backingStorePixelRatio;
+};
+
+exports.getPixelRatio = getPixelRatio;
