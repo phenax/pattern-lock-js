@@ -8,3 +8,15 @@ export const registerEvent = (target, event, fn) => {
 };
 
 export const raf = requestAnimationFrame || (fn => setTimeout(fn, 16));
+
+export const getPixelRatio = ctx => {
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    const backingStorePixelRatio =
+        ctx.webkitBackingStorePixelRatio ||
+        ctx.mozBackingStorePixelRatio ||
+        ctx.msBackingStorePixelRatio ||
+        ctx.oBackingStorePixelRatio ||
+        ctx.backingStorePixelRatio || 1;
+
+    return devicePixelRatio / backingStorePixelRatio;
+};

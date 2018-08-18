@@ -89,19 +89,27 @@ function () {
     if (!config.width) throw createInvalidOptionError('width');
     if (!config.height) throw createInvalidOptionError('height');
     config = _objectSpread({}, defaultConfig, config);
-    this.$canvas = config.$canvas;
     this.dimens = {
       width: config.width,
       height: config.height
     };
-    this.$canvas.width = this.dimens.width;
-    this.$canvas.height = this.dimens.height; // Canvas context
-
-    this.ctx = this.$canvas.getContext('2d');
+    this.setUpCanvas(config);
     this.initialize(config);
   }
 
   _createClass(PatternLock, [{
+    key: "setUpCanvas",
+    value: function setUpCanvas(config) {
+      this.$canvas = config.$canvas;
+      this.ctx = this.$canvas.getContext('2d');
+      var ratio = (0, _dom.getPixelRatio)(this.ctx);
+      this.$canvas.width = this.dimens.width * ratio;
+      this.$canvas.height = this.dimens.height * ratio;
+      this.$canvas.style.width = this.dimens.width + 'px';
+      this.$canvas.style.height = this.dimens.height + 'px';
+      this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+  }, {
     key: "initialize",
     value: function initialize(config) {
       (0, _libs.bindContext)(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
@@ -153,9 +161,7 @@ function () {
 
       (0, _dom.raf)(this.renderLoop);
       (0, _dom.raf)(this.calculationLoop);
-    } // destroy() {
-    // 	this._subscriptions.map(fn => fn());
-    // }
+    } // destroy = () => this._subscriptions.map(fn => fn());
 
   }, {
     key: "on",

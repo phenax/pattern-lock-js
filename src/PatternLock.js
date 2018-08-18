@@ -1,6 +1,6 @@
 import EventBus from './utils/events';
 import { patternToWords, hashCode, bindContext, gcd } from './utils/libs';
-import { registerEvent, raf } from './utils/dom';
+import { registerEvent, getPixelRatio, raf } from './utils/dom';
 import Matcher from './utils/Matcher';
 import THEMES from './utils/themes';
 
@@ -29,17 +29,23 @@ export class PatternLock {
 		if(!config.height) throw createInvalidOptionError('height');
 
 		config = { ...defaultConfig, ...config };
-
-		this.$canvas = config.$canvas;
 		this.dimens = { width: config.width, height: config.height };
 
-		this.$canvas.width = this.dimens.width;
-		this.$canvas.height = this.dimens.height;
+		this.setUpCanvas(config);
+		this.initialize(config);
+	}
 
-		// Canvas context
+	setUpCanvas(config) {
+		this.$canvas = config.$canvas;
 		this.ctx = this.$canvas.getContext('2d');
 
-		this.initialize(config);
+		const ratio = getPixelRatio(this.ctx);
+
+		this.$canvas.width = this.dimens.width * ratio;
+		this.$canvas.height = this.dimens.height * ratio;
+		this.$canvas.style.width = this.dimens.width + 'px';
+		this.$canvas.style.height = this.dimens.height + 'px';
+		this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 	}
 
 	initialize(config) {
@@ -56,11 +62,9 @@ export class PatternLock {
 		this.eventBus = EventBus();
 
 		this.setInitialState();
-
 		this._onResize();
 		this.setTheme(config.theme);
 		this.generateGrid(...config.grid);
-
 		this.attachEventHandlers();
 	}
 
@@ -102,9 +106,7 @@ export class PatternLock {
 		raf(this.calculationLoop);
 	}
 
-	// destroy() {
-	// 	this._subscriptions.map(fn => fn());
-	// }
+	// destroy = () => this._subscriptions.map(fn => fn());
 
 	on(event, fn) {
 		const subscription = this.eventBus.on(event, fn);
