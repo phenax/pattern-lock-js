@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _default = function _default() {
+var EventBus = function EventBus() {
   var eventMap = {};
 
   var off = function off(eventName, cb) {
@@ -38,4 +38,5 @@ var _default = function _default() {
   };
 };
 
+var _default = EventBus;
 exports.default = _default;

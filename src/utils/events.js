@@ -1,5 +1,5 @@
 
-export default () => {
+const EventBus = () => {
     const eventMap = {};
 
     const off = (eventName, cb) => {
@@ -21,3 +21,5 @@ export default () => {
 
     return { on, off, emit };
 };
+
+export default EventBus;

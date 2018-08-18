@@ -65,6 +65,26 @@ function () {
 
     _classCallCheck(this, PatternLock);
 
+    _defineProperty(this, "destroy", function () {
+      return _this._subscriptions.map(function (fn) {
+        return fn();
+      });
+    });
+
+    _defineProperty(this, "emit", function () {
+      var _this$eventBus;
+
+      return (_this$eventBus = _this.eventBus).emit.apply(_this$eventBus, arguments);
+    });
+
+    _defineProperty(this, "onStart", function (fn) {
+      return _this.on(events.PATTERN_START, fn);
+    });
+
+    _defineProperty(this, "onComplete", function (fn) {
+      return _this.on(events.PATTERN_COMPLETE, fn);
+    });
+
     _defineProperty(this, "_match", function (type) {
       return function () {
         for (var _len = arguments.length, values = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -122,12 +142,19 @@ function () {
       this.setTheme(config.theme);
       this.generateGrid.apply(this, _toConsumableArray(config.grid));
       this.attachEventHandlers();
+    }
+  }, {
+    key: "setInitialState",
+    value: function setInitialState() {
+      this.coordinates = null;
+      this.selectedNodes = [];
+      this.lastSelectedNode = null;
     } // setTheme :: (Theme, Boolean) -> Theme
 
   }, {
     key: "setTheme",
     value: function setTheme(theme) {
-      var forceUpdate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
       var defaultTheme = _themes.default.default;
 
       if (typeof theme === 'string') {
@@ -138,7 +165,7 @@ function () {
       this.THEME = this.THEME || {};
       this.THEME.colors = _objectSpread({}, defaultTheme.colors, theme.colors);
       this.THEME.dimens = _objectSpread({}, defaultTheme.dimens, theme.dimens);
-      forceUpdate && this.forceUpdate();
+      rerender && this.forceRender();
       return this.THEME;
     }
     /**
@@ -161,8 +188,7 @@ function () {
 
       (0, _dom.raf)(this.renderLoop);
       (0, _dom.raf)(this.calculationLoop);
-    } // destroy = () => this._subscriptions.map(fn => fn());
-
+    }
   }, {
     key: "on",
     value: function on(event, fn) {
@@ -173,47 +199,13 @@ function () {
       return subscription;
     }
   }, {
-    key: "emit",
-    value: function emit(event) {
-      var _this$eventBus;
-
-      for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-        args[_key2 - 1] = arguments[_key2];
-      }
-
-      return (_this$eventBus = this.eventBus).emit.apply(_this$eventBus, [event].concat(args));
-    }
-  }, {
-    key: "onStart",
-    value: function onStart(fn) {
-      this.on(events.PATTERN_START, fn);
-      return this;
-    }
-  }, {
-    key: "onComplete",
-    value: function onComplete(fn) {
-      this.on(events.PATTERN_COMPLETE, fn);
-      return this;
-    }
-    /**
-     * Set the initial state
-     */
-
-  }, {
-    key: "setInitialState",
-    value: function setInitialState() {
-      this.coordinates = null;
-      this.selectedNodes = [];
-      this.lastSelectedNode = null;
-    }
-  }, {
-    key: "onPatternStart",
-    value: function onPatternStart() {
+    key: "_emitPatternStart",
+    value: function _emitPatternStart() {
       this.emit(events.PATTERN_START, {});
     }
   }, {
-    key: "onPatternComplete",
-    value: function onPatternComplete() {
+    key: "_emitPatternComplete",
+    value: function _emitPatternComplete() {
       var nodes = this.selectedNodes.slice(0);
       var password = (0, _libs.patternToWords)(nodes);
       var hash = (0, _libs.hashCode)(password);
@@ -233,9 +225,10 @@ function () {
     value: function _onTouchStart(e) {
       if (e) e.preventDefault();
       this.setInitialState();
-      this.calculationLoop(false);
-      this.renderLoop(false);
-      this.onPatternStart();
+      this.forceRender();
+
+      this._emitPatternStart();
+
       this._isDragging = true;
     }
   }, {
@@ -244,7 +237,9 @@ function () {
       if (e) e.preventDefault();
       this.coordinates = null;
       this.renderLoop(false);
-      this.onPatternComplete();
+
+      this._emitPatternComplete();
+
       this._isDragging = false;
     }
   }, {
@@ -398,8 +393,8 @@ function () {
       }
     }
   }, {
-    key: "forceUpdate",
-    value: function forceUpdate() {
+    key: "forceRender",
+    value: function forceRender() {
       var _this4 = this;
 
       (0, _dom.raf)(function () {
@@ -583,8 +578,8 @@ function () {
 exports.PatternLock = PatternLock;
 
 var _default = function _default() {
-  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-    args[_key3] = arguments[_key3];
+  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    args[_key2] = arguments[_key2];
   }
 
   return _construct(PatternLock, args);

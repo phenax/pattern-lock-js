@@ -68,9 +68,15 @@ export class PatternLock {
 		this.attachEventHandlers();
 	}
 
+	setInitialState() {
+		this.coordinates = null;
+		this.selectedNodes = [];
+		this.lastSelectedNode = null;
+	}
+
 
 	// setTheme :: (Theme, Boolean) -> Theme
-	setTheme(theme, forceUpdate = true) {
+	setTheme(theme, rerender = true) {
 
 		const defaultTheme = THEMES.default;
 
@@ -84,7 +90,7 @@ export class PatternLock {
 		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
 		this.THEME.dimens = { ...defaultTheme.dimens, ...theme.dimens };
 
-		forceUpdate && this.forceUpdate();
+		rerender && this.forceRender();
 
 		return this.THEME;
 	}
@@ -106,32 +112,23 @@ export class PatternLock {
 		raf(this.calculationLoop);
 	}
 
-	// destroy = () => this._subscriptions.map(fn => fn());
+	destroy = () => this._subscriptions.map(fn => fn());
 
 	on(event, fn) {
 		const subscription = this.eventBus.on(event, fn);
 		this._subscriptions.push(subscription);
 		return subscription;
 	}
-	emit(event, ...args) { return this.eventBus.emit(event, ...args); }
-	onStart(fn) { this.on(events.PATTERN_START, fn); return this; }
-	onComplete(fn) { this.on(events.PATTERN_COMPLETE, fn); return this; }
-
-	/**
-	 * Set the initial state
-	 */
-	setInitialState() {
-		this.coordinates = null;
-		this.selectedNodes = [];
-		this.lastSelectedNode = null;
-	}
+	emit = (...args) => this.eventBus.emit(...args);
+	onStart = fn => this.on(events.PATTERN_START, fn);
+	onComplete = fn => this.on(events.PATTERN_COMPLETE, fn);
 
 
 
-	onPatternStart() {
+	_emitPatternStart() {
 		this.emit(events.PATTERN_START, {});
 	}
-	onPatternComplete() {
+	_emitPatternComplete() {
 		const nodes = this.selectedNodes.slice(0);
 		const password = patternToWords(nodes);
 		const hash = hashCode(password);
@@ -146,11 +143,9 @@ export class PatternLock {
 		if (e) e.preventDefault();
 		
 		this.setInitialState();
-		this.calculationLoop(false);
-		this.renderLoop(false);
-
+		this.forceRender();
 		
-		this.onPatternStart();
+		this._emitPatternStart();
 		this._isDragging = true;
 	}
 
@@ -160,7 +155,7 @@ export class PatternLock {
 		this.coordinates = null;
 		this.renderLoop(false);
 
-		this.onPatternComplete();
+		this._emitPatternComplete();
 		this._isDragging = false;
 	}
 
@@ -301,7 +296,7 @@ export class PatternLock {
 		}
 	}
 
-	forceUpdate() {
+	forceRender() {
 		raf(() => {
 			const previousDragState = this._isDragging;
 			this._isDragging = true;
