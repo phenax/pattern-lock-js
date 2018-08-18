@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// Right L, Diagonal L
-	lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==')
+	lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==')
 		.onSuccess(() => lock.setTheme('success'))
 		.onFailure(() => lock.setTheme('failure'));
 

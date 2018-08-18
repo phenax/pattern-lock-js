@@ -1,4 +1,4 @@
-import EventBus from './utils/events';
+import EventBus from './utils/EventBus';
 import { patternToWords, hashCode, bindContext, gcd } from './utils/libs';
 import { registerEvent, getPixelRatio, raf } from './utils/dom';
 import Matcher from './utils/Matcher';
@@ -141,10 +141,10 @@ export class PatternLock {
 
 	_emitPatternStart = () => this.emit(events.PATTERN_START, {});
 	_emitPatternComplete() {
-		const nodes = this.selectedNodes.slice(0);
+		const nodes = this.selectedNodes;
 		const password = patternToWords(nodes);
 		const hash = hashCode(password);
-		this.emit(events.PATTERN_COMPLETE, { nodes, hash, password });
+		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
 	}
 
 	_onResize() {
@@ -473,7 +473,6 @@ export class PatternLock {
 		return matcher;
 	};
 	matchHash = this._match('hash');
-	matchPassword = this._match('password');
 }
 
 export default (...args) => new PatternLock(...args);

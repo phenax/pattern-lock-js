@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
     grid: [3, 3]
   }); // Right L, Diagonal L
 
-  lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==').onSuccess(function () {
+  lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==').onSuccess(function () {
     return lock.setTheme('success');
   }).onFailure(function () {
     return lock.setTheme('failure');

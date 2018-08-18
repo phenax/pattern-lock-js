@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = exports.PatternLock = void 0;
 
-var _events = _interopRequireDefault(require("./utils/events"));
+var _EventBus = _interopRequireDefault(require("./utils/EventBus"));
 
 var _libs = require("./utils/libs");
 
@@ -114,8 +114,6 @@ function () {
 
     _defineProperty(this, "matchHash", this._match('hash'));
 
-    _defineProperty(this, "matchPassword", this._match('password'));
-
     if (!config.$canvas) throw createInvalidOptionError('$canvas');
     if (!config.width) throw createInvalidOptionError('width');
     if (!config.height) throw createInvalidOptionError('height');
@@ -145,7 +143,7 @@ function () {
     value: function initialize(config) {
       (0, _libs.bindContext)(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
       this._subscriptions = [];
-      this.eventBus = (0, _events.default)();
+      this.eventBus = (0, _EventBus.default)();
       this.setInitialState();
 
       this._onResize();
@@ -230,13 +228,12 @@ function () {
   }, {
     key: "_emitPatternComplete",
     value: function _emitPatternComplete() {
-      var nodes = this.selectedNodes.slice(0);
+      var nodes = this.selectedNodes;
       var password = (0, _libs.patternToWords)(nodes);
       var hash = (0, _libs.hashCode)(password);
       this.emit(events.PATTERN_COMPLETE, {
         nodes: nodes,
-        hash: hash,
-        password: password
+        hash: hash
       });
     }
   }, {

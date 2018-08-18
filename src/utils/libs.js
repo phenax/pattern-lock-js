@@ -1,9 +1,7 @@
-import wordMap from './word-map.js';
 
 // patternToWords :: Array<Node> -> String
-export const patternToWords = nodes =>
-	nodes.reduce((string = '', node) =>
-		wordMap[node.row - 1][node.col - 1] + string);
+export const patternToWords = nodes => JSON.stringify(nodes);
+//	nodes.reduce((string = '', node) => wordMap[node.row - 1][node.col - 1] + string);
 
 // hashCode :: String -> String
 export const hashCode = str => {

@@ -5,18 +5,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.gcd = exports.bindContext = exports.hashCode = exports.patternToWords = void 0;
 
-var _wordMap = _interopRequireDefault(require("./word-map.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 // patternToWords :: Array<Node> -> String
 var patternToWords = function patternToWords(nodes) {
-  return nodes.reduce(function () {
-    var string = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    var node = arguments.length > 1 ? arguments[1] : undefined;
-    return _wordMap.default[node.row - 1][node.col - 1] + string;
-  });
-}; // hashCode :: String -> String
+  return JSON.stringify(nodes);
+}; //	nodes.reduce((string = '', node) => wordMap[node.row - 1][node.col - 1] + string);
+// hashCode :: String -> String
 
 
 exports.patternToWords = patternToWords;
