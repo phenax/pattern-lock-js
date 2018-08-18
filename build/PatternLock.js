@@ -90,10 +90,136 @@ function () {
       return _this.emit(events.PATTERN_START, {});
     });
 
+    _defineProperty(this, "_onResize", function () {
+      _this.bounds = _this.$canvas.getBoundingClientRect();
+    });
+
+    _defineProperty(this, "_onTouchStart", function (e) {
+      if (e) e.preventDefault();
+
+      _this.setInitialState();
+
+      _this.forceRender();
+
+      _this._emitPatternStart();
+
+      _this._isDragging = true;
+    });
+
+    _defineProperty(this, "_onTouchStop", function (e) {
+      if (e) e.preventDefault();
+      _this.coordinates = null;
+
+      _this.renderLoop(false);
+
+      _this._emitPatternComplete();
+
+      _this._isDragging = false;
+    });
+
+    _defineProperty(this, "_onTouchMove", function (e) {
+      if (e) e.preventDefault();
+
+      if (_this._isDragging) {
+        var mousePoint = {
+          x: e.pageX || e.touches[0].pageX,
+          y: e.pageY || e.touches[0].pageY
+        };
+        mousePoint.x -= _this.bounds.left;
+        mousePoint.y -= _this.bounds.top;
+
+        if (mousePoint.x <= _this.dimens.width && mousePoint.x > 0 && mousePoint.y <= _this.dimens.height && mousePoint.y > 0) {
+          _this.coordinates = mousePoint;
+        } else {
+          _this._onTouchStop();
+        }
+      }
+    });
+
     _defineProperty(this, "isSelected", function (targetNode) {
       return !!_this.selectedNodes.filter(function (node) {
         return node.row === targetNode.row && node.col === targetNode.col;
       }).length;
+    });
+
+    _defineProperty(this, "calculationLoop", function () {
+      var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+      if (_this._isDragging && _this.coordinates) {
+        _this.forEachNode(function (x, y) {
+          var dist = Math.sqrt(Math.pow(_this.coordinates.x - x, 2) + Math.pow(_this.coordinates.y - y, 2));
+
+          if (dist < _this.THEME.dimens.node_radius + 1) {
+            var row = x / _this.interval.x;
+            var col = y / _this.interval.y;
+            var currentNode = {
+              row: row,
+              col: col
+            };
+
+            if (!_this.isSelected(currentNode)) {
+              _this.addIntermediaryNodes(currentNode);
+
+              _this.selectedNodes.push(currentNode);
+
+              return false;
+            }
+          }
+        });
+      }
+
+      if (runLoop) {
+        (0, _dom.raf)(_this.calculationLoop);
+      }
+    });
+
+    _defineProperty(this, "renderLoop", function () {
+      var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+      if (_this._isDragging) {
+        var _this$THEME$colors = _this.THEME.colors,
+            accent = _this$THEME$colors.accent,
+            primary = _this$THEME$colors.primary; // Clear the canvas(Redundant)
+
+        _this.ctx.clearRect(0, 0, _this.dimens.width, _this.dimens.height);
+
+        _this.renderGrid(); // Plot all the selected nodes
+
+
+        var lastNode = _this.selectedNodes.reduce(function (prevNode, node) {
+          if (prevNode) {
+            var point1 = {
+              x: node.row * _this.interval.x,
+              y: node.col * _this.interval.y
+            };
+            var point2 = {
+              x: prevNode.row * _this.interval.x,
+              y: prevNode.col * _this.interval.y
+            }; // Make the two selected nodes bigger
+
+            _this.drawNode(point1.x, point1.y, accent, primary, _this.THEME.dimens.node_ring + 3);
+
+            _this.drawNode(point2.x, point2.y, accent, primary, _this.THEME.dimens.node_ring + 3); // Join the nodes
+
+
+            _this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
+          }
+
+          return node;
+        }, null);
+
+        if (lastNode && _this.coordinates) {
+          // Draw the last node
+          _this.drawNode(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, accent, primary, _this.THEME.dimens.node_ring + 6); // Draw a line between last node to the current drag position
+
+
+          _this.joinNodes(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, _this.coordinates.x, _this.coordinates.y, true);
+        }
+      }
+
+      if (runLoop) {
+        (0, _dom.raf)(_this.renderLoop);
+      }
     });
 
     _defineProperty(this, "_match", function (type) {
@@ -141,7 +267,6 @@ function () {
   }, {
     key: "initialize",
     value: function initialize(config) {
-      (0, _libs.bindContext)(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
       this._subscriptions = [];
       this.eventBus = (0, _EventBus.default)();
       this.setInitialState();
@@ -237,55 +362,6 @@ function () {
       });
     }
   }, {
-    key: "_onResize",
-    value: function _onResize() {
-      this.bounds = this.$canvas.getBoundingClientRect();
-    }
-  }, {
-    key: "_onTouchStart",
-    value: function _onTouchStart(e) {
-      if (e) e.preventDefault();
-      this.setInitialState();
-      this.forceRender();
-
-      this._emitPatternStart();
-
-      this._isDragging = true;
-    }
-  }, {
-    key: "_onTouchStop",
-    value: function _onTouchStop(e) {
-      if (e) e.preventDefault();
-      this.coordinates = null;
-      this.renderLoop(false);
-
-      this._emitPatternComplete();
-
-      this._isDragging = false;
-    }
-  }, {
-    key: "_onTouchMove",
-    value: function _onTouchMove(e) {
-      if (e) e.preventDefault();
-
-      if (this._isDragging) {
-        var mousePoint = {
-          x: e.pageX || e.touches[0].pageX,
-          y: e.pageY || e.touches[0].pageY
-        };
-        mousePoint.x -= this.bounds.left;
-        mousePoint.y -= this.bounds.top;
-
-        if (mousePoint.x <= this.dimens.width && mousePoint.x > 0 && mousePoint.y <= this.dimens.height && mousePoint.y > 0) {
-          this.coordinates = mousePoint;
-        } else {
-          this._onTouchStop();
-        }
-      }
-    } // Check if the given node is already selected
-    // isSelected :: Node -> Boolean
-
-  }, {
     key: "addIntermediaryNodes",
     // Adds intermediary nodes between lastSelectedNode and the targetNode
     // addIntermediaryNodes :: Node -> ()
@@ -355,98 +431,14 @@ function () {
     } // Calculate the state of the lock for the next frame
 
   }, {
-    key: "calculationLoop",
-    value: function calculationLoop() {
-      var _this4 = this;
+    key: "generateGrid",
 
-      var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-
-      if (this._isDragging && this.coordinates) {
-        this.forEachNode(function (x, y) {
-          var dist = Math.sqrt(Math.pow(_this4.coordinates.x - x, 2) + Math.pow(_this4.coordinates.y - y, 2));
-
-          if (dist < _this4.THEME.dimens.node_radius + 1) {
-            var row = x / _this4.interval.x;
-            var col = y / _this4.interval.y;
-            var currentNode = {
-              row: row,
-              col: col
-            };
-
-            if (!_this4.isSelected(currentNode)) {
-              _this4.addIntermediaryNodes(currentNode);
-
-              _this4.selectedNodes.push(currentNode);
-
-              return false;
-            }
-          }
-        });
-      }
-
-      if (runLoop) {
-        (0, _dom.raf)(this.calculationLoop);
-      }
-    } // Render the state of the lock
-
-  }, {
-    key: "renderLoop",
-    value: function renderLoop() {
-      var _this5 = this;
-
-      var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-
-      if (this._isDragging) {
-        var _this$THEME$colors = this.THEME.colors,
-            accent = _this$THEME$colors.accent,
-            primary = _this$THEME$colors.primary; // Clear the canvas(Redundant)
-
-        this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
-        this.renderGrid(); // Plot all the selected nodes
-
-        var lastNode = this.selectedNodes.reduce(function (prevNode, node) {
-          if (prevNode) {
-            var point1 = {
-              x: node.row * _this5.interval.x,
-              y: node.col * _this5.interval.y
-            };
-            var point2 = {
-              x: prevNode.row * _this5.interval.x,
-              y: prevNode.col * _this5.interval.y
-            }; // Make the two selected nodes bigger
-
-            _this5.drawNode(point1.x, point1.y, accent, primary, _this5.THEME.dimens.node_ring + 3);
-
-            _this5.drawNode(point2.x, point2.y, accent, primary, _this5.THEME.dimens.node_ring + 3); // Join the nodes
-
-
-            _this5.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
-          }
-
-          return node;
-        }, null);
-
-        if (lastNode && this.coordinates) {
-          // Draw the last node
-          this.drawNode(lastNode.row * this.interval.x, lastNode.col * this.interval.y, accent, primary, this.THEME.dimens.node_ring + 6); // Draw a line between last node to the current drag position
-
-          this.joinNodes(lastNode.row * this.interval.x, lastNode.col * this.interval.y, this.coordinates.x, this.coordinates.y, true);
-        }
-      }
-
-      if (runLoop) {
-        (0, _dom.raf)(this.renderLoop);
-      }
-    }
     /**
      * Generate the grid of nodes
      *
      * @param  {Number} rows  The number of horizontal nodes
      * @param  {Number} cols  The number of vertical nodes
      */
-
-  }, {
-    key: "generateGrid",
     value: function generateGrid(rows, cols) {
       this.rows = rows;
       this.cols = cols;
@@ -472,7 +464,7 @@ function () {
   }, {
     key: "forEachNode",
     value: function forEachNode(callback) {
-      var _this6 = this;
+      var _this4 = this;
 
       var xGrid = Array(this.rows).fill(this.interval.x);
       var yGrid = Array(this.cols).fill(this.interval.y);
@@ -484,7 +476,7 @@ function () {
             // If the callback returns false, break out of the loop
             if (callback(x, y) === false) throw breakException;
             return x + dx;
-          }, _this6.interval.x);
+          }, _this4.interval.x);
           return y + dy;
         }, this.interval.y);
       } catch (e) {

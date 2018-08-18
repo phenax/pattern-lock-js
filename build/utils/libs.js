@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.gcd = exports.bindContext = exports.hashCode = exports.patternToWords = void 0;
+exports.gcd = exports.hashCode = exports.patternToWords = void 0;
 
 // patternToWords :: Array<Node> -> String
 var patternToWords = function patternToWords(nodes) {
@@ -23,19 +23,10 @@ var hashCode = function hashCode(str) {
     return a & a;
   });
   return btoa(hash + '');
-}; // bindContext :: (Object, Array<Function>) -> ()
-
-
-exports.hashCode = hashCode;
-
-var bindContext = function bindContext(ctx, fns) {
-  return fns.forEach(function (fnName) {
-    return ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx);
-  });
 }; // gcd :: (Number, Number) -> Number
 
 
-exports.bindContext = bindContext;
+exports.hashCode = hashCode;
 
 var gcd = function gcd(x, y) {
   while (y !== 0) {

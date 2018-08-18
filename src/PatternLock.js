@@ -1,5 +1,5 @@
 import EventBus from './utils/EventBus';
-import { patternToWords, hashCode, bindContext, gcd } from './utils/libs';
+import { patternToWords, hashCode, gcd } from './utils/libs';
 import { registerEvent, getPixelRatio, raf } from './utils/dom';
 import Matcher from './utils/Matcher';
 import THEMES from './utils/themes';
@@ -50,15 +50,6 @@ export class PatternLock {
 	}
 
 	initialize(config) {
-		bindContext(this, [
-			'_onTouchStart',
-			'_onTouchStop',
-			'_onTouchMove',
-			'_onResize',
-			'renderLoop',
-			'calculationLoop',
-		]);
-
 		this._subscriptions = [];
 		this.eventBus = EventBus();
 
@@ -147,11 +138,11 @@ export class PatternLock {
 		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
 	}
 
-	_onResize() {
+	_onResize = () => {
 		this.bounds = this.$canvas.getBoundingClientRect();
 	}
 
-	_onTouchStart(e) {
+	_onTouchStart = e => {
 		if (e) e.preventDefault();
 
 		this.setInitialState();
@@ -161,7 +152,7 @@ export class PatternLock {
 		this._isDragging = true;
 	}
 
-	_onTouchStop(e) {
+	_onTouchStop = e => {
 		if (e) e.preventDefault();
 
 		this.coordinates = null;
@@ -171,7 +162,7 @@ export class PatternLock {
 		this._isDragging = false;
 	}
 
-	_onTouchMove(e) {
+	_onTouchMove = e => {
 		if (e) e.preventDefault();
 
 		if (this._isDragging) {
@@ -263,7 +254,7 @@ export class PatternLock {
 
 
 	// Calculate the state of the lock for the next frame
-	calculationLoop(runLoop = true) {
+	calculationLoop = (runLoop = true) => {
 
 		if (this._isDragging && this.coordinates) {
 
@@ -296,7 +287,7 @@ export class PatternLock {
 	}
 
 	// Render the state of the lock
-	renderLoop(runLoop = true) {
+	renderLoop = (runLoop = true) => {
 
 		if (this._isDragging) {
 			const { accent, primary } = this.THEME.colors;

@@ -15,10 +15,6 @@ export const hashCode = str => {
 	return btoa(hash + '');
 };
 
-// bindContext :: (Object, Array<Function>) -> ()
-export const bindContext = (ctx, fns) =>
-	fns.forEach(fnName => ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx));
-
 // gcd :: (Number, Number) -> Number
 export const gcd = (x, y) => {
 	while (y !== 0) {
