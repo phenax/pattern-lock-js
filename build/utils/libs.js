@@ -38,7 +38,7 @@ var bindContext = function bindContext(ctx, fns) {
 exports.bindContext = bindContext;
 
 var gcd = function gcd(x, y) {
-  while (y != 0) {
+  while (y !== 0) {
     var tmp = x;
     x = y;
     y = tmp % y;

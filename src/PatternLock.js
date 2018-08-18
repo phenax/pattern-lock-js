@@ -98,7 +98,7 @@ export class PatternLock {
 			theme = THEMES[theme];
 		}
 
-		if(!theme) throw createInvalidOptionError(`theme`);
+		if(!theme) throw createInvalidOptionError('theme');
 
 		this.THEME = this.THEME || {};
 		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
@@ -199,8 +199,8 @@ export class PatternLock {
 	// Check if the given node is already selected
 	// isSelected :: Node -> Boolean
 	isSelected = targetNode => !!this.selectedNodes.filter(node => (
-		node.row == targetNode.row &&
-		node.col == targetNode.col
+		node.row === targetNode.row &&
+		node.col === targetNode.col
 	)).length;
 
 	// Adds intermediary nodes between lastSelectedNode and the targetNode
@@ -227,7 +227,7 @@ export class PatternLock {
 	}
 
 	// Returns the step direction to select intermediary nodes
-	// INFO: Can be moved out of the class as it is independent of this
+	// INFO: Can be moved out of the class as it is independent of `this`
 	// getIntermediaryStepDirection :: (Node, Node) -> Node
 	getIntermediaryStepDirection(previousNode, nextNode) {
 		let finalStep = { row: 0, col: 0 };

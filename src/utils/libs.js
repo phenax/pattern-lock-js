@@ -21,10 +21,10 @@ export const bindContext = (ctx, fns) =>
 
 // gcd :: (Number, Number) -> Number
 export const gcd = (x, y) => {
-	while (y != 0) {
+	while (y !== 0) {
 		let tmp = x;
 		x = y;
 		y = tmp % y;
 	}
 	return x;
-}
+};

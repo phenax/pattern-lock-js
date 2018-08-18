@@ -92,7 +92,7 @@ function () {
 
     _defineProperty(this, "isSelected", function (targetNode) {
       return !!_this.selectedNodes.filter(function (node) {
-        return node.row == targetNode.row && node.col == targetNode.col;
+        return node.row === targetNode.row && node.col === targetNode.col;
       }).length;
     });
 
@@ -188,7 +188,7 @@ function () {
         theme = _themes.default[theme];
       }
 
-      if (!theme) throw createInvalidOptionError("theme");
+      if (!theme) throw createInvalidOptionError('theme');
       this.THEME = this.THEME || {};
       this.THEME.colors = _objectSpread({}, defaultTheme.colors, theme.colors);
       this.THEME.dimens = _objectSpread({}, defaultTheme.dimens, theme.dimens);
@@ -311,7 +311,7 @@ function () {
 
       this.lastSelectedNode = targetNode;
     } // Returns the step direction to select intermediary nodes
-    // INFO: Can be moved out of the class as it is independent of this
+    // INFO: Can be moved out of the class as it is independent of `this`
     // getIntermediaryStepDirection :: (Node, Node) -> Node
 
   }, {
