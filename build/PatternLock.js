@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = exports.PatternLock = void 0;
 
-var _nanoevents = _interopRequireDefault(require("./utils/nanoevents"));
+var _events = _interopRequireDefault(require("./utils/events"));
 
 var _libs = require("./utils/libs");
 
@@ -37,19 +37,30 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var bind = function bind(target, eventList, fn) {
-  return eventList.forEach(function (ev) {
-    return target.addEventListener(ev, fn);
-  });
-};
-
-var unbind = function unbind(target, eventList, fn) {
-  return eventList.forEach(function (ev) {
+var unregisterEvent = function unregisterEvent(target, event, fn) {
+  return event.split(' ').forEach(function (ev) {
     return target.removeEventListener(ev, fn);
   });
 };
 
-var raf = requestAnimationFrame;
+var registerEvent = function registerEvent(target, event, fn) {
+  event.split(' ').forEach(function (ev) {
+    return target.addEventListener(ev, fn);
+  });
+  return function () {
+    return unregisterEvent(target, event, fn);
+  };
+};
+
+var bindContext = function bindContext(ctx, fns) {
+  return fns.forEach(function (fnName) {
+    return ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx);
+  });
+};
+
+var raf = requestAnimationFrame || function (fn) {
+  return setTimeout(fn, 16);
+};
 
 var gcd = function gcd(x, y) {
   while (y != 0) {
@@ -120,18 +131,12 @@ function () {
   _createClass(PatternLock, [{
     key: "initialize",
     value: function initialize(config) {
-      this._onTouchStart = this._onTouchStart.bind(this);
-      this._onTouchStop = this._onTouchStop.bind(this);
-      this._onTouchMove = this._onTouchMove.bind(this);
-      this._onResize = this._onResize.bind(this);
-      this.renderLoop = this.renderLoop.bind(this);
-      this.calculationLoop = this.calculationLoop.bind(this);
-      this.initializeEventBus();
-      this.setTheme(config.theme);
+      bindContext(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
+      this.setInitialState();
 
       this._onResize();
 
-      this.setInitialState();
+      this.setTheme(config.theme);
       this.generateGrid.apply(this, _toConsumableArray(config.grid));
       this.attachEventHandlers();
     }
@@ -164,28 +169,31 @@ function () {
   }, {
     key: "attachEventHandlers",
     value: function attachEventHandlers() {
-      bind(this.$canvas, ['mousedown', 'touchstart'], this._onTouchStart);
-      bind(this.$canvas, ['mouseup', 'touchend'], this._onTouchStop);
-      bind(window, ['mousemove', 'touchmove'], this._onTouchMove);
-      bind(window, ['resize'], this._onResize); // Start frame loops
+      var _this = this;
+
+      var register = function register(t, ev, fn) {
+        return _this._subscriptions.push(registerEvent(t, ev, fn));
+      };
+
+      register(this.$canvas, 'mousedown touchstart', this._onTouchStart);
+      register(this.$canvas, 'mouseup touchend', this._onTouchStop);
+      register(window, 'mousemove touchmove', this._onTouchMove);
+      register(window, 'resize', this._onResize); // Start frame loops
 
       raf(this.renderLoop);
       raf(this.calculationLoop);
-    }
-  }, {
-    key: "initializeEventBus",
-    value: function initializeEventBus() {
-      this.eventBus = new _nanoevents.default();
-    }
+    } // destroy() {
+    // 	this._subscriptions.map(fn => fn());
+    // }
+
   }, {
     key: "on",
     value: function on(event, fn) {
-      return this.eventBus.on(event, fn);
-    }
-  }, {
-    key: "off",
-    value: function off(event, fn) {
-      return this.eventBus.off(event, fn);
+      var subscription = this.eventBus.on(event, fn);
+
+      this._subscriptions.push(subscription);
+
+      return subscription;
     }
   }, {
     key: "emit",
@@ -217,6 +225,8 @@ function () {
   }, {
     key: "setInitialState",
     value: function setInitialState() {
+      this._subscriptions = [];
+      this.eventBus = new _events.default();
       this.coordinates = null;
       this.selectedNodes = [];
       this.lastSelectedNode = null;
@@ -381,26 +391,26 @@ function () {
   }, {
     key: "calculationLoop",
     value: function calculationLoop() {
-      var _this = this;
+      var _this2 = this;
 
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       if (this._isDragging && this.coordinates) {
         this.forEachNode(function (x, y) {
-          var dist = Math.sqrt(Math.pow(_this.coordinates.x - x, 2) + Math.pow(_this.coordinates.y - y, 2));
+          var dist = Math.sqrt(Math.pow(_this2.coordinates.x - x, 2) + Math.pow(_this2.coordinates.y - y, 2));
 
-          if (dist < _this.THEME.dimens.node_radius + 1) {
-            var row = x / _this.interval.x;
-            var col = y / _this.interval.y;
+          if (dist < _this2.THEME.dimens.node_radius + 1) {
+            var row = x / _this2.interval.x;
+            var col = y / _this2.interval.y;
             var currentNode = {
               row: row,
               col: col
             };
 
-            if (!_this.isSelected(currentNode)) {
-              _this.addIntermediaryNodes(currentNode);
+            if (!_this2.isSelected(currentNode)) {
+              _this2.addIntermediaryNodes(currentNode);
 
-              _this.selectedNodes.push(currentNode);
+              _this2.selectedNodes.push(currentNode);
 
               return false;
             }
@@ -415,18 +425,18 @@ function () {
   }, {
     key: "forceUpdate",
     value: function forceUpdate() {
-      var _this2 = this;
+      var _this3 = this;
 
       raf(function () {
-        var previousDragState = _this2._isDragging;
-        _this2._isDragging = true;
+        var previousDragState = _this3._isDragging;
+        _this3._isDragging = true;
 
-        _this2.calculationLoop(false);
+        _this3.calculationLoop(false);
 
         raf(function () {
-          _this2.renderLoop(false);
+          _this3.renderLoop(false);
 
-          _this2._isDragging = previousDragState;
+          _this3._isDragging = previousDragState;
         });
       });
     }
@@ -439,7 +449,7 @@ function () {
   }, {
     key: "renderLoop",
     value: function renderLoop() {
-      var _this3 = this;
+      var _this4 = this;
 
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
@@ -454,20 +464,20 @@ function () {
         var lastNode = this.selectedNodes.reduce(function (prevNode, node) {
           if (prevNode) {
             var point1 = {
-              x: node.row * _this3.interval.x,
-              y: node.col * _this3.interval.y
+              x: node.row * _this4.interval.x,
+              y: node.col * _this4.interval.y
             };
             var point2 = {
-              x: prevNode.row * _this3.interval.x,
-              y: prevNode.col * _this3.interval.y
+              x: prevNode.row * _this4.interval.x,
+              y: prevNode.col * _this4.interval.y
             }; // Make the two selected nodes bigger
 
-            _this3.drawNode(point1.x, point1.y, accent, primary, _this3.THEME.dimens.node_ring + 3);
+            _this4.drawNode(point1.x, point1.y, accent, primary, _this4.THEME.dimens.node_ring + 3);
 
-            _this3.drawNode(point2.x, point2.y, accent, primary, _this3.THEME.dimens.node_ring + 3); // Join the nodes
+            _this4.drawNode(point2.x, point2.y, accent, primary, _this4.THEME.dimens.node_ring + 3); // Join the nodes
 
 
-            _this3.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
+            _this4.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
           }
 
           return node;
@@ -524,7 +534,7 @@ function () {
   }, {
     key: "forEachNode",
     value: function forEachNode(callback) {
-      var _this4 = this;
+      var _this5 = this;
 
       var xGrid = Array(this.rows).fill(this.interval.x);
       var yGrid = Array(this.cols).fill(this.interval.y);
@@ -536,7 +546,7 @@ function () {
             // If the callback returns false, break out of the loop
             if (callback(x, y) === false) throw breakException;
             return x + dx;
-          }, _this4.interval.x);
+          }, _this5.interval.x);
           return y + dy;
         }, this.interval.y);
       } catch (e) {

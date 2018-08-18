@@ -1,13 +1,19 @@
-import NanoEvents from './utils/nanoevents';
+import EventBus from './utils/events';
 import { patternToWords, hashCode } from './utils/libs';
 import THEMES from './utils/themes';
 
-const bind = (target, eventList, fn) =>
-	eventList.forEach(ev => target.addEventListener(ev, fn));
-const unbind = (target, eventList, fn) =>
-	eventList.forEach(ev => target.removeEventListener(ev, fn));
+const unregisterEvent = (target, event, fn) =>
+	event.split(' ').forEach(ev => target.removeEventListener(ev, fn));
 
-const raf = requestAnimationFrame;
+const registerEvent = (target, event, fn) => {
+	event.split(' ').forEach(ev => target.addEventListener(ev, fn));
+	return () => unregisterEvent(target, event, fn);
+};
+
+const bindContext = (ctx, fns) =>
+	fns.forEach(fnName => ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx));
+
+const raf = requestAnimationFrame || (fn => setTimeout(fn, 16));
 
 const gcd = (x, y) => {
 	while (y != 0) {
@@ -65,20 +71,19 @@ export class PatternLock {
 	}
 
 	initialize(config) {
-		this._onTouchStart = this._onTouchStart.bind(this);
-		this._onTouchStop = this._onTouchStop.bind(this);
-		this._onTouchMove = this._onTouchMove.bind(this);
-		this._onResize = this._onResize.bind(this);
-		this.renderLoop = this.renderLoop.bind(this);
-		this.calculationLoop = this.calculationLoop.bind(this);
-
-		this.initializeEventBus();
-
-		this.setTheme(config.theme);
-
-		this._onResize();
+		bindContext(this, [
+			'_onTouchStart',
+			'_onTouchStop',
+			'_onTouchMove',
+			'_onResize',
+			'renderLoop',
+			'calculationLoop',
+		]);
 
 		this.setInitialState();
+
+		this._onResize();
+		this.setTheme(config.theme);
 		this.generateGrid(...config.grid);
 
 		this.attachEventHandlers();
@@ -112,19 +117,27 @@ export class PatternLock {
 	 * Attach event listeners and start frame loops
 	 */
 	attachEventHandlers() {
-		bind(this.$canvas, ['mousedown','touchstart'], this._onTouchStart);
-		bind(this.$canvas, ['mouseup','touchend'], this._onTouchStop);
-		bind(window, ['mousemove','touchmove'], this._onTouchMove);
-		bind(window, ['resize'], this._onResize);
+		const register = (t, ev, fn) => this._subscriptions.push(registerEvent(t, ev, fn));
+
+		register(this.$canvas, 'mousedown touchstart', this._onTouchStart);
+		register(this.$canvas, 'mouseup touchend', this._onTouchStop);
+		register(window, 'mousemove touchmove', this._onTouchMove);
+		register(window, 'resize', this._onResize);
 
 		// Start frame loops
 		raf(this.renderLoop);
 		raf(this.calculationLoop);
 	}
 
-	initializeEventBus() { this.eventBus = new NanoEvents(); }
-	on(event, fn) { return this.eventBus.on(event, fn); }
-	off(event, fn) { return this.eventBus.off(event, fn); }
+	// destroy() {
+	// 	this._subscriptions.map(fn => fn());
+	// }
+
+	on(event, fn) {
+		const subscription = this.eventBus.on(event, fn);
+		this._subscriptions.push(subscription);
+		return subscription;
+	}
 	emit(event, ...args) { return this.eventBus.emit(event, ...args); }
 	onStart(fn) { this.on(events.PATTERN_START, fn); return this; }
 	onComplete(fn) { this.on(events.PATTERN_COMPLETE, fn); return this; }
@@ -133,6 +146,8 @@ export class PatternLock {
 	 * Set the initial state
 	 */
 	setInitialState() {
+		this._subscriptions = [];
+		this.eventBus = new EventBus();
 		this.coordinates = null;
 		this.selectedNodes = [];
 		this.lastSelectedNode = null;

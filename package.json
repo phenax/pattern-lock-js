@@ -9,7 +9,7 @@
   "scripts": {
     "build": "concurrently 'npm run build:package' 'npm run build:example'",
     "watch": "concurrently 'npm run watch:package' 'npm run watch:example'",
-    "build:package": "babel src -d build --copy-files --ignore '**/*.example.js'",
+    "build:package": "babel src -d build --copy-files",
     "watch:package": "npm run build:package -- --watch",
     "build:example": "webpack -p",
     "watch:example": "webpack -w"
