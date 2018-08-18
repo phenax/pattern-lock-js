@@ -141,8 +141,10 @@ export class PatternLock {
 		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
 	}
 
+	recalculateBounds = () => this.bounds = this.$canvas.getBoundingClientRect();
+
 	_onResize = () => {
-		this.bounds = this.$canvas.getBoundingClientRect();
+		this.recalculateBounds();
 	}
 
 	_onTouchStart = e => {
@@ -213,7 +215,10 @@ export class PatternLock {
 			let i = 0;
 			while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
 				this.selectedNodes.push(currentNode);
-				currentNode = { row: currentNode.row + stepNode.row, col: currentNode.col + stepNode.col };
+				currentNode = {
+					row: currentNode.row + stepNode.row,
+					col: currentNode.col + stepNode.col,
+				};
 			}
 		}
 

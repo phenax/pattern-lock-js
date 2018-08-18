@@ -90,8 +90,12 @@ function () {
       return _this.emit(events.PATTERN_START, {});
     });
 
+    _defineProperty(this, "recalculateBounds", function () {
+      return _this.bounds = _this.$canvas.getBoundingClientRect();
+    });
+
     _defineProperty(this, "_onResize", function () {
-      _this.bounds = _this.$canvas.getBoundingClientRect();
+      _this.recalculateBounds();
     });
 
     _defineProperty(this, "_onTouchStart", function (e) {
