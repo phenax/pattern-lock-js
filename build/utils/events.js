@@ -14,7 +14,6 @@ EventBus.prototype = {
   on: function on(event, cb) {
     var _this = this;
 
-    console.log(event);
     event = this.events[event] = this.events[event] || [];
     event.push(cb);
     return function () {
@@ -22,14 +21,12 @@ EventBus.prototype = {
     };
   },
   off: function off(event, cb) {
-    console.log(event);
     event = this.events[event] = this.events[event] || [];
     event.splice(event.indexOf(cb) >>> 0, 1);
   },
   emit: function emit(event) {
     var _this2 = this;
 
-    console.log(event);
     var list = this.events[event];
     if (!list || !list[0]) return;
     var args = list.slice.call(arguments, 1);

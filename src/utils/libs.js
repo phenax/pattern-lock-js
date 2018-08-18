@@ -31,3 +31,15 @@ export const hashCode = str => {
 
 	return btoa(hash + '');
 };
+
+export const bindContext = (ctx, fns) =>
+	fns.forEach(fnName => ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx));
+
+export const gcd = (x, y) => {
+	while (y != 0) {
+		let tmp = x;
+		x = y;
+		y = tmp % y;
+	}
+	return x;
+}

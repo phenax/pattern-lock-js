@@ -9,6 +9,10 @@ var _events = _interopRequireDefault(require("./utils/events"));
 
 var _libs = require("./utils/libs");
 
+var _dom = require("./utils/dom");
+
+var _Matcher = _interopRequireDefault(require("./utils/Matcher"));
+
 var _themes = _interopRequireDefault(require("./utils/themes"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -29,48 +33,13 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var unregisterEvent = function unregisterEvent(target, event, fn) {
-  return event.split(' ').forEach(function (ev) {
-    return target.removeEventListener(ev, fn);
-  });
-};
-
-var registerEvent = function registerEvent(target, event, fn) {
-  event.split(' ').forEach(function (ev) {
-    return target.addEventListener(ev, fn);
-  });
-  return function () {
-    return unregisterEvent(target, event, fn);
-  };
-};
-
-var bindContext = function bindContext(ctx, fns) {
-  return fns.forEach(function (fnName) {
-    return ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx);
-  });
-};
-
-var raf = requestAnimationFrame || function (fn) {
-  return setTimeout(fn, 16);
-};
-
-var gcd = function gcd(x, y) {
-  while (y != 0) {
-    var tmp = x;
-    x = y;
-    y = tmp % y;
-  }
-
-  return x;
-};
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
@@ -87,32 +56,33 @@ var defaultConfig = {
   height: 430
 };
 
-var Matcher = function Matcher(values) {
-  var _onSuccess = function _onSuccess() {};
-
-  var _onFailure = function _onFailure() {};
-
-  var matcher = {
-    check: function check(val) {
-      return values.indexOf(val) !== -1 ? _onSuccess() : _onFailure();
-    },
-    onSuccess: function onSuccess(fn) {
-      _onSuccess = fn;
-      return matcher;
-    },
-    onFailure: function onFailure(fn) {
-      _onFailure = fn;
-      return matcher;
-    }
-  };
-  return matcher;
-};
-
 var PatternLock =
 /*#__PURE__*/
 function () {
   function PatternLock(config) {
+    var _this = this;
+
     _classCallCheck(this, PatternLock);
+
+    _defineProperty(this, "_match", function (type) {
+      return function () {
+        for (var _len = arguments.length, values = new Array(_len), _key = 0; _key < _len; _key++) {
+          values[_key] = arguments[_key];
+        }
+
+        var matcher = (0, _Matcher.default)(values);
+
+        _this.on(events.PATTERN_COMPLETE, function (data) {
+          return matcher.check(data[type]);
+        });
+
+        return matcher;
+      };
+    });
+
+    _defineProperty(this, "matchHash", this._match('hash'));
+
+    _defineProperty(this, "matchPassword", this._match('password'));
 
     if (!config.$canvas) throw createInvalidOptionError('$canvas');
     config = _objectSpread({}, defaultConfig, config);
@@ -131,7 +101,9 @@ function () {
   _createClass(PatternLock, [{
     key: "initialize",
     value: function initialize(config) {
-      bindContext(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
+      (0, _libs.bindContext)(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
+      this._subscriptions = [];
+      this.eventBus = new _events.default();
       this.setInitialState();
 
       this._onResize();
@@ -169,10 +141,10 @@ function () {
   }, {
     key: "attachEventHandlers",
     value: function attachEventHandlers() {
-      var _this = this;
+      var _this2 = this;
 
       var register = function register(t, ev, fn) {
-        return _this._subscriptions.push(registerEvent(t, ev, fn));
+        return _this2._subscriptions.push((0, _dom.registerEvent)(t, ev, fn));
       };
 
       register(this.$canvas, 'mousedown touchstart', this._onTouchStart);
@@ -180,8 +152,8 @@ function () {
       register(window, 'mousemove touchmove', this._onTouchMove);
       register(window, 'resize', this._onResize); // Start frame loops
 
-      raf(this.renderLoop);
-      raf(this.calculationLoop);
+      (0, _dom.raf)(this.renderLoop);
+      (0, _dom.raf)(this.calculationLoop);
     } // destroy() {
     // 	this._subscriptions.map(fn => fn());
     // }
@@ -200,8 +172,8 @@ function () {
     value: function emit(event) {
       var _this$eventBus;
 
-      for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        args[_key - 1] = arguments[_key];
+      for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+        args[_key2 - 1] = arguments[_key2];
       }
 
       return (_this$eventBus = this.eventBus).emit.apply(_this$eventBus, [event].concat(args));
@@ -225,8 +197,6 @@ function () {
   }, {
     key: "setInitialState",
     value: function setInitialState() {
-      this._subscriptions = [];
-      this.eventBus = new _events.default();
       this.coordinates = null;
       this.selectedNodes = [];
       this.lastSelectedNode = null;
@@ -372,7 +342,7 @@ function () {
       } else {
         var max = Math.max(dRow, dCol);
         var min = Math.min(dRow, dCol);
-        var gcdValue = gcd(max, min);
+        var gcdValue = (0, _libs.gcd)(max, min);
 
         if (max % min === 0) {
           finalStep.col = dCol / gcdValue * dCsign;
@@ -391,26 +361,26 @@ function () {
   }, {
     key: "calculationLoop",
     value: function calculationLoop() {
-      var _this2 = this;
+      var _this3 = this;
 
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       if (this._isDragging && this.coordinates) {
         this.forEachNode(function (x, y) {
-          var dist = Math.sqrt(Math.pow(_this2.coordinates.x - x, 2) + Math.pow(_this2.coordinates.y - y, 2));
+          var dist = Math.sqrt(Math.pow(_this3.coordinates.x - x, 2) + Math.pow(_this3.coordinates.y - y, 2));
 
-          if (dist < _this2.THEME.dimens.node_radius + 1) {
-            var row = x / _this2.interval.x;
-            var col = y / _this2.interval.y;
+          if (dist < _this3.THEME.dimens.node_radius + 1) {
+            var row = x / _this3.interval.x;
+            var col = y / _this3.interval.y;
             var currentNode = {
               row: row,
               col: col
             };
 
-            if (!_this2.isSelected(currentNode)) {
-              _this2.addIntermediaryNodes(currentNode);
+            if (!_this3.isSelected(currentNode)) {
+              _this3.addIntermediaryNodes(currentNode);
 
-              _this2.selectedNodes.push(currentNode);
+              _this3.selectedNodes.push(currentNode);
 
               return false;
             }
@@ -419,24 +389,24 @@ function () {
       }
 
       if (runLoop) {
-        raf(this.calculationLoop);
+        (0, _dom.raf)(this.calculationLoop);
       }
     }
   }, {
     key: "forceUpdate",
     value: function forceUpdate() {
-      var _this3 = this;
+      var _this4 = this;
 
-      raf(function () {
-        var previousDragState = _this3._isDragging;
-        _this3._isDragging = true;
+      (0, _dom.raf)(function () {
+        var previousDragState = _this4._isDragging;
+        _this4._isDragging = true;
 
-        _this3.calculationLoop(false);
+        _this4.calculationLoop(false);
 
-        raf(function () {
-          _this3.renderLoop(false);
+        (0, _dom.raf)(function () {
+          _this4.renderLoop(false);
 
-          _this3._isDragging = previousDragState;
+          _this4._isDragging = previousDragState;
         });
       });
     }
@@ -449,7 +419,7 @@ function () {
   }, {
     key: "renderLoop",
     value: function renderLoop() {
-      var _this4 = this;
+      var _this5 = this;
 
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
@@ -464,20 +434,20 @@ function () {
         var lastNode = this.selectedNodes.reduce(function (prevNode, node) {
           if (prevNode) {
             var point1 = {
-              x: node.row * _this4.interval.x,
-              y: node.col * _this4.interval.y
+              x: node.row * _this5.interval.x,
+              y: node.col * _this5.interval.y
             };
             var point2 = {
-              x: prevNode.row * _this4.interval.x,
-              y: prevNode.col * _this4.interval.y
+              x: prevNode.row * _this5.interval.x,
+              y: prevNode.col * _this5.interval.y
             }; // Make the two selected nodes bigger
 
-            _this4.drawNode(point1.x, point1.y, accent, primary, _this4.THEME.dimens.node_ring + 3);
+            _this5.drawNode(point1.x, point1.y, accent, primary, _this5.THEME.dimens.node_ring + 3);
 
-            _this4.drawNode(point2.x, point2.y, accent, primary, _this4.THEME.dimens.node_ring + 3); // Join the nodes
+            _this5.drawNode(point2.x, point2.y, accent, primary, _this5.THEME.dimens.node_ring + 3); // Join the nodes
 
 
-            _this4.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
+            _this5.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
           }
 
           return node;
@@ -492,7 +462,7 @@ function () {
       }
 
       if (runLoop) {
-        raf(this.renderLoop);
+        (0, _dom.raf)(this.renderLoop);
       }
     }
     /**
@@ -534,7 +504,7 @@ function () {
   }, {
     key: "forEachNode",
     value: function forEachNode(callback) {
-      var _this5 = this;
+      var _this6 = this;
 
       var xGrid = Array(this.rows).fill(this.interval.x);
       var yGrid = Array(this.cols).fill(this.interval.y);
@@ -546,7 +516,7 @@ function () {
             // If the callback returns false, break out of the loop
             if (callback(x, y) === false) throw breakException;
             return x + dx;
-          }, _this5.interval.x);
+          }, _this6.interval.x);
           return y + dy;
         }, this.interval.y);
       } catch (e) {
@@ -600,33 +570,6 @@ function () {
       this.ctx.lineTo(point2.x, point2.y);
       this.ctx.stroke();
     }
-  }, {
-    key: "match",
-    value: function match(type, values) {
-      var matcher = Matcher(values);
-      this.on(events.PATTERN_COMPLETE, function (data) {
-        return matcher.check(data[type]);
-      });
-      return matcher;
-    }
-  }, {
-    key: "matchHash",
-    value: function matchHash() {
-      for (var _len2 = arguments.length, hashes = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        hashes[_key2] = arguments[_key2];
-      }
-
-      return this.match('hash', hashes);
-    }
-  }, {
-    key: "matchPassword",
-    value: function matchPassword() {
-      for (var _len3 = arguments.length, passwords = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        passwords[_key3] = arguments[_key3];
-      }
-
-      return this.match('password', passwords);
-    }
   }]);
 
   return PatternLock;
@@ -635,8 +578,8 @@ function () {
 exports.PatternLock = PatternLock;
 
 var _default = function _default() {
-  for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-    args[_key4] = arguments[_key4];
+  for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    args[_key3] = arguments[_key3];
   }
 
   return _construct(PatternLock, args);

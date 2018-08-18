@@ -1,23 +1,30 @@
+"use strict";
 
-import PatternLock from './PatternLock';
+var _PatternLock = _interopRequireDefault(require("./PatternLock"));
 
-document.addEventListener('DOMContentLoaded', () => {
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	const lock = PatternLock({
-		$canvas: document.querySelector('#patternLock'),
-		width: 300,
-		height: 430,
-		grid: [ 3, 3 ],
-	});
+document.addEventListener('DOMContentLoaded', function () {
+  var lock = (0, _PatternLock.default)({
+    $canvas: document.querySelector('#patternLock'),
+    width: 300,
+    height: 430,
+    grid: [3, 3]
+  }); // Right L, Diagonal L
 
-	// Right L, Diagonal L
-	lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==')
-		.onSuccess(() => lock.setTheme('success'))
-		.onFailure(() => lock.setTheme('failure'));
+  lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==').onSuccess(function () {
+    return lock.setTheme('success');
+  }).onFailure(function () {
+    return lock.setTheme('failure');
+  });
+  var $password = document.querySelector('.js-password');
+  lock.onStart(function () {
+    return lock.setTheme('default');
+  });
+  lock.onComplete(function () {
+    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        hash = _ref.hash;
 
-	const $password = document.querySelector('.js-password');
-
-	lock.onStart(() => lock.setTheme('default'));
-	lock.onComplete(({ hash } = {}) => $password.value = hash);
+    return $password.value = hash;
+  });
 });
-

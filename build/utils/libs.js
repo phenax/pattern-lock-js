@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.hashCode = exports.patternToWords = void 0;
+exports.gcd = exports.bindContext = exports.hashCode = exports.patternToWords = void 0;
 
 var _wordMap = _interopRequireDefault(require("./word-map.js"));
 
@@ -46,3 +46,23 @@ var hashCode = function hashCode(str) {
 };
 
 exports.hashCode = hashCode;
+
+var bindContext = function bindContext(ctx, fns) {
+  return fns.forEach(function (fnName) {
+    return ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx);
+  });
+};
+
+exports.bindContext = bindContext;
+
+var gcd = function gcd(x, y) {
+  while (y != 0) {
+    var tmp = x;
+    x = y;
+    y = tmp % y;
+  }
+
+  return x;
+};
+
+exports.gcd = gcd;

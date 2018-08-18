@@ -5,18 +5,15 @@ export default (function EventBus() {
 
 EventBus.prototype = {
     on: function on(event, cb) {
-        console.log(event);
         event = this.events[event] = this.events[event] || [];
         event.push(cb);
         return () => this.off(event, cb);
     },
     off: function off(event, cb) {
-        console.log(event);
         event = this.events[event] = this.events[event] || [];
         event.splice(event.indexOf(cb) >>> 0, 1);
     },
     emit: function emit(event) {
-        console.log(event);
         const list = this.events[event];
         if (!list || !list[0]) return;
         const args = list.slice.call(arguments, 1);

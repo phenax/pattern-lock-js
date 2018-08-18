@@ -1,28 +1,8 @@
 import EventBus from './utils/events';
-import { patternToWords, hashCode } from './utils/libs';
+import { patternToWords, hashCode, bindContext, gcd } from './utils/libs';
+import { registerEvent, raf } from './utils/dom';
+import Matcher from './utils/Matcher';
 import THEMES from './utils/themes';
-
-const unregisterEvent = (target, event, fn) =>
-	event.split(' ').forEach(ev => target.removeEventListener(ev, fn));
-
-const registerEvent = (target, event, fn) => {
-	event.split(' ').forEach(ev => target.addEventListener(ev, fn));
-	return () => unregisterEvent(target, event, fn);
-};
-
-const bindContext = (ctx, fns) =>
-	fns.forEach(fnName => ctx[fnName] = ctx[fnName] && ctx[fnName].bind(ctx));
-
-const raf = requestAnimationFrame || (fn => setTimeout(fn, 16));
-
-const gcd = (x, y) => {
-	while (y != 0) {
-		let tmp = x;
-		x = y;
-		y = tmp % y;
-	}
-	return x;
-}
 
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
@@ -37,19 +17,6 @@ const defaultConfig = {
 	width: 300,
 	height: 430,
 };
-
-
-const Matcher = values => {
-	let _onSuccess = () => {};
-	let _onFailure = () => {};
-	const matcher = {
-		check: val => (values.indexOf(val) !== -1) ? _onSuccess() : _onFailure(),
-		onSuccess(fn) { _onSuccess = fn; return matcher; },
-		onFailure(fn) { _onFailure = fn; return matcher; },
-	};
-	return matcher;
-};
-
 
 export class PatternLock {
 
@@ -79,6 +46,9 @@ export class PatternLock {
 			'renderLoop',
 			'calculationLoop',
 		]);
+
+		this._subscriptions = [];
+		this.eventBus = new EventBus();
 
 		this.setInitialState();
 
@@ -146,8 +116,6 @@ export class PatternLock {
 	 * Set the initial state
 	 */
 	setInitialState() {
-		this._subscriptions = [];
-		this.eventBus = new EventBus();
 		this.coordinates = null;
 		this.selectedNodes = [];
 		this.lastSelectedNode = null;
@@ -522,14 +490,13 @@ export class PatternLock {
 	}
 
 
-	match(type, values) {
+	_match = type => (...values) => {
 		const matcher = Matcher(values);
 		this.on(events.PATTERN_COMPLETE, data => matcher.check(data[type]));
 		return matcher;
-	}
-
-	matchHash(...hashes) { return this.match('hash', hashes); }
-	matchPassword(...passwords) { return this.match('password', passwords); }
+	};
+	matchHash = this._match('hash');
+	matchPassword = this._match('password');
 }
 
 export default (...args) => new PatternLock(...args);
