@@ -2,8 +2,9 @@
   "name": "@phenax/pattern-lock-js",
   "version": "0.1.0",
   "description": "A pattern lock library for the web.",
-  "main": "build/PatternLock.js",
+  "main": "index.js",
   "repository": "https://github.com/phenax/pattern-lock-js.git",
+  "homepage": "https://phenax.github.io/pattern-lock-js",
   "author": "Akshay Nair <phenax5@gmail.com>",
   "scripts": {
     "build": "concurrently 'npm run build:package' 'npm run build:example'",
@@ -23,8 +24,5 @@
     "concurrently": "^3.6.1",
     "webpack": "^4.16.5",
     "webpack-cli": "^3.1.0"
-  },
-  "dependencies": {
-    "nanoevents": "^1.0.5"
   }
 }
