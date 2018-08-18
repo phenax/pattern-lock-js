@@ -2,42 +2,29 @@
   "name": "@phenax/pattern-lock-js",
   "version": "0.1.0",
   "description": "A pattern lock library for the web.",
-  "main": "build/pattern-lock.js",
+  "main": "build/PatternLock.js",
   "repository": "https://github.com/phenax/pattern-lock-js.git",
   "author": "Akshay Nair <phenax5@gmail.com>",
   "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -c --watch"
+    "build": "concurrently 'npm run build:package' 'npm run build:example'",
+    "watch": "concurrently 'npm run watch:package' 'npm run watch:example'",
+    "build:package": "babel src -d build --copy-files --ignore '**/*.example.js'",
+    "watch:package": "npm run build:package -- --watch",
+    "build:example": "webpack -p",
+    "watch:example": "webpack -w"
   },
   "license": "Apache 2.0",
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
-    "rollup": "^0.64.1",
-    "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-node-resolve": "^3.3.0"
-  },
-  "babel": {
-    "presets": [
-      [
-        "env",
-        {
-          "targets": {
-            "browsers": [
-              "last 5 versions"
-            ]
-          },
-          "modules": false,
-          "useBuiltIns": false
-        }
-      ]
-    ],
-    "plugins": [
-      "transform-object-rest-spread"
-    ]
+    "@babel/cli": "^7.0.0-rc.1",
+    "@babel/core": "^7.0.0-rc.1",
+    "@babel/preset-env": "^7.0.0-rc.1",
+    "@babel/preset-react": "^7.0.0-rc.1",
+    "babel-loader": "^8.0.0-beta.4",
+    "concurrently": "^3.6.1",
+    "webpack": "^4.16.5",
+    "webpack-cli": "^3.1.0"
   },
   "dependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "nanoevents": "^1.0.5"
   }
 }
