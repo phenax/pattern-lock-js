@@ -103,7 +103,7 @@ function () {
     value: function initialize(config) {
       (0, _libs.bindContext)(this, ['_onTouchStart', '_onTouchStop', '_onTouchMove', '_onResize', 'renderLoop', 'calculationLoop']);
       this._subscriptions = [];
-      this.eventBus = new _events.default();
+      this.eventBus = (0, _events.default)();
       this.setInitialState();
 
       this._onResize();

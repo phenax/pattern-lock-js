@@ -1,22 +1,23 @@
 
-export default (function EventBus() {
-    this.events = {};
-});
+export default () => {
+    const eventMap = {};
 
-EventBus.prototype = {
-    on: function on(event, cb) {
-        event = this.events[event] = this.events[event] || [];
-        event.push(cb);
-        return () => this.off(event, cb);
-    },
-    off: function off(event, cb) {
-        event = this.events[event] = this.events[event] || [];
-        event.splice(event.indexOf(cb) >>> 0, 1);
-    },
-    emit: function emit(event) {
-        const list = this.events[event];
-        if (!list || !list[0]) return;
-        const args = list.slice.call(arguments, 1);
-        list.slice().map(i => i.apply(this, args));
-    },
+    const off = (eventName, cb) => {
+        const fns = eventMap[eventName] = eventMap[eventName] || [];
+        return fns.splice(fns.indexOf(cb) >>> 0, 1);
+    };
+
+    const on = (eventName, cb) => {
+        const fns = eventMap[eventName] = eventMap[eventName] || [];
+        fns.push(cb);
+        return off.bind(null, fns, cb);
+    };
+
+    const emit = (event, ...args) => {
+        const fns = eventMap[event];
+        if (!fns || !fns.length) return [];
+        return fns.map(fn => fn(...args));
+    }
+
+    return { on, off, emit };
 };

@@ -5,33 +5,37 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var EventBus = function EventBus() {
-  this.events = {};
-};
+var _default = function _default() {
+  var eventMap = {};
 
-exports.default = EventBus;
-EventBus.prototype = {
-  on: function on(event, cb) {
-    var _this = this;
+  var off = function off(eventName, cb) {
+    var fns = eventMap[eventName] = eventMap[eventName] || [];
+    return fns.splice(fns.indexOf(cb) >>> 0, 1);
+  };
 
-    event = this.events[event] = this.events[event] || [];
-    event.push(cb);
-    return function () {
-      return _this.off(event, cb);
-    };
-  },
-  off: function off(event, cb) {
-    event = this.events[event] = this.events[event] || [];
-    event.splice(event.indexOf(cb) >>> 0, 1);
-  },
-  emit: function emit(event) {
-    var _this2 = this;
+  var on = function on(eventName, cb) {
+    var fns = eventMap[eventName] = eventMap[eventName] || [];
+    fns.push(cb);
+    return off.bind(null, fns, cb);
+  };
 
-    var list = this.events[event];
-    if (!list || !list[0]) return;
-    var args = list.slice.call(arguments, 1);
-    list.slice().map(function (i) {
-      return i.apply(_this2, args);
+  var emit = function emit(event) {
+    for (var _len = arguments.length, args = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    var fns = eventMap[event];
+    if (!fns || !fns.length) return [];
+    return fns.map(function (fn) {
+      return fn.apply(void 0, args);
     });
-  }
+  };
+
+  return {
+    on: on,
+    off: off,
+    emit: emit
+  };
 };
+
+exports.default = _default;

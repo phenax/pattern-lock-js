@@ -48,7 +48,7 @@ export class PatternLock {
 		]);
 
 		this._subscriptions = [];
-		this.eventBus = new EventBus();
+		this.eventBus = EventBus();
 
 		this.setInitialState();
 
