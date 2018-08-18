@@ -49,14 +49,17 @@ export class PatternLock {
 		this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 	}
 
-	initialize(config) {
+	initialize({ theme, grid: [ rows, cols ] }) {
 		this._subscriptions = [];
 		this.eventBus = EventBus();
 
+		this.rows = rows;
+		this.cols = cols;
+
 		this.setInitialState();
 		this._onResize();
-		this.setTheme(config.theme);
-		this.generateGrid(...config.grid);
+		this.setTheme(theme);
+		this.renderGrid();
 		this.attachEventHandlers();
 	}
 
@@ -348,22 +351,6 @@ export class PatternLock {
 		if (runLoop) {
 			raf(this.renderLoop);
 		}
-	}
-
-
-
-	/**
-	 * Generate the grid of nodes
-	 *
-	 * @param  {Number} rows  The number of horizontal nodes
-	 * @param  {Number} cols  The number of vertical nodes
-	 */
-	generateGrid(rows, cols) {
-
-		this.rows = rows;
-		this.cols = cols;
-
-		this.renderGrid();
 	}
 
 

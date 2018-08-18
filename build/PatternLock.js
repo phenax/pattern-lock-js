@@ -23,13 +23,13 @@ function _construct(Parent, args, Class) { if (isNativeReflectConstruct()) { _co
 
 function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
 
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
 
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
@@ -266,15 +266,22 @@ function () {
     }
   }, {
     key: "initialize",
-    value: function initialize(config) {
+    value: function initialize(_ref) {
+      var theme = _ref.theme,
+          _ref$grid = _slicedToArray(_ref.grid, 2),
+          rows = _ref$grid[0],
+          cols = _ref$grid[1];
+
       this._subscriptions = [];
       this.eventBus = (0, _EventBus.default)();
+      this.rows = rows;
+      this.cols = cols;
       this.setInitialState();
 
       this._onResize();
 
-      this.setTheme(config.theme);
-      this.generateGrid.apply(this, _toConsumableArray(config.grid));
+      this.setTheme(theme);
+      this.renderGrid();
       this.attachEventHandlers();
     }
   }, {
@@ -431,25 +438,11 @@ function () {
     } // Calculate the state of the lock for the next frame
 
   }, {
-    key: "generateGrid",
+    key: "renderGrid",
 
-    /**
-     * Generate the grid of nodes
-     *
-     * @param  {Number} rows  The number of horizontal nodes
-     * @param  {Number} cols  The number of vertical nodes
-     */
-    value: function generateGrid(rows, cols) {
-      this.rows = rows;
-      this.cols = cols;
-      this.renderGrid();
-    }
     /**
      * Render the grid to the canvas
      */
-
-  }, {
-    key: "renderGrid",
     value: function renderGrid() {
       this.ctx.fillStyle = this.THEME.colors.bg;
       this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
