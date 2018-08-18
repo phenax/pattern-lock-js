@@ -6,6 +6,7 @@ import THEMES from './utils/themes';
 
 
 // type Theme = String | Object
+// type Node = { row :: Number, col :: Number }
 
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
@@ -74,6 +75,19 @@ export class PatternLock {
 		this.lastSelectedNode = null;
 	}
 
+	forceRender() {
+		raf(() => {
+			const previousDragState = this._isDragging;
+			this._isDragging = true;
+			this.calculationLoop(false);
+
+			raf(() => {
+				this.renderLoop(false);
+				this._isDragging = previousDragState;
+			});
+		});
+	}
+
 
 	// setTheme :: (Theme, Boolean) -> Theme
 	setTheme(theme, rerender = true) {
@@ -125,9 +139,7 @@ export class PatternLock {
 
 
 
-	_emitPatternStart() {
-		this.emit(events.PATTERN_START, {});
-	}
+	_emitPatternStart = () => this.emit(events.PATTERN_START, {});
 	_emitPatternComplete() {
 		const nodes = this.selectedNodes.slice(0);
 		const password = patternToWords(nodes);
@@ -141,10 +153,10 @@ export class PatternLock {
 
 	_onTouchStart(e) {
 		if (e) e.preventDefault();
-		
+
 		this.setInitialState();
 		this.forceRender();
-		
+
 		this._emitPatternStart();
 		this._isDragging = true;
 	}
@@ -184,63 +196,54 @@ export class PatternLock {
 	}
 
 
-	/**
-	 * Check if the given node is already selected
-	 * @param  {Object}  targetNode  Node to check
-	 * @return {Boolean}             True if the node is selected
-	 */
-	isSelected(targetNode) {
-		return !!this.selectedNodes.find(
-			node => (
-				node.row == targetNode.row &&
-				node.col == targetNode.col
-			)
-		);
-	}
+	// Check if the given node is already selected
+	// isSelected :: Node -> Boolean
+	isSelected = targetNode => !!this.selectedNodes.filter(node => (
+		node.row == targetNode.row &&
+		node.col == targetNode.col
+	)).length;
 
-
-	/**
-	 * Adds intermediary nodes between lastSelectedNode to a targetNode
-	 *
-	 * @param  {Object}  targetNode  Node to select
-	 */
+	// Adds intermediary nodes between lastSelectedNode and the targetNode
+	// addIntermediaryNodes :: Node -> ()
 	addIntermediaryNodes(targetNode) {
-		const stepNode = this.intermediaryNodesStep(targetNode);
+		const stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, targetNode);
+
 		if (stepNode.row !== 0 || stepNode.col !== 0) {
-			let currentNode = { row: this.lastSelectedNode.row + stepNode.row, col: this.lastSelectedNode.col + stepNode.col };
+			let currentNode = {
+				row: this.lastSelectedNode.row + stepNode.row,
+				col: this.lastSelectedNode.col + stepNode.col
+			};
+
 			const maxIterations = Math.max(this.rows, this.cols);
+
 			let i = 0;
 			while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
 				this.selectedNodes.push(currentNode);
 				currentNode = { row: currentNode.row + stepNode.row, col: currentNode.col + stepNode.col };
 			}
 		}
+
 		this.lastSelectedNode = targetNode;
 	}
 
-
-	/**
-	 * Returns the steps to perform to select intermediary nodes between lastSelectedNode and a targetNode
-	 *
-	 * @param  {Object}  targetNode  Node to select
-	 *
-	 * @return {Object}             { row: stepForRows, col: StepForCols }
-	 */
-	intermediaryNodesStep(targetNode) {
+	// Returns the step direction to select intermediary nodes
+	// INFO: Can be moved out of the class as it is independent of this
+	// getIntermediaryStepDirection :: (Node, Node) -> Node
+	getIntermediaryStepDirection(previousNode, nextNode) {
 		let finalStep = { row: 0, col: 0 };
-		if (!this.lastSelectedNode) {
+		if (!previousNode) {
 			return finalStep;
 		}
 
-		const dRow = Math.abs(this.lastSelectedNode.row - targetNode.row);
-		const dCol = Math.abs(this.lastSelectedNode.col - targetNode.col);
+		const dRow = Math.abs(previousNode.row - nextNode.row);
+		const dCol = Math.abs(previousNode.col - nextNode.col);
 
 		if (dRow === 1 || dCol === 1) {
 			return finalStep;
 		}
 
-		let dRsign = (this.lastSelectedNode.row - targetNode.row) < 0 ? 1 : -1;
-		let dCsign = (this.lastSelectedNode.col - targetNode.col) < 0 ? 1 : -1;
+		let dRsign = (previousNode.row - nextNode.row) < 0 ? 1 : -1;
+		let dCsign = (previousNode.col - nextNode.col) < 0 ? 1 : -1;
 
 		if (dRow === 0) {
 			if (dCol !== 0) finalStep.col = dCsign;
@@ -259,11 +262,7 @@ export class PatternLock {
 	}
 
 
-	/**
-	 * Calculate the state of the lock for the next frame
-	 *
-	 * @param  {Boolean} runLoop  Start it as a loop if true
-	 */
+	// Calculate the state of the lock for the next frame
 	calculationLoop(runLoop = true) {
 
 		if (this._isDragging && this.coordinates) {
@@ -296,24 +295,7 @@ export class PatternLock {
 		}
 	}
 
-	forceRender() {
-		raf(() => {
-			const previousDragState = this._isDragging;
-			this._isDragging = true;
-			this.calculationLoop(false);
-
-			raf(() => {
-				this.renderLoop(false);
-				this._isDragging = previousDragState;
-			});
-		});
-	}
-
-	/**
-	 * Render the state of the lock
-	 *
-	 * @param  {Boolean} runLoop  Start it as a loop if true
-	 */
+	// Render the state of the lock
 	renderLoop(runLoop = true) {
 
 		if (this._isDragging) {
@@ -398,7 +380,6 @@ export class PatternLock {
 	 * Render the grid to the canvas
 	 */
 	renderGrid() {
-
 		this.ctx.fillStyle = this.THEME.colors.bg;
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
@@ -412,12 +393,7 @@ export class PatternLock {
 	}
 
 
-
-	/**
-	 * ForEach iterator for all nodes on the grid
-	 *
-	 * @param  {Function} callback
-	 */
+	// forEachNode :: ((x, y) -> Boolean) -> ()
 	forEachNode(callback) {
 
 		const xGrid = Array(this.rows).fill(this.interval.x);
@@ -490,9 +466,10 @@ export class PatternLock {
 	}
 
 
+	// _match :: String -> (...any) -> Matcher
 	_match = type => (...values) => {
 		const matcher = Matcher(values);
-		this.on(events.PATTERN_COMPLETE, data => matcher.check(data[type]));
+		this.onComplete(data => matcher.check(data[type]));
 		return matcher;
 	};
 	matchHash = this._match('hash');

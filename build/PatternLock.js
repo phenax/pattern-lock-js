@@ -42,6 +42,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 // type Theme = String | Object
+// type Node = { row :: Number, col :: Number }
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
 };
@@ -85,6 +86,16 @@ function () {
       return _this.on(events.PATTERN_COMPLETE, fn);
     });
 
+    _defineProperty(this, "_emitPatternStart", function () {
+      return _this.emit(events.PATTERN_START, {});
+    });
+
+    _defineProperty(this, "isSelected", function (targetNode) {
+      return !!_this.selectedNodes.filter(function (node) {
+        return node.row == targetNode.row && node.col == targetNode.col;
+      }).length;
+    });
+
     _defineProperty(this, "_match", function (type) {
       return function () {
         for (var _len = arguments.length, values = new Array(_len), _key = 0; _key < _len; _key++) {
@@ -93,7 +104,7 @@ function () {
 
         var matcher = (0, _Matcher.default)(values);
 
-        _this.on(events.PATTERN_COMPLETE, function (data) {
+        _this.onComplete(function (data) {
           return matcher.check(data[type]);
         });
 
@@ -149,6 +160,24 @@ function () {
       this.coordinates = null;
       this.selectedNodes = [];
       this.lastSelectedNode = null;
+    }
+  }, {
+    key: "forceRender",
+    value: function forceRender() {
+      var _this2 = this;
+
+      (0, _dom.raf)(function () {
+        var previousDragState = _this2._isDragging;
+        _this2._isDragging = true;
+
+        _this2.calculationLoop(false);
+
+        (0, _dom.raf)(function () {
+          _this2.renderLoop(false);
+
+          _this2._isDragging = previousDragState;
+        });
+      });
     } // setTheme :: (Theme, Boolean) -> Theme
 
   }, {
@@ -175,10 +204,10 @@ function () {
   }, {
     key: "attachEventHandlers",
     value: function attachEventHandlers() {
-      var _this2 = this;
+      var _this3 = this;
 
       var register = function register(t, ev, fn) {
-        return _this2._subscriptions.push((0, _dom.registerEvent)(t, ev, fn));
+        return _this3._subscriptions.push((0, _dom.registerEvent)(t, ev, fn));
       };
 
       register(this.$canvas, 'mousedown touchstart', this._onTouchStart);
@@ -197,11 +226,6 @@ function () {
       this._subscriptions.push(subscription);
 
       return subscription;
-    }
-  }, {
-    key: "_emitPatternStart",
-    value: function _emitPatternStart() {
-      this.emit(events.PATTERN_START, {});
     }
   }, {
     key: "_emitPatternComplete",
@@ -261,30 +285,15 @@ function () {
           this._onTouchStop();
         }
       }
-    }
-    /**
-     * Check if the given node is already selected
-     * @param  {Object}  targetNode  Node to check
-     * @return {Boolean}             True if the node is selected
-     */
-
-  }, {
-    key: "isSelected",
-    value: function isSelected(targetNode) {
-      return !!this.selectedNodes.find(function (node) {
-        return node.row == targetNode.row && node.col == targetNode.col;
-      });
-    }
-    /**
-     * Adds intermediary nodes between lastSelectedNode to a targetNode
-     *
-     * @param  {Object}  targetNode  Node to select
-     */
+    } // Check if the given node is already selected
+    // isSelected :: Node -> Boolean
 
   }, {
     key: "addIntermediaryNodes",
+    // Adds intermediary nodes between lastSelectedNode and the targetNode
+    // addIntermediaryNodes :: Node -> ()
     value: function addIntermediaryNodes(targetNode) {
-      var stepNode = this.intermediaryNodesStep(targetNode);
+      var stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, targetNode);
 
       if (stepNode.row !== 0 || stepNode.col !== 0) {
         var currentNode = {
@@ -304,36 +313,31 @@ function () {
       }
 
       this.lastSelectedNode = targetNode;
-    }
-    /**
-     * Returns the steps to perform to select intermediary nodes between lastSelectedNode and a targetNode
-     *
-     * @param  {Object}  targetNode  Node to select
-     *
-     * @return {Object}             { row: stepForRows, col: StepForCols }
-     */
+    } // Returns the step direction to select intermediary nodes
+    // INFO: Can be moved out of the class as it is independent of this
+    // getIntermediaryStepDirection :: (Node, Node) -> Node
 
   }, {
-    key: "intermediaryNodesStep",
-    value: function intermediaryNodesStep(targetNode) {
+    key: "getIntermediaryStepDirection",
+    value: function getIntermediaryStepDirection(previousNode, nextNode) {
       var finalStep = {
         row: 0,
         col: 0
       };
 
-      if (!this.lastSelectedNode) {
+      if (!previousNode) {
         return finalStep;
       }
 
-      var dRow = Math.abs(this.lastSelectedNode.row - targetNode.row);
-      var dCol = Math.abs(this.lastSelectedNode.col - targetNode.col);
+      var dRow = Math.abs(previousNode.row - nextNode.row);
+      var dCol = Math.abs(previousNode.col - nextNode.col);
 
       if (dRow === 1 || dCol === 1) {
         return finalStep;
       }
 
-      var dRsign = this.lastSelectedNode.row - targetNode.row < 0 ? 1 : -1;
-      var dCsign = this.lastSelectedNode.col - targetNode.col < 0 ? 1 : -1;
+      var dRsign = previousNode.row - nextNode.row < 0 ? 1 : -1;
+      var dCsign = previousNode.col - nextNode.col < 0 ? 1 : -1;
 
       if (dRow === 0) {
         if (dCol !== 0) finalStep.col = dCsign;
@@ -351,36 +355,31 @@ function () {
       }
 
       return finalStep;
-    }
-    /**
-     * Calculate the state of the lock for the next frame
-     *
-     * @param  {Boolean} runLoop  Start it as a loop if true
-     */
+    } // Calculate the state of the lock for the next frame
 
   }, {
     key: "calculationLoop",
     value: function calculationLoop() {
-      var _this3 = this;
+      var _this4 = this;
 
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       if (this._isDragging && this.coordinates) {
         this.forEachNode(function (x, y) {
-          var dist = Math.sqrt(Math.pow(_this3.coordinates.x - x, 2) + Math.pow(_this3.coordinates.y - y, 2));
+          var dist = Math.sqrt(Math.pow(_this4.coordinates.x - x, 2) + Math.pow(_this4.coordinates.y - y, 2));
 
-          if (dist < _this3.THEME.dimens.node_radius + 1) {
-            var row = x / _this3.interval.x;
-            var col = y / _this3.interval.y;
+          if (dist < _this4.THEME.dimens.node_radius + 1) {
+            var row = x / _this4.interval.x;
+            var col = y / _this4.interval.y;
             var currentNode = {
               row: row,
               col: col
             };
 
-            if (!_this3.isSelected(currentNode)) {
-              _this3.addIntermediaryNodes(currentNode);
+            if (!_this4.isSelected(currentNode)) {
+              _this4.addIntermediaryNodes(currentNode);
 
-              _this3.selectedNodes.push(currentNode);
+              _this4.selectedNodes.push(currentNode);
 
               return false;
             }
@@ -391,30 +390,7 @@ function () {
       if (runLoop) {
         (0, _dom.raf)(this.calculationLoop);
       }
-    }
-  }, {
-    key: "forceRender",
-    value: function forceRender() {
-      var _this4 = this;
-
-      (0, _dom.raf)(function () {
-        var previousDragState = _this4._isDragging;
-        _this4._isDragging = true;
-
-        _this4.calculationLoop(false);
-
-        (0, _dom.raf)(function () {
-          _this4.renderLoop(false);
-
-          _this4._isDragging = previousDragState;
-        });
-      });
-    }
-    /**
-     * Render the state of the lock
-     *
-     * @param  {Boolean} runLoop  Start it as a loop if true
-     */
+    } // Render the state of the lock
 
   }, {
     key: "renderLoop",
@@ -494,12 +470,7 @@ function () {
       }; // Draw all the nodes
 
       this.forEachNode(this.drawNode.bind(this));
-    }
-    /**
-     * ForEach iterator for all nodes on the grid
-     *
-     * @param  {Function} callback
-     */
+    } // forEachNode :: ((x, y) -> Boolean) -> ()
 
   }, {
     key: "forEachNode",
@@ -569,7 +540,8 @@ function () {
       this.ctx.moveTo(point1.x, point1.y);
       this.ctx.lineTo(point2.x, point2.y);
       this.ctx.stroke();
-    }
+    } // _match :: String -> (...any) -> Matcher
+
   }]);
 
   return PatternLock;

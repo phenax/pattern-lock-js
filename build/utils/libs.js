@@ -9,7 +9,6 @@ var _wordMap = _interopRequireDefault(require("./word-map.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// type Node = { row :: Number, col :: Number }
 // patternToWords :: Array<Node> -> String
 var patternToWords = function patternToWords(nodes) {
   return nodes.reduce(function () {

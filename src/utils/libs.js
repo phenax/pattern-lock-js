@@ -1,7 +1,5 @@
 import wordMap from './word-map.js';
 
-// type Node = { row :: Number, col :: Number }
-
 // patternToWords :: Array<Node> -> String
 export const patternToWords = nodes =>
 	nodes.reduce((string = '', node) =>
