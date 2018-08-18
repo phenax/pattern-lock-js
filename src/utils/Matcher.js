@@ -1,4 +1,5 @@
 
+// Matcher :: Array<String> -> Matcher
 export default values => {
 	let _onSuccess = () => {};
 	let _onFailure = () => {};

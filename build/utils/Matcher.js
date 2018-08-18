@@ -5,6 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
+// Matcher :: Array<String> -> Matcher
 var _default = function _default(values) {
   var _onSuccess = function _onSuccess() {};
 

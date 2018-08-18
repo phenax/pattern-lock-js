@@ -4,6 +4,9 @@ import { registerEvent, raf } from './utils/dom';
 import Matcher from './utils/Matcher';
 import THEMES from './utils/themes';
 
+
+// type Theme = String | Object
+
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
 const events = {
@@ -22,6 +25,8 @@ export class PatternLock {
 
 	constructor(config) {
 		if(!config.$canvas) throw createInvalidOptionError('$canvas');
+		if(!config.width) throw createInvalidOptionError('width');
+		if(!config.height) throw createInvalidOptionError('height');
 
 		config = { ...defaultConfig, ...config };
 
@@ -59,10 +64,8 @@ export class PatternLock {
 		this.attachEventHandlers();
 	}
 
-	/**
-	 * Set the pattern lock screen theme
-	 * @param {Object|string}   theme
-	 */
+
+	// setTheme :: (Theme, Boolean) -> Theme
 	setTheme(theme, forceUpdate = true) {
 
 		const defaultTheme = THEMES.default;

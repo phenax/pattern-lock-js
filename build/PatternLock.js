@@ -41,6 +41,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+// type Theme = String | Object
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
 };
@@ -85,6 +86,8 @@ function () {
     _defineProperty(this, "matchPassword", this._match('password'));
 
     if (!config.$canvas) throw createInvalidOptionError('$canvas');
+    if (!config.width) throw createInvalidOptionError('width');
+    if (!config.height) throw createInvalidOptionError('height');
     config = _objectSpread({}, defaultConfig, config);
     this.$canvas = config.$canvas;
     this.dimens = {
@@ -111,11 +114,7 @@ function () {
       this.setTheme(config.theme);
       this.generateGrid.apply(this, _toConsumableArray(config.grid));
       this.attachEventHandlers();
-    }
-    /**
-     * Set the pattern lock screen theme
-     * @param {Object|string}   theme
-     */
+    } // setTheme :: (Theme, Boolean) -> Theme
 
   }, {
     key: "setTheme",
