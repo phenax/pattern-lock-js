@@ -7,6 +7,7 @@ import THEMES from './utils/themes';
 
 // type Theme = String | Object
 // type Node = { row :: Number, col :: Number }
+// type Point = { x :: Number, y: Number }
 
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
@@ -53,12 +54,8 @@ export class PatternLock {
 		this._subscriptions = [];
 		this.eventBus = EventBus();
 
-		this.rows = rows;
-		this.cols = cols;
-
-		this.setInitialState();
-		this._onResize();
-		this.setTheme(theme);
+		this.setTheme(theme, false);
+		this.setGrid(rows, cols);
 		this.renderGrid();
 		this.attachEventHandlers();
 	}
@@ -69,19 +66,25 @@ export class PatternLock {
 		this.lastSelectedNode = null;
 	}
 
-	forceRender() {
+	forceRender = () => raf(() => {
+		const previousDragState = this._isDragging;
+		this._isDragging = true;
+		this.calculationLoop(false);
+
 		raf(() => {
-			const previousDragState = this._isDragging;
-			this._isDragging = true;
-			this.calculationLoop(false);
-
-			raf(() => {
-				this.renderLoop(false);
-				this._isDragging = previousDragState;
-			});
+			this.renderLoop(false);
+			this._isDragging = previousDragState;
 		});
-	}
+	});
 
+	setGrid(rows, cols) {
+		this.rows = rows;
+		this.cols = cols;
+
+		this.setInitialState();
+		this._onResize();
+		this.forceRender();
+	}
 
 	// setTheme :: (Theme, Boolean) -> Theme
 	setTheme(theme, rerender = true) {
@@ -102,7 +105,6 @@ export class PatternLock {
 
 		return this.THEME;
 	}
-
 
 	/**
 	 * Attach event listeners and start frame loops
@@ -141,10 +143,14 @@ export class PatternLock {
 		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
 	}
 
-	recalculateBounds = () => this.bounds = this.$canvas.getBoundingClientRect();
+	// recalculateBounds :: () -> Point
+	recalculateBounds = () => this.bounds = ({
+		x: this.$canvas.offsetLeft,
+		y: this.$canvas.offsetTop,
+	});
 
 	_onResize = () => {
-		this.recalculateBounds();
+		raf(this.recalculateBounds);
 	}
 
 	_onTouchStart = e => {
@@ -172,24 +178,32 @@ export class PatternLock {
 
 		if (this._isDragging) {
 
-			const mousePoint = {
+			let mousePoint = {
 				x: e.pageX || e.touches[0].pageX,
 				y: e.pageY || e.touches[0].pageY,
 			};
 
-			mousePoint.x -= this.bounds.left;
-			mousePoint.y -= this.bounds.top;
+			console.log({ mousePoint, bounds: this.bounds });
 
-			if (
-				mousePoint.x <= this.dimens.width && mousePoint.x > 0 &&
-				mousePoint.y <= this.dimens.height && mousePoint.y > 0
-			) {
+			mousePoint = {
+				x: mousePoint.x - this.bounds.x,
+				y: mousePoint.y - this.bounds.y,
+			};
+
+			if (this.isPointInCanvas(mousePoint)) {
 				this.coordinates = mousePoint;
 			} else {
 				this._onTouchStop();
 			}
 		}
 	}
+
+	// Checks if given point is within the boundaries of the canvas
+	// isPointInCanvas :: Point -> Boolean
+	isPointInCanvas = ({ x, y }) => (
+		x <= this.dimens.width && x > 0 &&
+		y <= this.dimens.height && y > 0
+	);
 
 
 	// Check if the given node is already selected
