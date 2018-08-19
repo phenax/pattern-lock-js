@@ -103,6 +103,13 @@ export class PatternLock {
 		return this.THEME;
 	}
 
+	setGrid(rows, cols) {
+		this.rows = rows;
+		this.cols = cols;
+
+		this._onResize();
+		this.forceRender();
+	}
 
 	/**
 	 * Attach event listeners and start frame loops
