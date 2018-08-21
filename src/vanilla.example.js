@@ -4,7 +4,7 @@ import { div, input, text, h, onChange, render } from './example-helpers/bdom';
 
 
 const PatternLockCanvas = () => {
-	const $canvas = document.createElement('canvas');
+	const $canvas = h('canvas')();
 
 	const lock = PatternLock({
 		$canvas,
@@ -23,42 +23,48 @@ const PatternLockCanvas = () => {
 	return { lock, $canvas };
 };
 
-const App = () => {
+const OptionsGroup = ({ list, onSelect, name }) => (
+	div({ style: 'padding: 1em 0;' }, [
+		div({ style: 'font-size: 1.3em;' }, [ h('strong')({}, [ text(name) ]) ]),
+		div({},
+			list.map((item, index) => (
+				h('label')({ style: 'padding: .3em .5em;' }, [
+					onChange(onSelect(item, index), input({ type: 'radio', name })),
+					text(item),
+				])
+			))
+		),
+	])
+);
 
+const App = () => {
 	const { lock, $canvas } = PatternLockCanvas();
 
 	const $password = input();
 	lock.onComplete(({ hash } = {}) => $password.value = hash);
 
-	const onCheckChange = ({ target: $radio }) => {
-		if($radio.checked && $radio.value) {
-			const theme = $radio.value;
-			lock.setTheme(theme);
-		}
-	};
-
-	const themes = [ 'default', 'success', 'failure' ];
+	const onThemeSelect = theme => () => lock.setTheme(theme);
+	const onGridSelect = grid => () => lock.setGrid(...grid);
 
 	const $app = div({}, [
 		div({ class: 'title' }, [ text('PatternLockJS') ]),
 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
 		div({ class: 'canvas-wrapper' }, [ $canvas ]),
-		div({},
-			themes
-				.map(value => div({}, [
-					h('label')({}, [
-						input({ type: 'radio', name: 'themes', value }),
-						text(`Theme: ${value}`),
-					])
-				]))
-				.map($el => onChange(onCheckChange, $el))
-		),
 		div({ class: 'password' }, [ text('Your password is: '), $password ]),
+		OptionsGroup({
+			name: 'Grid',
+			list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
+			onSelect: onGridSelect,
+		}),
+		OptionsGroup({
+			name: 'Theme',
+			list: [ 'default', 'success', 'failure' ],
+			onSelect: onThemeSelect,
+		}),
 	]);
 
 	return { $app, lock };
 };
-
 
 document.addEventListener('DOMContentLoaded', () => {
 	const { $app, lock } = App();

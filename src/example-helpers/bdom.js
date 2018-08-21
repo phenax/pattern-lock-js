@@ -1,6 +1,6 @@
 
 const isValidAttribute = attrName => {
-	const invalidAttributes = [ 'style' ];
+	const invalidAttributes = [];
 	return invalidAttributes.indexOf(attrName) === -1;
 };
 
@@ -10,8 +10,7 @@ export const h = tagName => (props = {}, children = []) => {
 	Object.keys(props)
 		.filter(isValidAttribute)
 		.forEach(key => $el.setAttribute(key, props[key]));
-	
-	Object.assign($el.style, props.style);
+
 	children.forEach(child => $el.appendChild(child));
 
 	return $el;
@@ -20,11 +19,13 @@ export const h = tagName => (props = {}, children = []) => {
 export const text = str => document.createTextNode(str);
 export const div = h('div');
 export const input = h('input');
+export const button = h('button');
 
 export const onEvent = ev => (fn, $el) => {
 	$el.addEventListener(ev, fn);
 	return $el;
 };
+export const onClick = onEvent('click');
 export const onChange = onEvent('change');
 
 export const render = ($child, $parent) => $parent.appendChild($child);

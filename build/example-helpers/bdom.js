@@ -3,10 +3,10 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.render = exports.onChange = exports.onEvent = exports.input = exports.div = exports.text = exports.h = void 0;
+exports.render = exports.onChange = exports.onClick = exports.onEvent = exports.button = exports.input = exports.div = exports.text = exports.h = void 0;
 
 var isValidAttribute = function isValidAttribute(attrName) {
-  var invalidAttributes = ['style'];
+  var invalidAttributes = [];
   return invalidAttributes.indexOf(attrName) === -1;
 };
 
@@ -18,7 +18,6 @@ var h = function h(tagName) {
     Object.keys(props).filter(isValidAttribute).forEach(function (key) {
       return $el.setAttribute(key, props[key]);
     });
-    Object.assign($el.style, props.style);
     children.forEach(function (child) {
       return $el.appendChild(child);
     });
@@ -37,6 +36,8 @@ var div = h('div');
 exports.div = div;
 var input = h('input');
 exports.input = input;
+var button = h('button');
+exports.button = button;
 
 var onEvent = function onEvent(ev) {
   return function (fn, $el) {
@@ -46,6 +47,8 @@ var onEvent = function onEvent(ev) {
 };
 
 exports.onEvent = onEvent;
+var onClick = onEvent('click');
+exports.onClick = onClick;
 var onChange = onEvent('change');
 exports.onChange = onChange;
 
