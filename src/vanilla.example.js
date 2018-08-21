@@ -43,9 +43,6 @@ const App = () => {
 	const $password = input();
 	lock.onComplete(({ hash } = {}) => $password.value = hash);
 
-	const onThemeSelect = theme => () => lock.setTheme(theme);
-	const onGridSelect = grid => () => lock.setGrid(...grid);
-
 	const $app = div({}, [
 		div({ class: 'title' }, [ text('PatternLockJS') ]),
 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
@@ -54,13 +51,13 @@ const App = () => {
 		OptionsGroup({
 			name: 'Grid',
 			list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
-			onSelect: onGridSelect,
+			onSelect: grid => () => lock.setGrid(...grid),
 		}),
-		OptionsGroup({
-			name: 'Theme',
-			list: [ 'default', 'success', 'failure' ],
-			onSelect: onThemeSelect,
-		}),
+		// OptionsGroup({
+		// 	name: 'Theme',
+		// 	list: [ 'default', 'success', 'failure' ],
+		// 	onSelect: theme => () => lock.setTheme(theme),
+		// }),
 	]);
 
 	return { $app, lock };
