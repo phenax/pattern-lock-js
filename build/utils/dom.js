@@ -7,7 +7,9 @@ exports.getPixelRatio = exports.raf = exports.registerEvent = exports.unregister
 
 var unregisterEvent = function unregisterEvent(target, event, fn) {
   return event.split(' ').forEach(function (ev) {
-    return target.removeEventListener(ev, fn);
+    return target.removeEventListener(ev, fn, {
+      passive: false
+    });
   });
 };
 
@@ -15,7 +17,9 @@ exports.unregisterEvent = unregisterEvent;
 
 var registerEvent = function registerEvent(target, event, fn) {
   event.split(' ').forEach(function (ev) {
-    return target.addEventListener(ev, fn);
+    return target.addEventListener(ev, fn, {
+      passive: false
+    });
   });
   return function () {
     return unregisterEvent(target, event, fn);

@@ -37,6 +37,10 @@
 			text-align: left;
 		}
 
+		.canvas-wrapper {
+			padding: 2em 0;
+		}
+
 		.password {
 			padding: 1em 0;
 		}
@@ -47,17 +51,7 @@
 
 
 <div class='pattern-container'>
-
-	<div class='title'>PatternLockJS</div>
-	<div class='subtitle'>Draw unlock pattern to generate a hash</div>
-
-	<br />
-
-	<canvas id='patternLock'></canvas>
-	<div class='password'>
-		Your password is: <input class='js-password' type='text' />
-	</div>
-
+	<div id='root'></div>
 </div>
 
 <script src='./build/example.js'></script>

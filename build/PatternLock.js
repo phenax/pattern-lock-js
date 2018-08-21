@@ -43,6 +43,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 // type Theme = String | Object
 // type Node = { row :: Number, col :: Number }
+// type Point = { x :: Number, y: Number }
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
 };
@@ -65,6 +66,21 @@ function () {
     var _this = this;
 
     _classCallCheck(this, PatternLock);
+
+    _defineProperty(this, "forceRender", function () {
+      return (0, _dom.raf)(function () {
+        var previousDragState = _this._isDragging;
+        _this._isDragging = true;
+
+        _this.calculationLoop(false);
+
+        (0, _dom.raf)(function () {
+          _this.renderLoop(false);
+
+          _this._isDragging = previousDragState;
+        });
+      });
+    });
 
     _defineProperty(this, "destroy", function () {
       return _this._subscriptions.map(function (fn) {
@@ -90,8 +106,15 @@ function () {
       return _this.emit(events.PATTERN_START, {});
     });
 
+    _defineProperty(this, "recalculateBounds", function () {
+      return _this.bounds = {
+        x: _this.$canvas.offsetLeft,
+        y: _this.$canvas.offsetTop
+      };
+    });
+
     _defineProperty(this, "_onResize", function () {
-      _this.bounds = _this.$canvas.getBoundingClientRect();
+      (0, _dom.raf)(_this.recalculateBounds);
     });
 
     _defineProperty(this, "_onTouchStart", function (e) {
@@ -125,15 +148,27 @@ function () {
           x: e.pageX || e.touches[0].pageX,
           y: e.pageY || e.touches[0].pageY
         };
-        mousePoint.x -= _this.bounds.left;
-        mousePoint.y -= _this.bounds.top;
+        console.log({
+          mousePoint: mousePoint,
+          bounds: _this.bounds
+        });
+        mousePoint = {
+          x: mousePoint.x - _this.bounds.x,
+          y: mousePoint.y - _this.bounds.y
+        };
 
-        if (mousePoint.x <= _this.dimens.width && mousePoint.x > 0 && mousePoint.y <= _this.dimens.height && mousePoint.y > 0) {
+        if (_this.isPointInCanvas(mousePoint)) {
           _this.coordinates = mousePoint;
         } else {
           _this._onTouchStop();
         }
       }
+    });
+
+    _defineProperty(this, "isPointInCanvas", function (_ref) {
+      var x = _ref.x,
+          y = _ref.y;
+      return x <= _this.dimens.width && x > 0 && y <= _this.dimens.height && y > 0;
     });
 
     _defineProperty(this, "isSelected", function (targetNode) {
@@ -266,21 +301,16 @@ function () {
     }
   }, {
     key: "initialize",
-    value: function initialize(_ref) {
-      var theme = _ref.theme,
-          _ref$grid = _slicedToArray(_ref.grid, 2),
-          rows = _ref$grid[0],
-          cols = _ref$grid[1];
+    value: function initialize(_ref2) {
+      var theme = _ref2.theme,
+          _ref2$grid = _slicedToArray(_ref2.grid, 2),
+          rows = _ref2$grid[0],
+          cols = _ref2$grid[1];
 
       this._subscriptions = [];
       this.eventBus = (0, _EventBus.default)();
-      this.rows = rows;
-      this.cols = cols;
-      this.setInitialState();
-
-      this._onResize();
-
-      this.setTheme(theme);
+      this.setTheme(theme, false);
+      this.setGrid(rows, cols);
       this.renderGrid();
       this.attachEventHandlers();
     }
@@ -292,22 +322,15 @@ function () {
       this.lastSelectedNode = null;
     }
   }, {
-    key: "forceRender",
-    value: function forceRender() {
-      var _this2 = this;
+    key: "setGrid",
+    value: function setGrid(rows, cols) {
+      this.rows = rows;
+      this.cols = cols;
+      this.setInitialState();
 
-      (0, _dom.raf)(function () {
-        var previousDragState = _this2._isDragging;
-        _this2._isDragging = true;
+      this._onResize();
 
-        _this2.calculationLoop(false);
-
-        (0, _dom.raf)(function () {
-          _this2.renderLoop(false);
-
-          _this2._isDragging = previousDragState;
-        });
-      });
+      this.forceRender();
     } // setTheme :: (Theme, Boolean) -> Theme
 
   }, {
@@ -334,10 +357,10 @@ function () {
   }, {
     key: "attachEventHandlers",
     value: function attachEventHandlers() {
-      var _this3 = this;
+      var _this2 = this;
 
       var register = function register(t, ev, fn) {
-        return _this3._subscriptions.push((0, _dom.registerEvent)(t, ev, fn));
+        return _this2._subscriptions.push((0, _dom.registerEvent)(t, ev, fn));
       };
 
       register(this.$canvas, 'mousedown touchstart', this._onTouchStart);
@@ -367,7 +390,8 @@ function () {
         nodes: nodes,
         hash: hash
       });
-    }
+    } // recalculateBounds :: () -> Point
+
   }, {
     key: "addIntermediaryNodes",
     // Adds intermediary nodes between lastSelectedNode and the targetNode
@@ -457,7 +481,7 @@ function () {
   }, {
     key: "forEachNode",
     value: function forEachNode(callback) {
-      var _this4 = this;
+      var _this3 = this;
 
       var xGrid = Array(this.rows).fill(this.interval.x);
       var yGrid = Array(this.cols).fill(this.interval.y);
@@ -469,7 +493,7 @@ function () {
             // If the callback returns false, break out of the loop
             if (callback(x, y) === false) throw breakException;
             return x + dx;
-          }, _this4.interval.x);
+          }, _this3.interval.x);
           return y + dy;
         }, this.interval.y);
       } catch (e) {
