@@ -4,20 +4,21 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-var THEMES = {};
-THEMES.dark = {
+var themes = {};
+var DEFAULT_DIMENS = {
+  line_width: 6,
+  node_radius: 20,
+  node_core: 8,
+  node_ring: 1
+};
+themes.dark = {
   default: {
     colors: {
       accent: '#ae64cd',
       primary: '#ffffff',
       bg: '#2c3e50'
     },
-    dimens: {
-      line_width: 6,
-      node_radius: 20,
-      node_core: 8,
-      node_ring: 1
-    }
+    dimens: DEFAULT_DIMENS
   },
   success: {
     colors: {
@@ -30,19 +31,14 @@ THEMES.dark = {
     }
   }
 };
-THEMES.light = {
+themes.light = {
   default: {
     colors: {
       accent: '#ae64cd',
       primary: '#34495e',
       bg: '#ecf0f1'
     },
-    dimens: {
-      line_width: 6,
-      node_radius: 20,
-      node_core: 8,
-      node_ring: 1
-    }
+    dimens: DEFAULT_DIMENS
   },
   success: {
     colors: {
@@ -55,5 +51,5 @@ THEMES.light = {
     }
   }
 };
-var _default = THEMES;
+var _default = themes;
 exports.default = _default;

@@ -87,6 +87,7 @@ export class PatternLock {
 		});
 	});
 
+	// setGrid :: (Number, Number) -> PatternLock
 	setGrid(rows, cols) {
 		this.rows = rows;
 		this.cols = cols;
@@ -94,6 +95,7 @@ export class PatternLock {
 		this.setInitialState();
 		this._onResize();
 		this.forceRender();
+		return this;
 	}
 
 	// setTheme :: (Theme, Boolean) -> PatternLock
@@ -125,9 +127,7 @@ export class PatternLock {
 		return this;
 	}
 
-	/**
-	 * Attach event listeners and start frame loops
-	 */
+	// Attach event listeners and start frame loops
 	attachEventHandlers() {
 		const register = (t, ev, fn) => this._subscriptions.push(registerEvent(t, ev, fn));
 
@@ -141,6 +141,9 @@ export class PatternLock {
 		raf(this.calculationLoop);
 	}
 
+
+
+	// Event handler stuff start
 	destroy = () => this._subscriptions.map(fn => fn());
 
 	on(event, fn) {
@@ -152,8 +155,6 @@ export class PatternLock {
 	onStart = fn => this.on(events.PATTERN_START, fn);
 	onComplete = fn => this.on(events.PATTERN_COMPLETE, fn);
 
-
-
 	_emitPatternStart = () => this.emit(events.PATTERN_START, {});
 	_emitPatternComplete() {
 		const nodes = this.selectedNodes;
@@ -161,6 +162,8 @@ export class PatternLock {
 		const hash = hashCode(password);
 		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
 	}
+	// Event handler stuff end
+
 
 	// recalculateBounds :: () -> Point
 	recalculateBounds = () => this.bounds = ({
@@ -168,9 +171,7 @@ export class PatternLock {
 		y: this.$canvas.offsetTop,
 	});
 
-	_onResize = () => {
-		raf(this.recalculateBounds);
-	}
+	_onResize = () => raf(this.recalculateBounds);
 
 	_onTouchStart = e => {
 		if (e) e.preventDefault();
@@ -276,7 +277,9 @@ export class PatternLock {
 		let dCsign = (previousNode.col - nextNode.col) < 0 ? 1 : -1;
 
 		if (dRow === 0) {
-			if (dCol !== 0) finalStep.col = dCsign;
+			if (dCol !== 0) {
+				finalStep.col = dCsign;
+			}
 		} else if (dCol === 0) {
 			finalStep.row = dRsign;
 		} else {
@@ -327,60 +330,43 @@ export class PatternLock {
 
 	// Render the state of the lock
 	renderLoop = (runLoop = true) => {
-
 		if (this._isDragging) {
-			const { accent, primary } = this.themeState.colors;
+			const {
+				colors: { accent, primary },
+				dimens: { node_ring: ringWidth }
+			} = this.themeState;
 
 			// Clear the canvas(Redundant)
 			this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
 
+			// Paint the grid
 			this.renderGrid();
 
 			// Plot all the selected nodes
 			const lastNode = this.selectedNodes.reduce((prevNode, node) => {
 				if (prevNode) {
-
-					const point1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
-					const point2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
+					const p1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
+					const p2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
 
 					// Make the two selected nodes bigger
-					this.drawNode(
-						point1.x, point1.y,
-						accent, primary,
-						this.themeState.dimens.node_ring + 3
-					);
-					this.drawNode(
-						point2.x, point2.y,
-						accent, primary,
-						this.themeState.dimens.node_ring + 3
-					);
+					this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
+					this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3);
 
 					// Join the nodes
-					this.joinNodes(
-						prevNode.row, prevNode.col,
-						node.row, node.col
-					);
+					this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
 				}
 
 				return node;
 			}, null);
 
-
 			if (lastNode && this.coordinates) {
+				const prevPoint = { x: lastNode.row * this.interval.x, y: lastNode.col * this.interval.y };
 
 				// Draw the last node
-				this.drawNode(
-					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
-					accent, primary,
-					this.themeState.dimens.node_ring + 6
-				);
+				this.drawNode(prevPoint.x, prevPoint.y, accent, primary, ringWidth + 6);
 
 				// Draw a line between last node to the current drag position
-				this.joinNodes(
-					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
-					this.coordinates.x, this.coordinates.y,
-					true
-				);
+				this.joinNodes(prevPoint.x, prevPoint.y, this.coordinates.x, this.coordinates.y, true);
 			}
 		}
 
@@ -410,29 +396,20 @@ export class PatternLock {
 	// forEachNode :: ((x, y) -> Boolean) -> ()
 	forEachNode(callback) {
 
-		const xGrid = Array(this.rows).fill(this.interval.x);
-		const yGrid = Array(this.cols).fill(this.interval.y);
+		const xGrid = Array(this.rows + 1).fill(this.interval.x);
+		const yGrid = Array(this.cols + 1).fill(this.interval.y);
 
 		const breakException = new Error('Break Exception');
 
 		try {
-
 			yGrid.reduce((y, dy) => {
-
 				xGrid.reduce((x, dx) => {
-
-					// If the callback returns false, break out of the loop
 					if (callback(x, y) === false)
 						throw breakException;
-
 					return x + dx;
-
-				}, this.interval.x);
-
+				});
 				return y + dy;
-
-			}, this.interval.y);
-
+			});
 		} catch (e) {
 			if (e !== breakException) throw e;
 		}
@@ -440,19 +417,24 @@ export class PatternLock {
 
 	drawNode(x, y, centerColor, borderColor, size) {
 
+		const {
+			dimens: { node_ring: ringWidth, node_radius: ringRadius, node_core: coreRadius },
+			colors: { primary }
+		} = this.themeState;
+
 		// Config
-		this.ctx.lineWidth = size || this.themeState.dimens.node_ring;
-		this.ctx.fillStyle = centerColor || this.themeState.colors.primary;
-		this.ctx.strokeStyle = borderColor || this.themeState.colors.primary;
+		this.ctx.lineWidth = size || ringWidth;
+		this.ctx.fillStyle = centerColor || primary;
+		this.ctx.strokeStyle = borderColor || primary;
 
 		// Draw inner circle
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.themeState.dimens.node_core, 0, Math.PI * 2);
+		this.ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
 		this.ctx.fill();
 
 		// Draw outer ring
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.themeState.dimens.node_radius, 0, Math.PI * 2);
+		this.ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
 		this.ctx.stroke();
 	}
 
