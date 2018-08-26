@@ -270,7 +270,7 @@ function () {
     });
 
     _defineProperty(this, "matchHash", function (values) {
-      var matcher = (0, _Matcher.default)(values);
+      var matcher = (0, _Matcher.default)(values, _this.eventBus);
 
       _this.onComplete(function (data) {
         return matcher.check(data.hash);

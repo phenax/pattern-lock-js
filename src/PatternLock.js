@@ -462,7 +462,7 @@ export class PatternLock {
 	// Will check if the drawn pattern matches produces a hash from the passed list
 	// matchHash :: Array<Hash> -> Matcher
 	matchHash = values => {
-		const matcher = Matcher(values);
+		const matcher = Matcher(values, this.eventBus);
 		this.onComplete(data => matcher.check(data.hash));
 		return matcher;
 	};
