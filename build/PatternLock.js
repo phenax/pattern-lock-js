@@ -41,19 +41,28 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-// type Theme = String | Object
-// type Node = { row :: Number, col :: Number }
-// type Point = { x :: Number, y: Number }
+/*
+type Theme = String | Object
+type Node = { row :: Number, col :: Number }
+type Point = { x :: Number, y: Number }
+type State = 'default' | 'success' | 'failure'
+type Styles = {
+	colors :: {},
+	dimens :: {},
+};
+*/
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
 };
 
+var DEFAULT_THEME_NAME = 'dark';
+var DEFAULT_THEME = _themes.default[DEFAULT_THEME_NAME];
 var events = {
   PATTERN_COMPLETE: 'complete',
   PATTERN_START: 'start'
 };
 var defaultConfig = {
-  theme: 'default',
+  theme: DEFAULT_THEME_NAME,
   grid: [3, 3],
   width: 300,
   height: 430
@@ -180,7 +189,7 @@ function () {
         _this.forEachNode(function (x, y) {
           var dist = Math.sqrt(Math.pow(_this.coordinates.x - x, 2) + Math.pow(_this.coordinates.y - y, 2));
 
-          if (dist < _this.THEME.dimens.node_radius + 1) {
+          if (dist < _this.themeState.dimens.node_radius + 1) {
             var row = x / _this.interval.x;
             var col = y / _this.interval.y;
             var currentNode = {
@@ -208,9 +217,9 @@ function () {
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       if (_this._isDragging) {
-        var _this$THEME$colors = _this.THEME.colors,
-            accent = _this$THEME$colors.accent,
-            primary = _this$THEME$colors.primary; // Clear the canvas(Redundant)
+        var _this$themeState$colo = _this.themeState.colors,
+            accent = _this$themeState$colo.accent,
+            primary = _this$themeState$colo.primary; // Clear the canvas(Redundant)
 
         _this.ctx.clearRect(0, 0, _this.dimens.width, _this.dimens.height);
 
@@ -228,9 +237,9 @@ function () {
               y: prevNode.col * _this.interval.y
             }; // Make the two selected nodes bigger
 
-            _this.drawNode(point1.x, point1.y, accent, primary, _this.THEME.dimens.node_ring + 3);
+            _this.drawNode(point1.x, point1.y, accent, primary, _this.themeState.dimens.node_ring + 3);
 
-            _this.drawNode(point2.x, point2.y, accent, primary, _this.THEME.dimens.node_ring + 3); // Join the nodes
+            _this.drawNode(point2.x, point2.y, accent, primary, _this.themeState.dimens.node_ring + 3); // Join the nodes
 
 
             _this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
@@ -241,7 +250,7 @@ function () {
 
         if (lastNode && _this.coordinates) {
           // Draw the last node
-          _this.drawNode(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, accent, primary, _this.THEME.dimens.node_ring + 6); // Draw a line between last node to the current drag position
+          _this.drawNode(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, accent, primary, _this.themeState.dimens.node_ring + 6); // Draw a line between last node to the current drag position
 
 
           _this.joinNodes(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, _this.coordinates.x, _this.coordinates.y, true);
@@ -327,24 +336,34 @@ function () {
       this._onResize();
 
       this.forceRender();
-    } // setTheme :: (Theme, Boolean) -> Theme
+    } // setTheme :: (Theme, Boolean) -> PatternLock
 
   }, {
     key: "setTheme",
     value: function setTheme(theme) {
       var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var defaultTheme = _themes.default.default;
 
       if (typeof theme === 'string') {
         theme = _themes.default[theme];
       }
 
       if (!theme) throw createInvalidOptionError('theme');
-      this.THEME = this.THEME || {};
-      this.THEME.colors = _objectSpread({}, defaultTheme.colors, theme.colors);
-      this.THEME.dimens = _objectSpread({}, defaultTheme.dimens, theme.dimens);
+      this.theme = theme;
+      this.setThemeState('default', false);
       rerender && this.forceRender();
-      return this.THEME;
+      return this;
+    } // setThemeState :: (State, Boolean) -> PatternLock
+
+  }, {
+    key: "setThemeState",
+    value: function setThemeState(themeState) {
+      var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      if (!this.theme) throw createInvalidOptionError('theme');
+      this.themeState = this.theme[themeState || 'default'] || {};
+      this.themeState.colors = _objectSpread({}, this.theme.default.colors, this.themeState.colors);
+      this.themeState.dimens = _objectSpread({}, this.theme.default.dimens, this.themeState.dimens);
+      rerender && this.forceRender();
+      return this;
     }
     /**
      * Attach event listeners and start frame loops
@@ -464,7 +483,7 @@ function () {
      * Render the grid to the canvas
      */
     value: function renderGrid() {
-      this.ctx.fillStyle = this.THEME.colors.bg;
+      this.ctx.fillStyle = this.themeState.colors.bg;
       this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
       this.interval = {
         x: this.dimens.width / (this.rows + 1),
@@ -500,16 +519,16 @@ function () {
     key: "drawNode",
     value: function drawNode(x, y, centerColor, borderColor, size) {
       // Config
-      this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
-      this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
-      this.ctx.strokeStyle = borderColor || this.THEME.colors.primary; // Draw inner circle
+      this.ctx.lineWidth = size || this.themeState.dimens.node_ring;
+      this.ctx.fillStyle = centerColor || this.themeState.colors.primary;
+      this.ctx.strokeStyle = borderColor || this.themeState.colors.primary; // Draw inner circle
 
       this.ctx.beginPath();
-      this.ctx.arc(x, y, this.THEME.dimens.node_core, 0, Math.PI * 2);
+      this.ctx.arc(x, y, this.themeState.dimens.node_core, 0, Math.PI * 2);
       this.ctx.fill(); // Draw outer ring
 
       this.ctx.beginPath();
-      this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI * 2);
+      this.ctx.arc(x, y, this.themeState.dimens.node_radius, 0, Math.PI * 2);
       this.ctx.stroke();
     }
   }, {
@@ -534,8 +553,8 @@ function () {
         y: factor.y * col2
       }; // Config
 
-      this.ctx.lineWidth = this.THEME.dimens.line_width;
-      this.ctx.strokeStyle = this.THEME.colors.accent;
+      this.ctx.lineWidth = this.themeState.dimens.line_width;
+      this.ctx.strokeStyle = this.themeState.colors.accent;
       this.ctx.lineCap = 'round'; // Draw line
 
       this.ctx.beginPath();

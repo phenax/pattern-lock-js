@@ -15,10 +15,10 @@ const PatternLockCanvas = () => {
 
 	// Right L, Diagonal L
 	lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==')
-		.onSuccess(() => lock.setTheme('success'))
-		.onFailure(() => lock.setTheme('failure'));
+		.onSuccess(() => lock.setThemeState('success'))
+		.onFailure(() => lock.setThemeState('failure'));
 
-	lock.onStart(() => lock.setTheme('default'));
+	lock.onStart(() => lock.setThemeState('default'));
 
 	return { lock, $canvas };
 };
@@ -37,7 +37,7 @@ const App = () => {
 		}
 	};
 
-	const themes = [ 'default', 'success', 'failure' ];
+	const themes = [ 'dark', 'light' ];
 
 	const $app = div({}, [
 		div({ class: 'title' }, [ text('PatternLockJS') ]),

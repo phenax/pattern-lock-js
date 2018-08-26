@@ -5,11 +5,21 @@ import Matcher from './utils/Matcher';
 import THEMES from './utils/themes';
 
 
-// type Theme = String | Object
-// type Node = { row :: Number, col :: Number }
-// type Point = { x :: Number, y: Number }
+/*
+type Theme = String | Object
+type Node = { row :: Number, col :: Number }
+type Point = { x :: Number, y: Number }
+type State = 'default' | 'success' | 'failure'
+type Styles = {
+	colors :: {},
+	dimens :: {},
+};
+*/
 
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
+
+const DEFAULT_THEME_NAME = 'dark';
+const DEFAULT_THEME = THEMES[DEFAULT_THEME_NAME];
 
 const events = {
 	PATTERN_COMPLETE: 'complete',
@@ -17,7 +27,7 @@ const events = {
 };
 
 const defaultConfig = {
-	theme: 'default',
+	theme: DEFAULT_THEME_NAME,
 	grid: [ 3, 3 ],
 	width: 300,
 	height: 430,
@@ -86,10 +96,8 @@ export class PatternLock {
 		this.forceRender();
 	}
 
-	// setTheme :: (Theme, Boolean) -> Theme
+	// setTheme :: (Theme, Boolean) -> PatternLock
 	setTheme(theme, rerender = true) {
-
-		const defaultTheme = THEMES.default;
 
 		if(typeof theme === 'string') {
 			theme = THEMES[theme];
@@ -97,13 +105,24 @@ export class PatternLock {
 
 		if(!theme) throw createInvalidOptionError('theme');
 
-		this.THEME = this.THEME || {};
-		this.THEME.colors = { ...defaultTheme.colors, ...theme.colors };
-		this.THEME.dimens = { ...defaultTheme.dimens, ...theme.dimens };
+		this.theme = theme;
+
+		this.setThemeState('default', false);
 
 		rerender && this.forceRender();
+		return this;
+	}
 
-		return this.THEME;
+	// setThemeState :: (State, Boolean) -> PatternLock
+	setThemeState(themeState, rerender = true) {
+		if(!this.theme) throw createInvalidOptionError('theme');
+
+		this.themeState = this.theme[themeState || 'default'] || {};
+		this.themeState.colors = { ...this.theme.default.colors, ...this.themeState.colors };
+		this.themeState.dimens = { ...this.theme.default.dimens, ...this.themeState.dimens };
+
+		rerender && this.forceRender();
+		return this;
 	}
 
 	/**
@@ -285,7 +304,7 @@ export class PatternLock {
 					Math.pow(this.coordinates.y - y, 2)
 				);
 
-				if (dist < this.THEME.dimens.node_radius + 1) {
+				if (dist < this.themeState.dimens.node_radius + 1) {
 
 					const row = x / this.interval.x;
 					const col = y / this.interval.y;
@@ -310,7 +329,7 @@ export class PatternLock {
 	renderLoop = (runLoop = true) => {
 
 		if (this._isDragging) {
-			const { accent, primary } = this.THEME.colors;
+			const { accent, primary } = this.themeState.colors;
 
 			// Clear the canvas(Redundant)
 			this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
@@ -328,12 +347,12 @@ export class PatternLock {
 					this.drawNode(
 						point1.x, point1.y,
 						accent, primary,
-						this.THEME.dimens.node_ring + 3
+						this.themeState.dimens.node_ring + 3
 					);
 					this.drawNode(
 						point2.x, point2.y,
 						accent, primary,
-						this.THEME.dimens.node_ring + 3
+						this.themeState.dimens.node_ring + 3
 					);
 
 					// Join the nodes
@@ -353,7 +372,7 @@ export class PatternLock {
 				this.drawNode(
 					lastNode.row * this.interval.x, lastNode.col * this.interval.y,
 					accent, primary,
-					this.THEME.dimens.node_ring + 6
+					this.themeState.dimens.node_ring + 6
 				);
 
 				// Draw a line between last node to the current drag position
@@ -375,7 +394,7 @@ export class PatternLock {
 	 * Render the grid to the canvas
 	 */
 	renderGrid() {
-		this.ctx.fillStyle = this.THEME.colors.bg;
+		this.ctx.fillStyle = this.themeState.colors.bg;
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
 
 		this.interval = {
@@ -422,18 +441,18 @@ export class PatternLock {
 	drawNode(x, y, centerColor, borderColor, size) {
 
 		// Config
-		this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
-		this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
-		this.ctx.strokeStyle = borderColor || this.THEME.colors.primary;
+		this.ctx.lineWidth = size || this.themeState.dimens.node_ring;
+		this.ctx.fillStyle = centerColor || this.themeState.colors.primary;
+		this.ctx.strokeStyle = borderColor || this.themeState.colors.primary;
 
 		// Draw inner circle
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.THEME.dimens.node_core, 0, Math.PI * 2);
+		this.ctx.arc(x, y, this.themeState.dimens.node_core, 0, Math.PI * 2);
 		this.ctx.fill();
 
 		// Draw outer ring
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI * 2);
+		this.ctx.arc(x, y, this.themeState.dimens.node_radius, 0, Math.PI * 2);
 		this.ctx.stroke();
 	}
 
@@ -449,8 +468,8 @@ export class PatternLock {
 		const point2 = { x: factor.x * row2, y: factor.y * col2 };
 
 		// Config
-		this.ctx.lineWidth = this.THEME.dimens.line_width;
-		this.ctx.strokeStyle = this.THEME.colors.accent;
+		this.ctx.lineWidth = this.themeState.dimens.line_width;
+		this.ctx.strokeStyle = this.themeState.colors.accent;
 		this.ctx.lineCap = 'round';
 
 		// Draw line

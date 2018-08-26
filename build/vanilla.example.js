@@ -16,12 +16,12 @@ var PatternLockCanvas = function PatternLockCanvas() {
   }); // Right L, Diagonal L
 
   lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==').onSuccess(function () {
-    return lock.setTheme('success');
+    return lock.setThemeState('success');
   }).onFailure(function () {
-    return lock.setTheme('failure');
+    return lock.setThemeState('failure');
   });
   lock.onStart(function () {
-    return lock.setTheme('default');
+    return lock.setThemeState('default');
   });
   return {
     lock: lock,
@@ -51,7 +51,7 @@ var App = function App() {
     }
   };
 
-  var themes = ['default', 'success', 'failure'];
+  var themes = ['dark', 'light'];
   var $app = (0, _bdom.div)({}, [(0, _bdom.div)({
     class: 'title'
   }, [(0, _bdom.text)('PatternLockJS')]), (0, _bdom.div)({
