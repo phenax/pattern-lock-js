@@ -1,20 +1,50 @@
 import EventBus from './utils/EventBus';
+import Matcher from './utils/Matcher';
+
 import { patternToWords, hashCode, gcd } from './utils/libs';
 import { registerEvent, getPixelRatio, raf } from './utils/dom';
-import Matcher from './utils/Matcher';
+
 import THEMES from './utils/themes';
 
 
 /*
 type Hash = String
+type Pixels = Number
+type String = String
+type Grid = [ Number, Number ]
 type Theme = String | Object
+
 type Node = { row :: Number, col :: Number }
-type Point = { x :: Number, y: Number }
+type Point = { x :: Number, y :: Number }
+
 type State = 'default' | 'success' | 'failure'
+
+type Colors = {
+	bg :: String
+	accent :: String
+	primary :: String
+}
+
+type Dimens = {
+	line_width :: Pixels
+	node_radius :: Pixels
+	node_core :: Pixels
+	node_ring :: Pixels
+}
+
 type Styles = {
-	colors :: {},
-	dimens :: {},
-};
+	colors :: Colors
+	dimens :: Dimens
+}
+
+type Options = {
+	$canvas :: HTMLCanvasElement
+	theme :: ?Theme
+	grid :: ?Grid
+	width :: ?Pixels
+	height :: ?Pixels
+}
+
 */
 
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
@@ -98,7 +128,7 @@ export class PatternLock {
 		return this;
 	}
 
-	// setTheme :: (Theme, Boolean) -> PatternLock
+	// setTheme :: (Theme, ?Boolean) -> PatternLock
 	setTheme(theme, rerender = true) {
 
 		if(typeof theme === 'string') {
@@ -115,7 +145,7 @@ export class PatternLock {
 		return this;
 	}
 
-	// setThemeState :: (State, Boolean) -> PatternLock
+	// setThemeState :: (State, ?Boolean) -> PatternLock
 	setThemeState(themeState, rerender = true) {
 		if(!this.theme) throw createInvalidOptionError('theme');
 

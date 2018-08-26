@@ -7,11 +7,11 @@ exports.default = exports.PatternLock = void 0;
 
 var _EventBus = _interopRequireDefault(require("./utils/EventBus"));
 
+var _Matcher = _interopRequireDefault(require("./utils/Matcher"));
+
 var _libs = require("./utils/libs");
 
 var _dom = require("./utils/dom");
-
-var _Matcher = _interopRequireDefault(require("./utils/Matcher"));
 
 var _themes = _interopRequireDefault(require("./utils/themes"));
 
@@ -43,14 +43,42 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 /*
 type Hash = String
+type Pixels = Number
+type String = String
+type Grid = [ Number, Number ]
 type Theme = String | Object
+
 type Node = { row :: Number, col :: Number }
-type Point = { x :: Number, y: Number }
+type Point = { x :: Number, y :: Number }
+
 type State = 'default' | 'success' | 'failure'
+
+type Colors = {
+	bg :: String
+	accent :: String
+	primary :: String
+}
+
+type Dimens = {
+	line_width :: Pixels
+	node_radius :: Pixels
+	node_core :: Pixels
+	node_ring :: Pixels
+}
+
 type Styles = {
-	colors :: {},
-	dimens :: {},
-};
+	colors :: Colors
+	dimens :: Dimens
+}
+
+type Options = {
+	$canvas :: HTMLCanvasElement
+	theme :: ?Theme
+	grid :: ?Grid
+	width :: ?Pixels
+	height :: ?Pixels
+}
+
 */
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
@@ -337,7 +365,7 @@ function () {
 
       this.forceRender();
       return this;
-    } // setTheme :: (Theme, Boolean) -> PatternLock
+    } // setTheme :: (Theme, ?Boolean) -> PatternLock
 
   }, {
     key: "setTheme",
@@ -353,7 +381,7 @@ function () {
       this.setThemeState('default', false);
       rerender && this.forceRender();
       return this;
-    } // setThemeState :: (State, Boolean) -> PatternLock
+    } // setThemeState :: (State, ?Boolean) -> PatternLock
 
   }, {
     key: "setThemeState",
