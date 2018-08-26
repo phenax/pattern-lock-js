@@ -14,7 +14,7 @@ const PatternLockCanvas = () => {
 	});
 
 	// Right L, Diagonal L
-	lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==')
+	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==' ])
 		.onSuccess(() => lock.setThemeState('success'))
 		.onFailure(() => lock.setThemeState('failure'));
 

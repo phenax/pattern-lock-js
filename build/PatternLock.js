@@ -42,6 +42,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 /*
+type Hash = String
 type Theme = String | Object
 type Node = { row :: Number, col :: Number }
 type Point = { x :: Number, y: Number }
@@ -56,7 +57,6 @@ var createInvalidOptionError = function createInvalidOptionError(option) {
 };
 
 var DEFAULT_THEME_NAME = 'dark';
-var DEFAULT_THEME = _themes.default[DEFAULT_THEME_NAME];
 var events = {
   PATTERN_COMPLETE: 'complete',
   PATTERN_START: 'start'
@@ -269,23 +269,15 @@ function () {
       }
     });
 
-    _defineProperty(this, "_match", function (type) {
-      return function () {
-        for (var _len = arguments.length, values = new Array(_len), _key = 0; _key < _len; _key++) {
-          values[_key] = arguments[_key];
-        }
+    _defineProperty(this, "matchHash", function (values) {
+      var matcher = (0, _Matcher.default)(values);
 
-        var matcher = (0, _Matcher.default)(values);
+      _this.onComplete(function (data) {
+        return matcher.check(data.hash);
+      });
 
-        _this.onComplete(function (data) {
-          return matcher.check(data[type]);
-        });
-
-        return matcher;
-      };
+      return matcher;
     });
-
-    _defineProperty(this, "matchHash", this._match('hash'));
 
     if (!config.$canvas) throw createInvalidOptionError('$canvas');
     if (!config.width) throw createInvalidOptionError('width');
@@ -488,10 +480,7 @@ function () {
 
   }, {
     key: "renderGrid",
-
-    /**
-     * Render the grid to the canvas
-     */
+    // Render the grid to the canvas
     value: function renderGrid() {
       this.ctx.fillStyle = this.themeState.colors.bg;
       this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
@@ -574,7 +563,8 @@ function () {
       this.ctx.moveTo(point1.x, point1.y);
       this.ctx.lineTo(point2.x, point2.y);
       this.ctx.stroke();
-    } // _match :: String -> (...any) -> Matcher
+    } // Will check if the drawn pattern matches produces a hash from the passed list
+    // matchHash :: Array<Hash> -> Matcher
 
   }]);
 
@@ -584,8 +574,8 @@ function () {
 exports.PatternLock = PatternLock;
 
 var _default = function _default() {
-  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    args[_key2] = arguments[_key2];
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
   }
 
   return _construct(PatternLock, args);

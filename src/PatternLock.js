@@ -6,6 +6,7 @@ import THEMES from './utils/themes';
 
 
 /*
+type Hash = String
 type Theme = String | Object
 type Node = { row :: Number, col :: Number }
 type Point = { x :: Number, y: Number }
@@ -19,7 +20,6 @@ type Styles = {
 const createInvalidOptionError = option => new Error(`Invalid or empty ${option} passed`);
 
 const DEFAULT_THEME_NAME = 'dark';
-const DEFAULT_THEME = THEMES[DEFAULT_THEME_NAME];
 
 const events = {
 	PATTERN_COMPLETE: 'complete',
@@ -376,9 +376,7 @@ export class PatternLock {
 	}
 
 
-	/**
-	 * Render the grid to the canvas
-	 */
+	// Render the grid to the canvas
 	renderGrid() {
 		this.ctx.fillStyle = this.themeState.colors.bg;
 		this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
@@ -461,14 +459,13 @@ export class PatternLock {
 		this.ctx.stroke();
 	}
 
-
-	// _match :: String -> (...any) -> Matcher
-	_match = type => (...values) => {
+	// Will check if the drawn pattern matches produces a hash from the passed list
+	// matchHash :: Array<Hash> -> Matcher
+	matchHash = values => {
 		const matcher = Matcher(values);
-		this.onComplete(data => matcher.check(data[type]));
+		this.onComplete(data => matcher.check(data.hash));
 		return matcher;
 	};
-	matchHash = this._match('hash');
 }
 
 export default (...args) => new PatternLock(...args);
