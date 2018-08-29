@@ -14,6 +14,8 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var PatternLockCanvas = function PatternLockCanvas() {
   var $canvas = (0, _bdom.h)('canvas')();
   var lock = (0, _PatternLock.default)({
@@ -39,8 +41,9 @@ var PatternLockCanvas = function PatternLockCanvas() {
 
 var OptionsGroup = function OptionsGroup(_ref) {
   var list = _ref.list,
-      onSelect = _ref.onSelect,
-      name = _ref.name;
+      onItemSelect = _ref.onItemSelect,
+      name = _ref.name,
+      selected = _ref.selected;
   return (0, _bdom.div)({
     style: 'padding: 1em 0;'
   }, [(0, _bdom.div)({
@@ -48,10 +51,10 @@ var OptionsGroup = function OptionsGroup(_ref) {
   }, [(0, _bdom.h)('strong')({}, [(0, _bdom.text)(name)])]), (0, _bdom.div)({}, list.map(function (item, index) {
     return (0, _bdom.h)('label')({
       style: 'padding: .3em .5em;'
-    }, [(0, _bdom.onChange)(onSelect(item, index), (0, _bdom.input)({
+    }, [(0, _bdom.onChange)(onItemSelect(item, index), (0, _bdom.input)(_defineProperty({
       type: 'radio',
       name: name
-    })), (0, _bdom.text)(item)]);
+    }, index === selected ? 'checked' : 'unchecked', true))), (0, _bdom.text)(item)]);
   }))]);
 };
 
@@ -78,17 +81,31 @@ var App = function App() {
   }, [(0, _bdom.text)('Your password is: '), $password]), OptionsGroup({
     name: 'Grid',
     list: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
-    onSelect: function onSelect(grid) {
+    selected: 1,
+    onItemSelect: function onItemSelect(grid) {
       return function () {
         return lock.setGrid.apply(lock, _toConsumableArray(grid));
       };
     }
-  })] // OptionsGroup({
-  // 	name: 'Theme',
-  // 	list: [ 'dark', 'light' ],
-  // 	onSelect: theme => () => lock.setTheme(theme),
-  // }),
-  );
+  }), OptionsGroup({
+    name: 'Theme',
+    list: ['dark', 'light'],
+    selected: 0,
+    onItemSelect: function onItemSelect(theme) {
+      return function () {
+        return lock.setTheme(theme);
+      };
+    }
+  }), OptionsGroup({
+    name: 'Theme State',
+    list: ['default', 'success', 'failure'],
+    selected: 0,
+    onItemSelect: function onItemSelect(state) {
+      return function () {
+        return lock.setThemeState(state);
+      };
+    }
+  })]);
   return {
     $app: $app,
     lock: lock

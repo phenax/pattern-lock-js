@@ -23,13 +23,20 @@ const PatternLockCanvas = () => {
 	return { lock, $canvas };
 };
 
-const OptionsGroup = ({ list, onSelect, name }) => (
+const OptionsGroup = ({ list, onItemSelect, name, selected }) => (
 	div({ style: 'padding: 1em 0;' }, [
 		div({ style: 'font-size: 1.3em;' }, [ h('strong')({}, [ text(name) ]) ]),
 		div({},
 			list.map((item, index) => (
 				h('label')({ style: 'padding: .3em .5em;' }, [
-					onChange(onSelect(item, index), input({ type: 'radio', name })),
+					onChange(
+						onItemSelect(item, index),
+						input({
+							type: 'radio',
+							name,
+							[index === selected ? 'checked': 'unchecked']: true
+						}),
+					),
 					text(item),
 				])
 			))
@@ -51,13 +58,21 @@ const App = () => {
 		OptionsGroup({
 			name: 'Grid',
 			list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
-			onSelect: grid => () => lock.setGrid(...grid),
+			selected: 1,
+			onItemSelect: grid => () => lock.setGrid(...grid),
 		}),
-		// OptionsGroup({
-		// 	name: 'Theme',
-		// 	list: [ 'dark', 'light' ],
-		// 	onSelect: theme => () => lock.setTheme(theme),
-		// }),
+		OptionsGroup({
+			name: 'Theme',
+			list: [ 'dark', 'light' ],
+			selected: 0,
+			onItemSelect: theme => () => lock.setTheme(theme),
+		}),
+		OptionsGroup({
+			name: 'Theme State',
+			list: [ 'default', 'success', 'failure' ],
+			selected: 0,
+			onItemSelect: state => () => lock.setThemeState(state),
+		}),
 	]);
 
 	return { $app, lock };
