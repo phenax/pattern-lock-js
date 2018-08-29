@@ -261,50 +261,50 @@ export class PatternLock {
 		node.col === targetNode.col
 	)).length;
 
-	// Adds intermediary nodes between lastSelectedNode and the targetNode
+	// Adds intermediary nodes between lastSelectedNode and the target
 	// addIntermediaryNodes :: Node -> ()
-	addIntermediaryNodes(targetNode) {
-		const stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, targetNode);
+	addIntermediaryNodes(target) {
+		const stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, target);
 
 		if (stepNode.row !== 0 || stepNode.col !== 0) {
-			let currentNode = {
+			let current = {
 				row: this.lastSelectedNode.row + stepNode.row,
 				col: this.lastSelectedNode.col + stepNode.col
 			};
 
-			const maxIterations = Math.max(this.rows, this.cols);
+			const max = Math.max(this.rows, this.cols);
 
 			let i = 0;
-			while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
-				this.selectedNodes.push(currentNode);
-				currentNode = {
-					row: currentNode.row + stepNode.row,
-					col: currentNode.col + stepNode.col,
+			while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
+				this.selectedNodes.push(current);
+				current = {
+					row: current.row + stepNode.row,
+					col: current.col + stepNode.col,
 				};
 			}
 		}
 
-		this.lastSelectedNode = targetNode;
+		this.lastSelectedNode = target;
 	}
 
 	// Returns the step direction to select intermediary nodes
 	// INFO: Can be moved out of the class as it is independent of `this`
 	// getIntermediaryStepDirection :: (Node, Node) -> Node
-	getIntermediaryStepDirection(previousNode, nextNode) {
+	getIntermediaryStepDirection(prev, next) {
 		let finalStep = { row: 0, col: 0 };
-		if (!previousNode) {
+		if (!prev) {
 			return finalStep;
 		}
 
-		const dRow = Math.abs(previousNode.row - nextNode.row);
-		const dCol = Math.abs(previousNode.col - nextNode.col);
+		const dRow = Math.abs(prev.row - next.row);
+		const dCol = Math.abs(prev.col - next.col);
 
 		if (dRow === 1 || dCol === 1) {
 			return finalStep;
 		}
 
-		let dRsign = (previousNode.row - nextNode.row) < 0 ? 1 : -1;
-		let dCsign = (previousNode.col - nextNode.col) < 0 ? 1 : -1;
+		let dRsign = (prev.row - next.row) < 0 ? 1 : -1;
+		let dCsign = (prev.col - next.col) < 0 ? 1 : -1;
 
 		if (dRow === 0) {
 			if (dCol !== 0) {
@@ -321,6 +321,7 @@ export class PatternLock {
 				finalStep.row = (dRow / gcdValue) * dRsign;
 			}
 		}
+
 		return finalStep;
 	}
 
@@ -423,7 +424,6 @@ export class PatternLock {
 
 	// forEachNode :: ((x, y) -> Boolean) -> ()
 	forEachNode(callback) {
-
 		const xGrid = Array(this.rows + 1).fill(this.interval.x);
 		const yGrid = Array(this.cols + 1).fill(this.interval.y);
 
@@ -444,7 +444,6 @@ export class PatternLock {
 	}
 
 	drawNode(x, y, centerColor, borderColor, size) {
-
 		const {
 			dimens: { node_ring: ringWidth, node_radius: ringRadius, node_core: coreRadius },
 			colors: { primary }
