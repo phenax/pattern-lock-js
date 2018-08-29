@@ -1,18 +1,8 @@
 
-const isValidAttribute = attrName => {
-	const invalidAttributes = [];
-	return invalidAttributes.indexOf(attrName) === -1;
-};
-
 export const h = tagName => (props = {}, children = []) => {
 	const $el = document.createElement(tagName);
-
-	Object.keys(props)
-		.filter(isValidAttribute)
-		.forEach(key => $el.setAttribute(key, props[key]));
-
+	Object.keys(props).forEach(key => $el.setAttribute(key, props[key]));
 	children.forEach(child => $el.appendChild(child));
-
 	return $el;
 };
 

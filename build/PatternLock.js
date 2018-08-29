@@ -7,11 +7,11 @@ exports.default = exports.PatternLock = void 0;
 
 var _EventBus = _interopRequireDefault(require("./utils/EventBus"));
 
+var _Matcher = _interopRequireDefault(require("./utils/Matcher"));
+
 var _libs = require("./utils/libs");
 
 var _dom = require("./utils/dom");
-
-var _Matcher = _interopRequireDefault(require("./utils/Matcher"));
 
 var _themes = _interopRequireDefault(require("./utils/themes"));
 
@@ -41,19 +41,56 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-// type Theme = String | Object
-// type Node = { row :: Number, col :: Number }
-// type Point = { x :: Number, y: Number }
+/*
+type Hash = String
+type Pixels = Number
+type String = String
+type Grid = [ Number, Number ]
+type Theme = String | Object
+
+type Node = { row :: Number, col :: Number }
+type Point = { x :: Number, y :: Number }
+
+type State = 'default' | 'success' | 'failure'
+
+type Colors = {
+	bg :: String
+	accent :: String
+	primary :: String
+}
+
+type Dimens = {
+	line_width :: Pixels
+	node_radius :: Pixels
+	node_core :: Pixels
+	node_ring :: Pixels
+}
+
+type Styles = {
+	colors :: Colors
+	dimens :: Dimens
+}
+
+type Options = {
+	$canvas :: HTMLCanvasElement
+	theme :: ?Theme
+	grid :: ?Grid
+	width :: ?Pixels
+	height :: ?Pixels
+}
+
+*/
 var createInvalidOptionError = function createInvalidOptionError(option) {
   return new Error("Invalid or empty ".concat(option, " passed"));
 };
 
+var DEFAULT_THEME_NAME = 'dark';
 var events = {
   PATTERN_COMPLETE: 'complete',
   PATTERN_START: 'start'
 };
 var defaultConfig = {
-  theme: 'default',
+  theme: DEFAULT_THEME_NAME,
   grid: [3, 3],
   width: 300,
   height: 430
@@ -114,7 +151,7 @@ function () {
     });
 
     _defineProperty(this, "_onResize", function () {
-      (0, _dom.raf)(_this.recalculateBounds);
+      return (0, _dom.raf)(_this.recalculateBounds);
     });
 
     _defineProperty(this, "_onTouchStart", function (e) {
@@ -180,7 +217,7 @@ function () {
         _this.forEachNode(function (x, y) {
           var dist = Math.sqrt(Math.pow(_this.coordinates.x - x, 2) + Math.pow(_this.coordinates.y - y, 2));
 
-          if (dist < _this.THEME.dimens.node_radius + 1) {
+          if (dist < _this.themeState.dimens.node_radius + 1) {
             var row = x / _this.interval.x;
             var col = y / _this.interval.y;
             var currentNode = {
@@ -208,29 +245,32 @@ function () {
       var runLoop = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
 
       if (_this._isDragging) {
-        var _this$THEME$colors = _this.THEME.colors,
-            accent = _this$THEME$colors.accent,
-            primary = _this$THEME$colors.primary; // Clear the canvas(Redundant)
+        var _this$themeState = _this.themeState,
+            _this$themeState$colo = _this$themeState.colors,
+            accent = _this$themeState$colo.accent,
+            primary = _this$themeState$colo.primary,
+            ringWidth = _this$themeState.dimens.node_ring; // Clear the canvas(Redundant)
 
-        _this.ctx.clearRect(0, 0, _this.dimens.width, _this.dimens.height);
+        _this.ctx.clearRect(0, 0, _this.dimens.width, _this.dimens.height); // Paint the grid
+
 
         _this.renderGrid(); // Plot all the selected nodes
 
 
         var lastNode = _this.selectedNodes.reduce(function (prevNode, node) {
           if (prevNode) {
-            var point1 = {
+            var p1 = {
               x: node.row * _this.interval.x,
               y: node.col * _this.interval.y
             };
-            var point2 = {
+            var p2 = {
               x: prevNode.row * _this.interval.x,
               y: prevNode.col * _this.interval.y
             }; // Make the two selected nodes bigger
 
-            _this.drawNode(point1.x, point1.y, accent, primary, _this.THEME.dimens.node_ring + 3);
+            _this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
 
-            _this.drawNode(point2.x, point2.y, accent, primary, _this.THEME.dimens.node_ring + 3); // Join the nodes
+            _this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3); // Join the nodes
 
 
             _this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
@@ -240,11 +280,15 @@ function () {
         }, null);
 
         if (lastNode && _this.coordinates) {
-          // Draw the last node
-          _this.drawNode(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, accent, primary, _this.THEME.dimens.node_ring + 6); // Draw a line between last node to the current drag position
+          var prevPoint = {
+            x: lastNode.row * _this.interval.x,
+            y: lastNode.col * _this.interval.y
+          }; // Draw the last node
+
+          _this.drawNode(prevPoint.x, prevPoint.y, accent, primary, ringWidth + 6); // Draw a line between last node to the current drag position
 
 
-          _this.joinNodes(lastNode.row * _this.interval.x, lastNode.col * _this.interval.y, _this.coordinates.x, _this.coordinates.y, true);
+          _this.joinNodes(prevPoint.x, prevPoint.y, _this.coordinates.x, _this.coordinates.y, true);
         }
       }
 
@@ -253,23 +297,15 @@ function () {
       }
     });
 
-    _defineProperty(this, "_match", function (type) {
-      return function () {
-        for (var _len = arguments.length, values = new Array(_len), _key = 0; _key < _len; _key++) {
-          values[_key] = arguments[_key];
-        }
+    _defineProperty(this, "matchHash", function (values) {
+      var matcher = (0, _Matcher.default)(values, _this.eventBus);
 
-        var matcher = (0, _Matcher.default)(values);
+      _this.onComplete(function (data) {
+        return matcher.check(data.hash);
+      });
 
-        _this.onComplete(function (data) {
-          return matcher.check(data[type]);
-        });
-
-        return matcher;
-      };
+      return matcher;
     });
-
-    _defineProperty(this, "matchHash", this._match('hash'));
 
     if (!config.$canvas) throw createInvalidOptionError('$canvas');
     if (!config.width) throw createInvalidOptionError('width');
@@ -319,6 +355,7 @@ function () {
     }
   }, {
     key: "setGrid",
+    // setGrid :: (Number, Number) -> PatternLock
     value: function setGrid(rows, cols) {
       this.rows = rows;
       this.cols = cols;
@@ -327,28 +364,36 @@ function () {
       this._onResize();
 
       this.forceRender();
-    } // setTheme :: (Theme, Boolean) -> Theme
+      return this;
+    } // setTheme :: (Theme, ?Boolean) -> PatternLock
 
   }, {
     key: "setTheme",
     value: function setTheme(theme) {
       var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-      var defaultTheme = _themes.default.default;
 
       if (typeof theme === 'string') {
         theme = _themes.default[theme];
       }
 
       if (!theme) throw createInvalidOptionError('theme');
-      this.THEME = this.THEME || {};
-      this.THEME.colors = _objectSpread({}, defaultTheme.colors, theme.colors);
-      this.THEME.dimens = _objectSpread({}, defaultTheme.dimens, theme.dimens);
+      this.theme = theme;
+      this.setThemeState('default', false);
       rerender && this.forceRender();
-      return this.THEME;
-    }
-    /**
-     * Attach event listeners and start frame loops
-     */
+      return this;
+    } // setThemeState :: (State, ?Boolean) -> PatternLock
+
+  }, {
+    key: "setThemeState",
+    value: function setThemeState(themeState) {
+      var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+      if (!this.theme) throw createInvalidOptionError('theme');
+      this.themeState = this.theme[themeState || 'default'] || {};
+      this.themeState.colors = _objectSpread({}, this.theme.default.colors, this.themeState.colors);
+      this.themeState.dimens = _objectSpread({}, this.theme.default.dimens, this.themeState.dimens);
+      rerender && this.forceRender();
+      return this;
+    } // Attach event listeners and start frame loops
 
   }, {
     key: "attachEventHandlers",
@@ -366,7 +411,8 @@ function () {
 
       (0, _dom.raf)(this.renderLoop);
       (0, _dom.raf)(this.calculationLoop);
-    }
+    } // Event handler stuff start
+
   }, {
     key: "on",
     value: function on(event, fn) {
@@ -386,61 +432,64 @@ function () {
         nodes: nodes,
         hash: hash
       });
-    } // recalculateBounds :: () -> Point
+    } // Event handler stuff end
+    // recalculateBounds :: () -> Point
 
   }, {
     key: "addIntermediaryNodes",
-    // Adds intermediary nodes between lastSelectedNode and the targetNode
+    // Adds intermediary nodes between lastSelectedNode and the target
     // addIntermediaryNodes :: Node -> ()
-    value: function addIntermediaryNodes(targetNode) {
-      var stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, targetNode);
+    value: function addIntermediaryNodes(target) {
+      var stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, target);
 
       if (stepNode.row !== 0 || stepNode.col !== 0) {
-        var currentNode = {
+        var current = {
           row: this.lastSelectedNode.row + stepNode.row,
           col: this.lastSelectedNode.col + stepNode.col
         };
-        var maxIterations = Math.max(this.rows, this.cols);
+        var max = Math.max(this.rows, this.cols);
         var i = 0;
 
-        while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
-          this.selectedNodes.push(currentNode);
-          currentNode = {
-            row: currentNode.row + stepNode.row,
-            col: currentNode.col + stepNode.col
+        while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
+          this.selectedNodes.push(current);
+          current = {
+            row: current.row + stepNode.row,
+            col: current.col + stepNode.col
           };
         }
       }
 
-      this.lastSelectedNode = targetNode;
+      this.lastSelectedNode = target;
     } // Returns the step direction to select intermediary nodes
     // INFO: Can be moved out of the class as it is independent of `this`
     // getIntermediaryStepDirection :: (Node, Node) -> Node
 
   }, {
     key: "getIntermediaryStepDirection",
-    value: function getIntermediaryStepDirection(previousNode, nextNode) {
+    value: function getIntermediaryStepDirection(prev, next) {
       var finalStep = {
         row: 0,
         col: 0
       };
 
-      if (!previousNode) {
+      if (!prev) {
         return finalStep;
       }
 
-      var dRow = Math.abs(previousNode.row - nextNode.row);
-      var dCol = Math.abs(previousNode.col - nextNode.col);
+      var dRow = Math.abs(prev.row - next.row);
+      var dCol = Math.abs(prev.col - next.col);
 
       if (dRow === 1 || dCol === 1) {
         return finalStep;
       }
 
-      var dRsign = previousNode.row - nextNode.row < 0 ? 1 : -1;
-      var dCsign = previousNode.col - nextNode.col < 0 ? 1 : -1;
+      var dRsign = prev.row - next.row < 0 ? 1 : -1;
+      var dCsign = prev.col - next.col < 0 ? 1 : -1;
 
       if (dRow === 0) {
-        if (dCol !== 0) finalStep.col = dCsign;
+        if (dCol !== 0) {
+          finalStep.col = dCsign;
+        }
       } else if (dCol === 0) {
         finalStep.row = dRsign;
       } else {
@@ -459,12 +508,9 @@ function () {
 
   }, {
     key: "renderGrid",
-
-    /**
-     * Render the grid to the canvas
-     */
+    // Render the grid to the canvas
     value: function renderGrid() {
-      this.ctx.fillStyle = this.THEME.colors.bg;
+      this.ctx.fillStyle = this.themeState.colors.bg;
       this.ctx.fillRect(0, 0, this.dimens.width, this.dimens.height);
       this.interval = {
         x: this.dimens.width / (this.rows + 1),
@@ -477,21 +523,18 @@ function () {
   }, {
     key: "forEachNode",
     value: function forEachNode(callback) {
-      var _this3 = this;
-
-      var xGrid = Array(this.rows).fill(this.interval.x);
-      var yGrid = Array(this.cols).fill(this.interval.y);
+      var xGrid = Array(this.rows + 1).fill(this.interval.x);
+      var yGrid = Array(this.cols + 1).fill(this.interval.y);
       var breakException = new Error('Break Exception');
 
       try {
         yGrid.reduce(function (y, dy) {
           xGrid.reduce(function (x, dx) {
-            // If the callback returns false, break out of the loop
             if (callback(x, y) === false) throw breakException;
             return x + dx;
-          }, _this3.interval.x);
+          });
           return y + dy;
-        }, this.interval.y);
+        });
       } catch (e) {
         if (e !== breakException) throw e;
       }
@@ -499,17 +542,23 @@ function () {
   }, {
     key: "drawNode",
     value: function drawNode(x, y, centerColor, borderColor, size) {
-      // Config
-      this.ctx.lineWidth = size || this.THEME.dimens.node_ring;
-      this.ctx.fillStyle = centerColor || this.THEME.colors.primary;
-      this.ctx.strokeStyle = borderColor || this.THEME.colors.primary; // Draw inner circle
+      var _this$themeState2 = this.themeState,
+          _this$themeState2$dim = _this$themeState2.dimens,
+          ringWidth = _this$themeState2$dim.node_ring,
+          ringRadius = _this$themeState2$dim.node_radius,
+          coreRadius = _this$themeState2$dim.node_core,
+          primary = _this$themeState2.colors.primary; // Config
+
+      this.ctx.lineWidth = size || ringWidth;
+      this.ctx.fillStyle = centerColor || primary;
+      this.ctx.strokeStyle = borderColor || primary; // Draw inner circle
 
       this.ctx.beginPath();
-      this.ctx.arc(x, y, this.THEME.dimens.node_core, 0, Math.PI * 2);
+      this.ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
       this.ctx.fill(); // Draw outer ring
 
       this.ctx.beginPath();
-      this.ctx.arc(x, y, this.THEME.dimens.node_radius, 0, Math.PI * 2);
+      this.ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
       this.ctx.stroke();
     }
   }, {
@@ -534,15 +583,16 @@ function () {
         y: factor.y * col2
       }; // Config
 
-      this.ctx.lineWidth = this.THEME.dimens.line_width;
-      this.ctx.strokeStyle = this.THEME.colors.accent;
+      this.ctx.lineWidth = this.themeState.dimens.line_width;
+      this.ctx.strokeStyle = this.themeState.colors.accent;
       this.ctx.lineCap = 'round'; // Draw line
 
       this.ctx.beginPath();
       this.ctx.moveTo(point1.x, point1.y);
       this.ctx.lineTo(point2.x, point2.y);
       this.ctx.stroke();
-    } // _match :: String -> (...any) -> Matcher
+    } // Will check if the drawn pattern matches produces a hash from the passed list
+    // matchHash :: Array<Hash> -> Matcher
 
   }]);
 
@@ -552,8 +602,8 @@ function () {
 exports.PatternLock = PatternLock;
 
 var _default = function _default() {
-  for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    args[_key2] = arguments[_key2];
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
   }
 
   return _construct(PatternLock, args);

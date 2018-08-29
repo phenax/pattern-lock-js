@@ -5,17 +5,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.render = exports.onChange = exports.onClick = exports.onEvent = exports.button = exports.input = exports.div = exports.text = exports.h = void 0;
 
-var isValidAttribute = function isValidAttribute(attrName) {
-  var invalidAttributes = [];
-  return invalidAttributes.indexOf(attrName) === -1;
-};
-
 var h = function h(tagName) {
   return function () {
     var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
     var children = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
     var $el = document.createElement(tagName);
-    Object.keys(props).filter(isValidAttribute).forEach(function (key) {
+    Object.keys(props).forEach(function (key) {
       return $el.setAttribute(key, props[key]);
     });
     children.forEach(function (child) {

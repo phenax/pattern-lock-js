@@ -14,11 +14,11 @@ const PatternLockCanvas = () => {
 	});
 
 	// Right L, Diagonal L
-	lock.matchHash('LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==')
-		.onSuccess(() => lock.setTheme('success'))
-		.onFailure(() => lock.setTheme('failure'));
+	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==' ])
+		.onSuccess(() => lock.setThemeState('success'))
+		.onFailure(() => lock.setThemeState('failure'));
 
-	lock.onStart(() => lock.setTheme('default'));
+	lock.onStart(() => lock.setThemeState('default'));
 
 	return { lock, $canvas };
 };
@@ -55,7 +55,7 @@ const App = () => {
 		}),
 		// OptionsGroup({
 		// 	name: 'Theme',
-		// 	list: [ 'default', 'success', 'failure' ],
+		// 	list: [ 'dark', 'light' ],
 		// 	onSelect: theme => () => lock.setTheme(theme),
 		// }),
 	]);
