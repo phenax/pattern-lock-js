@@ -23,23 +23,30 @@ const PatternLockCanvas = () => {
 	return { lock, $canvas };
 };
 
+const OptionItem = ({ name, value, isSelected, onSelect }) => (
+	h('label')({ style: 'padding: .3em .5em;' }, [
+		onChange(
+			onSelect,
+			input({
+				type: 'radio',
+				name,
+				[isSelected ? 'checked': 'unchecked']: true
+			}),
+		),
+		text(value),
+	])
+);
+
 const OptionsGroup = ({ list, onItemSelect, name, selected }) => (
 	div({ style: 'padding: 1em 0;' }, [
 		div({ style: 'font-size: 1.3em;' }, [ h('strong')({}, [ text(name) ]) ]),
 		div({},
-			list.map((item, index) => (
-				h('label')({ style: 'padding: .3em .5em;' }, [
-					onChange(
-						onItemSelect(item, index),
-						input({
-							type: 'radio',
-							name,
-							[index === selected ? 'checked': 'unchecked']: true
-						}),
-					),
-					text(item),
-				])
-			))
+			list.map((item, index) => OptionItem({
+				name,
+				value: item,
+				isSelected: index === selected,
+				onSelect: onItemSelect(item, index),
+			}))
 		),
 	])
 );

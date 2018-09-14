@@ -39,22 +39,35 @@ var PatternLockCanvas = function PatternLockCanvas() {
   };
 };
 
-var OptionsGroup = function OptionsGroup(_ref) {
-  var list = _ref.list,
-      onItemSelect = _ref.onItemSelect,
-      name = _ref.name,
-      selected = _ref.selected;
+var OptionItem = function OptionItem(_ref) {
+  var name = _ref.name,
+      value = _ref.value,
+      isSelected = _ref.isSelected,
+      onSelect = _ref.onSelect;
+  return (0, _bdom.h)('label')({
+    style: 'padding: .3em .5em;'
+  }, [(0, _bdom.onChange)(onSelect, (0, _bdom.input)(_defineProperty({
+    type: 'radio',
+    name: name
+  }, isSelected ? 'checked' : 'unchecked', true))), (0, _bdom.text)(value)]);
+};
+
+var OptionsGroup = function OptionsGroup(_ref2) {
+  var list = _ref2.list,
+      onItemSelect = _ref2.onItemSelect,
+      name = _ref2.name,
+      selected = _ref2.selected;
   return (0, _bdom.div)({
     style: 'padding: 1em 0;'
   }, [(0, _bdom.div)({
     style: 'font-size: 1.3em;'
   }, [(0, _bdom.h)('strong')({}, [(0, _bdom.text)(name)])]), (0, _bdom.div)({}, list.map(function (item, index) {
-    return (0, _bdom.h)('label')({
-      style: 'padding: .3em .5em;'
-    }, [(0, _bdom.onChange)(onItemSelect(item, index), (0, _bdom.input)(_defineProperty({
-      type: 'radio',
-      name: name
-    }, index === selected ? 'checked' : 'unchecked', true))), (0, _bdom.text)(item)]);
+    return OptionItem({
+      name: name,
+      value: item,
+      isSelected: index === selected,
+      onSelect: onItemSelect(item, index)
+    });
   }))]);
 };
 
@@ -65,8 +78,8 @@ var App = function App() {
 
   var $password = (0, _bdom.input)();
   lock.onComplete(function () {
-    var _ref2 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        hash = _ref2.hash;
+    var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        hash = _ref3.hash;
 
     return $password.value = hash;
   });
