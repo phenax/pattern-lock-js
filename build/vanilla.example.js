@@ -76,6 +76,20 @@ var App = function App() {
       lock = _PatternLockCanvas.lock,
       $canvas = _PatternLockCanvas.$canvas;
 
+  var state = {
+    grid: {
+      value: '',
+      index: 1
+    },
+    theme: {
+      value: '',
+      index: 0
+    },
+    themeState: {
+      value: '',
+      index: 0
+    }
+  };
   var $password = (0, _bdom.input)();
   lock.onComplete(function () {
     var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
@@ -83,6 +97,17 @@ var App = function App() {
 
     return $password.value = hash;
   });
+
+  var stateChange = function stateChange(stateName, action) {
+    return function (value, index) {
+      state[stateName] = {
+        value: value,
+        index: index
+      };
+      return action(value);
+    };
+  };
+
   var $app = (0, _bdom.div)({}, [(0, _bdom.div)({
     class: 'title'
   }, [(0, _bdom.text)('PatternLockJS')]), (0, _bdom.div)({
@@ -91,34 +116,34 @@ var App = function App() {
     class: 'canvas-wrapper'
   }, [$canvas]), (0, _bdom.div)({
     class: 'password'
-  }, [(0, _bdom.text)('Your password is: '), $password]), OptionsGroup({
+  }, [(0, _bdom.text)('Your password is: '), $password]), (0, _bdom.div)({}, [OptionsGroup({
     name: 'Grid',
     list: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
-    selected: 1,
-    onItemSelect: function onItemSelect(grid) {
+    selected: state.grid.index,
+    onItemSelect: stateChange('grid', function (grid) {
       return function () {
         return lock.setGrid.apply(lock, _toConsumableArray(grid));
       };
-    }
+    })
   }), OptionsGroup({
     name: 'Theme',
     list: ['dark', 'light'],
-    selected: 0,
-    onItemSelect: function onItemSelect(theme) {
+    selected: state.theme.index,
+    onItemSelect: stateChange('theme', function (theme) {
       return function () {
         return lock.setTheme(theme);
       };
-    }
+    })
   }), OptionsGroup({
     name: 'Theme State',
     list: ['default', 'success', 'failure'],
-    selected: 0,
-    onItemSelect: function onItemSelect(state) {
+    selected: state.themeState.index,
+    onItemSelect: stateChange('themeState', function (ts) {
       return function () {
-        return lock.setThemeState(state);
+        return lock.setThemeState(ts);
       };
-    }
-  })]);
+    })
+  })])]);
   return {
     $app: $app,
     lock: lock

@@ -53,33 +53,45 @@ const OptionsGroup = ({ list, onItemSelect, name, selected }) => (
 
 const App = () => {
 	const { lock, $canvas } = PatternLockCanvas();
+	const state = {
+		grid: { value: '', index: 1 },
+		theme: { value: '', index: 0 },
+		themeState: { value: '', index: 0 },
+	};
 
 	const $password = input();
 	lock.onComplete(({ hash } = {}) => $password.value = hash);
+
+	const stateChange = (stateName, action) => (value, index) => {
+		state[stateName] = { value, index };
+		return action(value);
+	};
 
 	const $app = div({}, [
 		div({ class: 'title' }, [ text('PatternLockJS') ]),
 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
 		div({ class: 'canvas-wrapper' }, [ $canvas ]),
 		div({ class: 'password' }, [ text('Your password is: '), $password ]),
-		OptionsGroup({
-			name: 'Grid',
-			list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
-			selected: 1,
-			onItemSelect: grid => () => lock.setGrid(...grid),
-		}),
-		OptionsGroup({
-			name: 'Theme',
-			list: [ 'dark', 'light' ],
-			selected: 0,
-			onItemSelect: theme => () => lock.setTheme(theme),
-		}),
-		OptionsGroup({
-			name: 'Theme State',
-			list: [ 'default', 'success', 'failure' ],
-			selected: 0,
-			onItemSelect: state => () => lock.setThemeState(state),
-		}),
+		div({}, [
+			OptionsGroup({
+				name: 'Grid',
+				list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
+				selected: state.grid.index,
+				onItemSelect: stateChange('grid', grid => () => lock.setGrid(...grid)),
+			}),
+			OptionsGroup({
+				name: 'Theme',
+				list: [ 'dark', 'light' ],
+				selected: state.theme.index,
+				onItemSelect: stateChange('theme', theme => () => lock.setTheme(theme)),
+			}),
+			OptionsGroup({
+				name: 'Theme State',
+				list: [ 'default', 'success', 'failure' ],
+				selected: state.themeState.index,
+				onItemSelect: stateChange('themeState', ts => () => lock.setThemeState(ts)),
+			}),
+		]),
 	]);
 
 	return { $app, lock };
