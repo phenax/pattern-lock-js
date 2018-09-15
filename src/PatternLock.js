@@ -119,6 +119,9 @@ export class PatternLock {
 
 	// setGrid :: (Number, Number) -> PatternLock
 	setGrid(rows, cols) {
+		if(this.rows === rows && this.cols === cols)
+			return this;
+
 		this.rows = rows;
 		this.cols = cols;
 
@@ -130,10 +133,11 @@ export class PatternLock {
 
 	// setTheme :: (Theme, ?Boolean) -> PatternLock
 	setTheme(theme, rerender = true) {
+		if (theme === THEMES[this.theme] || theme === this.theme)
+			return this;
 
-		if(typeof theme === 'string') {
+		if(typeof theme === 'string')
 			theme = THEMES[theme];
-		}
 
 		if(!theme) throw createInvalidOptionError('theme');
 

@@ -2,7 +2,11 @@
 
 var _hyperapp = require("hyperapp");
 
+var _libs = require("./utils/libs");
+
 var _PatternLock = _interopRequireDefault(require("./PatternLock"));
+
+var _Options = require("./example-helpers/Options");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10,105 +14,53 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
 
-// import { div, input, text, h, onChange, render } from './example-helpers/bdom';
-// const PatternLockCanvas = () => {
-// 	const $canvas = h('canvas')();
-// 	const lock = PatternLock({
-// 		$canvas,
-// 		width: 300,
-// 		height: 430,
-// 		grid: [ 3, 3 ],
-// 	});
-// 	// Right L, Diagonal L
-// 	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==', 'LTYyMzEzNTM2Ng==' ])
-// 		.onSuccess(() => lock.setThemeState('success'))
-// 		.onFailure(() => lock.setThemeState('failure'));
-// 	lock.onStart(() => lock.setThemeState('default'));
-// 	return { lock, $canvas };
-// };
-// const App = ({ grids, themes, themeStates }) => {
-// 	const { lock, $canvas } = PatternLockCanvas();
-// 	const state = {
-// 		grid: { value: '', index: 1 },
-// 		theme: { value: '', index: 0 },
-// 		themeState: { value: '', index: 0 },
-// 	};
-// 	const $password = input();
-// 	lock.onComplete(({ hash } = {}) => $password.value = hash);
-// 	const $codeBox = div();
-// 	const renderCodeBox = () => render(CodeExample({ ...state }), $codeBox);
-// 	renderCodeBox();
-// 	const stateChange = (stateName, action) => (value, index) => {
-// 		state[stateName] = { value, index };
-// 		renderCodeBox();
-// 		return action(value);
-// 	};
-// 	const $app = div({}, [
-// 		div({ class: 'title' }, [ text('PatternLockJS') ]),
-// 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
-// 		div({ class: 'canvas-wrapper' }, [ $canvas ]),
-// 		div({ class: 'password' }, [ text('Your password is: '), $password ]),
-// 		div({}, [ $codeBox ]),
-// 		div({}, [
-// 			OptionsGroup({
-// 				name: 'Grid',
-// 				list: grids,
-// 				selected: state.grid.index,
-// 				onItemSelect: stateChange('grid', grid => () => lock.setGrid(...grid)),
-// 			}),
-// 			OptionsGroup({
-// 				name: 'Theme',
-// 				list: themes,
-// 				selected: state.theme.index,
-// 				onItemSelect: stateChange('theme', theme => () => lock.setTheme(theme)),
-// 			}),
-// 			OptionsGroup({
-// 				name: 'Theme State',
-// 				list: themeStates,
-// 				selected: state.themeState.index,
-// 				onItemSelect: stateChange('themeState', ts => () => lock.setThemeState(ts)),
-// 			}),
-// 		]),
-// 	]);
-// 	return { $app, lock };
-// };
-var OptionItem = function OptionItem(_ref) {
-  var name = _ref.name,
-      value = _ref.value,
-      isSelected = _ref.isSelected,
-      onSelect = _ref.onSelect;
-  return (0, _hyperapp.h)('label', {
-    style: 'padding: .3em .5em;'
-  }, [(0, _hyperapp.h)('input', _objectSpread({
-    type: 'radio',
-    name: name,
-    onchange: onSelect
-  }, isSelected ? {
-    checked: true
-  } : {})), value.toString()]);
-};
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
 
-var OptionsGroup = function OptionsGroup(_ref2) {
-  var list = _ref2.list,
-      onItemSelect = _ref2.onItemSelect,
-      name = _ref2.name,
-      selected = _ref2.selected;
-  return (0, _hyperapp.h)('div', {
-    style: 'padding: 1em 0;'
-  }, [(0, _hyperapp.h)('div', {
-    style: 'font-size: 1.3em;'
-  }, (0, _hyperapp.h)('strong', {}, name)), (0, _hyperapp.h)('div', {}, list.map(function (item, index) {
-    return OptionItem({
-      name: name,
-      value: item,
-      isSelected: index === selected,
-      onSelect: onItemSelect(index)
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+var PatternLockCanvas = {
+  locker: (0, _libs.Maybe)(null),
+  onCreate: function onCreate(_ref) {
+    var grid = _ref.grid,
+        theme = _ref.theme,
+        themeState = _ref.themeState;
+    return function ($canvas) {
+      var lock = (0, _PatternLock.default)({
+        $canvas: $canvas,
+        grid: grid,
+        theme: theme,
+        width: 300,
+        height: 430
+      });
+      PatternLockCanvas.locker = (0, _libs.Maybe)(lock);
+    };
+  },
+  onDestroy: function onDestroy() {
+    return function () {
+      return PatternLockCanvas.locker.map(function (lock) {
+        return lock.destroy();
+      });
+    };
+  },
+  onReceiveProps: function onReceiveProps(_ref2) {
+    var grid = _ref2.grid,
+        theme = _ref2.theme,
+        themeState = _ref2.themeState;
+    PatternLockCanvas.locker.map(function (lock) {
+      return lock.setGrid.apply(lock, _toConsumableArray(grid)).setTheme(theme).setThemeState(themeState);
     });
-  }))]);
+  },
+  render: function render(props) {
+    PatternLockCanvas.onReceiveProps(props);
+    return (0, _hyperapp.h)('canvas', {
+      oncreate: PatternLockCanvas.onCreate(props),
+      ondestroy: PatternLockCanvas.onDestroy()
+    });
+  }
 };
 
 var CodeExample = function CodeExample(_ref3) {
@@ -125,18 +77,9 @@ var App = {
   state: {
     gridIndex: 1,
     themeIndex: 0,
-    themeStateIndex: 0,
-    count: 0
+    themeStateIndex: 0
   },
   actions: {
-    incr: function incr() {
-      return function (_ref4) {
-        var count = _ref4.count;
-        return {
-          count: count + 1
-        };
-      };
-    },
     setGrid: function setGrid(gridIndex) {
       return function () {
         return {
@@ -159,14 +102,32 @@ var App = {
       };
     }
   },
-  render: function render(_ref5) {
-    var grids = _ref5.grids,
-        themes = _ref5.themes,
-        themeStates = _ref5.themeStates;
+  render: function render(_ref4) {
+    var grids = _ref4.grids,
+        themes = _ref4.themes,
+        themeStates = _ref4.themeStates;
     return function (state, actions) {
-      return (0, _hyperapp.h)('div', {}, [CodeExample({
+      return (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)('div', {
+        class: 'title'
+      }, 'PatternLockJS'), (0, _hyperapp.h)('div', {
+        class: 'subtitle'
+      }, 'Draw unlock pattern to generate a hash'), (0, _hyperapp.h)('div', {
+        class: 'canvas-wrapper'
+      }, PatternLockCanvas.render({
+        onComplete: function onComplete(_ref5) {
+          var hash = _ref5.hash;
+          return actions.setPassword(hash);
+        },
+        grid: grids[state.gridIndex],
+        theme: themes[state.themeIndex],
+        themeState: themeStates[state.themeStateIndex]
+      })), (0, _hyperapp.h)('div', {
+        class: 'password'
+      }, ['Your password is: ', (0, _hyperapp.h)('input', {
+        value: ''
+      })]), (0, _hyperapp.h)(CodeExample, {
         state: state
-      }), (0, _hyperapp.h)('div', {}, [OptionsGroup({
+      }), (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)(_Options.OptionsGroup, {
         name: 'Grid',
         list: grids,
         selected: state.gridIndex,
@@ -175,7 +136,7 @@ var App = {
             return actions.setGrid(index);
           };
         }
-      }), OptionsGroup({
+      }), (0, _hyperapp.h)(_Options.OptionsGroup, {
         name: 'Theme',
         list: themes,
         selected: state.themeIndex,
@@ -184,7 +145,7 @@ var App = {
             return actions.setTheme(index);
           };
         }
-      }), OptionsGroup({
+      }), (0, _hyperapp.h)(_Options.OptionsGroup, {
         name: 'Theme State',
         list: themeStates,
         selected: state.themeStateIndex,
@@ -193,9 +154,7 @@ var App = {
             return actions.setThemeState(index);
           };
         }
-      })]), (0, _hyperapp.h)('button', {
-        onclick: actions.incr
-      }, 'incr')]);
+      })])]);
     };
   }
 };

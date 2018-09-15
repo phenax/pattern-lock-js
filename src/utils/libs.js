@@ -24,3 +24,9 @@ export const gcd = (x, y) => {
 	}
 	return x;
 };
+
+
+export const Maybe = value => ({
+	value,
+	map: fn => Maybe(value? fn(value): value),
+});

@@ -1,106 +1,46 @@
 import { h, app } from 'hyperapp';
 
-import PatternLock from './PatternLock';
-// import { div, input, text, h, onChange, render } from './example-helpers/bdom';
+import { Maybe } from './utils/libs';
+import PatternLockJs from './PatternLock';
 
+import { OptionsGroup } from './example-helpers/Options';
 
-// const PatternLockCanvas = () => {
-// 	const $canvas = h('canvas')();
+const PatternLockCanvas = {
+	locker: Maybe(null),
 
-// 	const lock = PatternLock({
-// 		$canvas,
-// 		width: 300,
-// 		height: 430,
-// 		grid: [ 3, 3 ],
-// 	});
+	onCreate: ({ grid, theme, themeState }) => $canvas => {
+		const lock = PatternLockJs({
+			$canvas,
+			grid,
+			theme,
+			width: 300,
+			height: 430,
+		});
+		PatternLockCanvas.locker = Maybe(lock);
+	},
+	onDestroy: () => () =>
+		PatternLockCanvas.locker
+			.map(lock => lock.destroy()),
 
-// 	// Right L, Diagonal L
-// 	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==', 'LTYyMzEzNTM2Ng==' ])
-// 		.onSuccess(() => lock.setThemeState('success'))
-// 		.onFailure(() => lock.setThemeState('failure'));
-
-// 	lock.onStart(() => lock.setThemeState('default'));
-
-// 	return { lock, $canvas };
-// };
-
-// const App = ({ grids, themes, themeStates }) => {
-// 	const { lock, $canvas } = PatternLockCanvas();
-// 	const state = {
-// 		grid: { value: '', index: 1 },
-// 		theme: { value: '', index: 0 },
-// 		themeState: { value: '', index: 0 },
-// 	};
-
-// 	const $password = input();
-// 	lock.onComplete(({ hash } = {}) => $password.value = hash);
+	onReceiveProps: ({ grid, theme, themeState }) => {
+		PatternLockCanvas.locker.map(lock => {
+			return lock
+				.setGrid(...grid)
+				.setTheme(theme)
+				.setThemeState(themeState);
+		});
+	},
 	
-// 	const $codeBox = div();
-// 	const renderCodeBox = () => render(CodeExample({ ...state }), $codeBox);
+	render: (props) => {
+		PatternLockCanvas.onReceiveProps(props);
+		return h('canvas', {
+			oncreate: PatternLockCanvas.onCreate(props),
+			ondestroy: PatternLockCanvas.onDestroy(),
+		});
+	},
+};
 
-// 	renderCodeBox();
-// 	const stateChange = (stateName, action) => (value, index) => {
-// 		state[stateName] = { value, index };
-// 		renderCodeBox();
-// 		return action(value);
-// 	};
 
-// 	const $app = div({}, [
-// 		div({ class: 'title' }, [ text('PatternLockJS') ]),
-// 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
-// 		div({ class: 'canvas-wrapper' }, [ $canvas ]),
-// 		div({ class: 'password' }, [ text('Your password is: '), $password ]),
-// 		div({}, [ $codeBox ]),
-// 		div({}, [
-// 			OptionsGroup({
-// 				name: 'Grid',
-// 				list: grids,
-// 				selected: state.grid.index,
-// 				onItemSelect: stateChange('grid', grid => () => lock.setGrid(...grid)),
-// 			}),
-// 			OptionsGroup({
-// 				name: 'Theme',
-// 				list: themes,
-// 				selected: state.theme.index,
-// 				onItemSelect: stateChange('theme', theme => () => lock.setTheme(theme)),
-// 			}),
-// 			OptionsGroup({
-// 				name: 'Theme State',
-// 				list: themeStates,
-// 				selected: state.themeState.index,
-// 				onItemSelect: stateChange('themeState', ts => () => lock.setThemeState(ts)),
-// 			}),
-// 		]),
-// 	]);
-
-// 	return { $app, lock };
-// };
-
-const OptionItem = ({ name, value, isSelected, onSelect }) => (
-	h('label', { style: 'padding: .3em .5em;' }, [
-		h('input', {
-			type: 'radio',
-			name,
-			onchange: onSelect,
-			...(isSelected? { checked: true }: {}),
-		}),
-		value.toString(),
-	])
-);
-
-const OptionsGroup = ({ list, onItemSelect, name, selected }) => (
-	h('div', { style: 'padding: 1em 0;' }, [
-		h('div', { style: 'font-size: 1.3em;' }, h('strong', {}, name)),
-		h('div', {},
-			list.map((item, index) => OptionItem({
-				name,
-				value: item,
-				isSelected: index === selected,
-				onSelect: onItemSelect(index),
-			})),
-		),
-	])
-);
 
 const CodeExample = ({ tabSize = 4, ...props }) => (
 	h('div',
@@ -114,37 +54,48 @@ const App = {
 		gridIndex: 1,
 		themeIndex: 0,
 		themeStateIndex: 0,
-		count: 0,
 	},
 	actions: {
-		incr: () => ({ count }) => ({ count: count + 1 }),
 		setGrid: gridIndex => () => ({ gridIndex }),
 		setTheme: themeIndex => () => ({ themeIndex }),
 		setThemeState: themeStateIndex => () => ({ themeStateIndex }),
 	},
 	render: ({ grids, themes, themeStates }) => (state, actions) => h('div', {}, [
-		CodeExample({ state }),
+		h('div', { class: 'title' }, 'PatternLockJS'),
+		h('div', { class: 'subtitle' }, 'Draw unlock pattern to generate a hash'),
+		h('div', { class: 'canvas-wrapper' },
+			PatternLockCanvas.render({
+				onComplete: ({ hash }) => actions.setPassword(hash),
+				grid: grids[state.gridIndex],
+				theme: themes[state.themeIndex],
+				themeState: themeStates[state.themeStateIndex],
+			}),
+		),
+		h('div', { class: 'password' }, [
+			'Your password is: ',
+			h('input', { value: '' })
+		]),
+		h(CodeExample, { state }),
 		h('div', {}, [
-			OptionsGroup({
+			h(OptionsGroup, {
 				name: 'Grid',
 				list: grids,
 				selected: state.gridIndex,
 				onItemSelect: index => () => actions.setGrid(index),
 			}),
-			OptionsGroup({
+			h(OptionsGroup, {
 				name: 'Theme',
 				list: themes,
 				selected: state.themeIndex,
 				onItemSelect: index => () => actions.setTheme(index),
 			}),
-			OptionsGroup({
+			h(OptionsGroup, {
 				name: 'Theme State',
 				list: themeStates,
 				selected: state.themeStateIndex,
 				onItemSelect: index => () => actions.setThemeState(index),
 			}),
 		]),
-		h('button', { onclick: actions.incr }, 'incr'),
 	]),
 };
 

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.gcd = exports.hashCode = exports.patternToWords = void 0;
+exports.Maybe = exports.gcd = exports.hashCode = exports.patternToWords = void 0;
 
 // patternToWords :: Array<Node> -> String
 var patternToWords = function patternToWords(nodes) {
@@ -39,3 +39,14 @@ var gcd = function gcd(x, y) {
 };
 
 exports.gcd = gcd;
+
+var Maybe = function Maybe(value) {
+  return {
+    value: value,
+    map: function map(fn) {
+      return Maybe(value ? fn(value) : value);
+    }
+  };
+};
+
+exports.Maybe = Maybe;

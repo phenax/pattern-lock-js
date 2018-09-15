@@ -357,6 +357,7 @@ function () {
     key: "setGrid",
     // setGrid :: (Number, Number) -> PatternLock
     value: function setGrid(rows, cols) {
+      if (this.rows === rows && this.cols === cols) return this;
       this.rows = rows;
       this.cols = cols;
       this.setInitialState();
@@ -371,11 +372,8 @@ function () {
     key: "setTheme",
     value: function setTheme(theme) {
       var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-      if (typeof theme === 'string') {
-        theme = _themes.default[theme];
-      }
-
+      if (theme === _themes.default[this.theme] || theme === this.theme) return this;
+      if (typeof theme === 'string') theme = _themes.default[theme];
       if (!theme) throw createInvalidOptionError('theme');
       this.theme = theme;
       this.setThemeState('default', false);
