@@ -73,7 +73,13 @@ var App = (0, _component.component)({
       }, ['Your password is: ', (0, _hyperapp.h)('input', {
         value: state.password
       })]), (0, _hyperapp.h)(_CodeExample.default, {
-        state: state
+        config: {
+          $canvas: _CodeExample.default.expression('document.getElementById(\'myCanvas\')'),
+          width: 300,
+          height: 430,
+          grid: grids[state.gridIndex],
+          theme: themes[state.themeIndex]
+        }
       }), (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)(_Options.OptionsGroup, {
         name: 'Grid',
         list: grids,

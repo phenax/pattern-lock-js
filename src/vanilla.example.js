@@ -34,7 +34,15 @@ const App = component({
 			'Your password is: ',
 			h('input', { value: state.password })
 		]),
-		h(CodeExample, { state }),
+		h(CodeExample, {
+			config: {
+				$canvas: CodeExample.expression('document.getElementById(\'myCanvas\')'),
+				width: 300,
+				height: 430,
+				grid: grids[state.gridIndex],
+				theme: themes[state.themeIndex],
+			}
+		}),
 		h('div', {}, [
 			h(OptionsGroup, {
 				name: 'Grid',
