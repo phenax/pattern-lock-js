@@ -192,9 +192,15 @@ export class PatternLock {
 	_emitPatternStart = () => this.emit(events.PATTERN_START, {});
 	_emitPatternComplete() {
 		const nodes = this.selectedNodes;
-		const password = patternToWords(nodes);
-		const hash = hashCode(password);
-		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
+		let hash = '';
+		let password = '';
+
+		if(nodes.length) {
+			password = patternToWords(nodes);
+			hash = hashCode(password);
+		}
+
+		this.emit(events.PATTERN_COMPLETE, { nodes, password, hash });
 	}
 	// Event handler stuff end
 
@@ -280,7 +286,10 @@ export class PatternLock {
 
 			let i = 0;
 			while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
-				this.selectedNodes.push(current);
+				if (!this.isSelected(current)) {
+					this.selectedNodes.push(current);
+				}
+
 				current = {
 					row: current.row + stepNode.row,
 					col: current.col + stepNode.col,

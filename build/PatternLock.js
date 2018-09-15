@@ -425,10 +425,17 @@ function () {
     key: "_emitPatternComplete",
     value: function _emitPatternComplete() {
       var nodes = this.selectedNodes;
-      var password = (0, _libs.patternToWords)(nodes);
-      var hash = (0, _libs.hashCode)(password);
+      var hash = '';
+      var password = '';
+
+      if (nodes.length) {
+        password = (0, _libs.patternToWords)(nodes);
+        hash = (0, _libs.hashCode)(password);
+      }
+
       this.emit(events.PATTERN_COMPLETE, {
         nodes: nodes,
+        password: password,
         hash: hash
       });
     } // Event handler stuff end
@@ -450,7 +457,10 @@ function () {
         var i = 0;
 
         while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
-          this.selectedNodes.push(current);
+          if (!this.isSelected(current)) {
+            this.selectedNodes.push(current);
+          }
+
           current = {
             row: current.row + stepNode.row,
             col: current.col + stepNode.col
