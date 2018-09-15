@@ -188,9 +188,15 @@ export class PatternLock {
 	_emitPatternStart = () => this.emit(events.PATTERN_START, {});
 	_emitPatternComplete() {
 		const nodes = this.selectedNodes;
-		const password = patternToWords(nodes);
-		const hash = hashCode(password);
-		this.emit(events.PATTERN_COMPLETE, { nodes, hash });
+		let hash = '';
+		let password = '';
+
+		if(nodes.length) {
+			password = patternToWords(nodes);
+			hash = hashCode(password);
+		}
+
+		this.emit(events.PATTERN_COMPLETE, { nodes, password, hash });
 	}
 	// Event handler stuff end
 

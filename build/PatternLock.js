@@ -426,10 +426,17 @@ function () {
     key: "_emitPatternComplete",
     value: function _emitPatternComplete() {
       var nodes = this.selectedNodes;
-      var password = (0, _libs.patternToWords)(nodes);
-      var hash = (0, _libs.hashCode)(password);
+      var hash = '';
+      var password = '';
+
+      if (nodes.length) {
+        password = (0, _libs.patternToWords)(nodes);
+        hash = (0, _libs.hashCode)(password);
+      }
+
       this.emit(events.PATTERN_COMPLETE, {
         nodes: nodes,
+        password: password,
         hash: hash
       });
     } // Event handler stuff end
