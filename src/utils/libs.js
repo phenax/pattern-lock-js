@@ -30,3 +30,8 @@ export const Maybe = value => ({
 	value,
 	map: fn => Maybe(value? fn(value): value),
 });
+
+export const prop = (path, obj) =>
+	path
+		.split('.')
+		.reduce((acc, key) => acc ? acc[key] : undefined, obj);

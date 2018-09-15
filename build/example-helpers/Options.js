@@ -10,15 +10,15 @@ var _hyperapp = require("hyperapp");
 var OptionItem = function OptionItem(_ref) {
   var name = _ref.name,
       value = _ref.value,
-      isSelected = _ref.isSelected,
-      onSelect = _ref.onSelect;
+      checked = _ref.checked,
+      onCheck = _ref.onCheck;
   return (0, _hyperapp.h)('label', {
     style: 'padding: .3em .5em;'
   }, [(0, _hyperapp.h)('input', {
-    type: 'radio',
     name: name,
-    onchange: onSelect,
-    checked: isSelected
+    checked: checked,
+    type: 'radio',
+    onchange: onCheck
   }), value.toString()]);
 };
 
@@ -33,13 +33,13 @@ var OptionsGroup = function OptionsGroup(_ref2) {
     style: 'padding: 1em 0;'
   }, [(0, _hyperapp.h)('div', {
     style: 'font-size: 1.3em;'
-  }, (0, _hyperapp.h)('strong', {}, name)), (0, _hyperapp.h)('div', {}, list.map(function (item, index) {
+  }, (0, _hyperapp.h)('strong', {}, name)), (0, _hyperapp.h)('div', {}, list.map(function (value, index) {
     return (0, _hyperapp.h)(OptionItem, {
       name: name,
-      value: item,
-      key: item,
-      isSelected: index === selected,
-      onSelect: onItemSelect(index)
+      value: value,
+      key: value,
+      checked: index === selected,
+      onCheck: onItemSelect(index)
     });
   }))]);
 };

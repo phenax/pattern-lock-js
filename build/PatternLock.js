@@ -182,8 +182,8 @@ function () {
 
       if (_this._isDragging) {
         var mousePoint = {
-          x: e.pageX || e.touches[0].pageX,
-          y: e.pageY || e.touches[0].pageY
+          x: (0, _libs.prop)('pageX', e) || (0, _libs.prop)('touches.0.pageX', e) || 0,
+          y: (0, _libs.prop)('pageY', e) || (0, _libs.prop)('touches.0.pageY', e) || 0
         };
         mousePoint = {
           x: mousePoint.x - _this.bounds.x,

@@ -1,7 +1,7 @@
 import EventBus from './utils/EventBus';
 import Matcher from './utils/Matcher';
 
-import { patternToWords, hashCode, gcd } from './utils/libs';
+import { patternToWords, hashCode, gcd, prop } from './utils/libs';
 import { registerEvent, getPixelRatio, raf } from './utils/dom';
 
 import THEMES from './utils/themes';
@@ -233,8 +233,8 @@ export class PatternLock {
 		if (this._isDragging) {
 
 			let mousePoint = {
-				x: e.pageX || e.touches[0].pageX,
-				y: e.pageY || e.touches[0].pageY,
+				x: prop('pageX', e) || prop('touches.0.pageX', e) || 0,
+				y: prop('pageY', e) || prop('touches.0.pageY', e) || 0,
 			};
 
 			mousePoint = {

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Maybe = exports.gcd = exports.hashCode = exports.patternToWords = void 0;
+exports.prop = exports.Maybe = exports.gcd = exports.hashCode = exports.patternToWords = void 0;
 
 // patternToWords :: Array<Node> -> String
 var patternToWords = function patternToWords(nodes) {
@@ -50,3 +50,11 @@ var Maybe = function Maybe(value) {
 };
 
 exports.Maybe = Maybe;
+
+var prop = function prop(path, obj) {
+  return path.split('.').reduce(function (acc, key) {
+    return acc ? acc[key] : undefined;
+  }, obj);
+};
+
+exports.prop = prop;
