@@ -53,6 +53,7 @@ var CodeExample = function CodeExample(_ref3) {
       config = _ref3.config;
   return (0, _hyperapp.h)('div', {
     style: {
+      position: 'relative',
       fontSize: '.9em',
       textAlign: 'left',
       padding: '1.7em',

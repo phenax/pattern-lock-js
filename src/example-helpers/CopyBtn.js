@@ -5,6 +5,20 @@ import { Maybe } from '../utils/libs';
 
 import { component } from './component';
 
+const copyBtnStyles = {
+	position: 'absolute',
+	right: '0',
+	top: '0',
+	outline: 'none',
+	border: '1px solid #011',
+	background: '#0c1e30',
+	color: '#fff',
+	borderRadius: '0 0 0 10px',
+	fontSize: '.8em',
+	padding: '.3em 1em',
+	cursor: 'pointer',
+};
+
 const CopyBtn = component({
 	clipboard: Maybe(null),
 	defaultProps: { text: '' },
@@ -14,9 +28,15 @@ const CopyBtn = component({
 	onDestroy: self => () =>
 		self.clipboard.map(clipboard => clipboard.destroy()),
 
-	render: ({ text, rootProps }) => h(
+	render: ({ text, rootProps, style, ...props }) => h(
 		'button',
-		{ ...rootProps, 'data-clipboard-text': text },
+		{
+			...rootProps,
+			'data-clipboard-text': text,
+			style: { ...copyBtnStyles, ...style, },
+			class: 'copybtn',
+			...props,
+		},
 		'Copy Code'
 	),
 });

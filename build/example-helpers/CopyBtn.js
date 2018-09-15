@@ -19,6 +19,23 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+var copyBtnStyles = {
+  position: 'absolute',
+  right: '0',
+  top: '0',
+  outline: 'none',
+  border: '1px solid #011',
+  background: '#0c1e30',
+  color: '#fff',
+  borderRadius: '0 0 0 10px',
+  fontSize: '.8em',
+  padding: '.3em 1em',
+  cursor: 'pointer'
+};
 var CopyBtn = (0, _component.component)({
   clipboard: (0, _libs.Maybe)(null),
   defaultProps: {
@@ -39,10 +56,15 @@ var CopyBtn = (0, _component.component)({
   },
   render: function render(_ref2) {
     var text = _ref2.text,
-        rootProps = _ref2.rootProps;
+        rootProps = _ref2.rootProps,
+        style = _ref2.style,
+        props = _objectWithoutProperties(_ref2, ["text", "rootProps", "style"]);
+
     return (0, _hyperapp.h)('button', _objectSpread({}, rootProps, {
-      'data-clipboard-text': text
-    }), 'Copy Code');
+      'data-clipboard-text': text,
+      style: _objectSpread({}, copyBtnStyles, style),
+      class: 'copybtn'
+    }, props), 'Copy Code');
   }
 });
 var _default = CopyBtn;

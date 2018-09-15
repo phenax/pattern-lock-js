@@ -21,6 +21,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 	h('div',
 		{
 			style: {
+				position: 'relative',
 				fontSize: '.9em',
 				textAlign: 'left',
 				padding: '1.7em',
