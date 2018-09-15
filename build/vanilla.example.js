@@ -93,7 +93,7 @@ var App = (0, _component.component)({
       })]), (0, _hyperapp.h)('button', {
         onclick: actions.toggleControls,
         class: 'button-primary'
-      }, 'Show Controls'), !state.showControls ? null : (0, _hyperapp.h)('div', {
+      }, "".concat(state.showControls ? 'Hide' : 'Show', " Controls")), !state.showControls ? null : (0, _hyperapp.h)('div', {
         class: 'controls-wrapper'
       }, [(0, _hyperapp.h)(_CodeExample.default, {
         config: {

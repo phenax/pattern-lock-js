@@ -46,7 +46,7 @@ const App = component({
 		h('button', {
 			onclick: actions.toggleControls,
 			class: 'button-primary'
-		}, 'Show Controls'),
+		}, `${state.showControls ? 'Hide': 'Show'} Controls`),
 		!state.showControls ? null : h('div', { class: 'controls-wrapper' }, [
 			h(CodeExample, {
 				config: {
