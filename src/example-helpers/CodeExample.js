@@ -1,4 +1,9 @@
 import { h } from 'hyperapp';
+import Clipboard from 'clipboard';
+
+import { Maybe } from '../utils/libs';
+
+import { component } from './component';
 
 const CodeKey = (_, children) => h('span',
 	{ style: { color: '#DB696F' } },
@@ -19,6 +24,22 @@ const IndentedBlock = ({ level = 4 }, children) => h('div',
 	{ style: { paddingLeft: `${level * 5}px` } },
 	children
 );
+
+const CopyBtn = component({
+	clipboard: Maybe(null),
+	defaultProps: { text: '' },
+
+	onCreate: (self, { text }) => $btn =>
+		self.clipboard = Maybe(new Clipboard($btn)),
+	onDestroy: self => () =>
+		self.clipboard.map(clipboard => clipboard.destroy()),
+
+	render: ({ text, rootProps }) => h(
+		'button',
+		{ ...rootProps, 'data-clipboard-text': text },
+		'Copy Code'
+	),
+});
 
 const CodeExample = ({ tabSize = 4, config }) => (
 	h('div',
@@ -58,6 +79,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 			])),
 			'});'
 		),
+		h(CopyBtn, { text: JSON.stringify(config) }),
 	)
 );
 

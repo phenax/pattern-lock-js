@@ -35,7 +35,7 @@ var component = function component(instance) {
         oncreate: onCreate(instance, props),
         ondestroy: onDestroy(instance, props)
       }
-    }));
+    }), instance);
   };
 
   Comp.instance = instance;
