@@ -3,7 +3,8 @@ import { h } from 'hyperapp';
 import { Maybe } from '../utils/libs';
 import PatternLockJs from '../PatternLock';
 
-import { component, isEqual } from './component';
+import { component } from './component';
+import { isEqual } from './utils';
 
 const PatternLockCanvas = component({
 	locker: Maybe(null),

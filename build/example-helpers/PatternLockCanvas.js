@@ -13,6 +13,8 @@ var _PatternLock = _interopRequireDefault(require("../PatternLock"));
 
 var _component = require("./component");
 
+var _utils = require("./utils");
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
@@ -52,7 +54,7 @@ var PatternLockCanvas = (0, _component.component)({
     };
   },
   onReceiveProps: function onReceiveProps(self, props, prevProps) {
-    if ((0, _component.isEqual)(props, prevProps)) return;
+    if ((0, _utils.isEqual)(props, prevProps)) return;
     self.locker.map(function (lock) {
       return lock.setGrid.apply(lock, _toConsumableArray(props.grid).concat([false])).setTheme(props.theme, false).setThemeState(props.themeState, false).forceRender();
     });

@@ -1,45 +1,21 @@
 import { h } from 'hyperapp';
-import Clipboard from 'clipboard';
 
-import { Maybe } from '../utils/libs';
+import { prettyPrint } from './utils';
 
-import { component } from './component';
+import CopyBtn from './CopyBtn';
 
-const CodeKey = (_, children) => h('span',
-	{ style: { color: '#DB696F' } },
-	children,
-);
 
-const CodeValue = ({ value }) => h('span',
-	{ style: { color: '#88CA5F' } },
-	JSON.stringify(value)
-);
+const withColoredText = (color, predicate = ((props, children) => children)) => (props, children) =>
+	h('span', { style: { color } }, predicate(props, children));
 
-const FunctionCall = (_, children) => h('span',
-	{ style: { color: '#1abcdc', fontStyle: 'italic' } },
-	children
-);
+const CodeKey = withColoredText('#DB696F');
+const FunctionCall = withColoredText('#1abcdc');
+const CodeValue = withColoredText('#88CA5F', ({ value }) => JSON.stringify(value));
 
 const IndentedBlock = ({ level = 4 }, children) => h('div',
-	{ style: { paddingLeft: `${level * 5}px` } },
+	{ style: { paddingLeft: `${level * 7}px` } },
 	children
 );
-
-const CopyBtn = component({
-	clipboard: Maybe(null),
-	defaultProps: { text: '' },
-
-	onCreate: (self, { text }) => $btn =>
-		self.clipboard = Maybe(new Clipboard($btn)),
-	onDestroy: self => () =>
-		self.clipboard.map(clipboard => clipboard.destroy()),
-
-	render: ({ text, rootProps }) => h(
-		'button',
-		{ ...rootProps, 'data-clipboard-text': text },
-		'Copy Code'
-	),
-});
 
 const CodeExample = ({ tabSize = 4, config }) => (
 	h('div',
@@ -79,7 +55,12 @@ const CodeExample = ({ tabSize = 4, config }) => (
 			])),
 			'});'
 		),
-		h(CopyBtn, { text: JSON.stringify(config) }),
+		h(CopyBtn, {
+			text: `const lock = PatternLock(${prettyPrint({
+				$canvas: prettyPrint.expresssion('document.getElementById("myCanvas")'),
+				...config,
+			})});`,
+		}),
 	)
 );
 
