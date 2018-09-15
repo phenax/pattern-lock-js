@@ -30,41 +30,68 @@ const lock = PatternLock({
 
 ### Customize the theme
 ```javascript
-patternLock.setTheme('default');
-patternLock.setTheme('success');
-patternLock.setTheme('failure');
+lock.setTheme('dark');
+lock.setTheme('light');
 
 // Or pass a custom theme
 
-patternLock.setTheme({
-    colors: {
-        accent: '#1abc9c',     // Accent color for node
-        primary: '#ffffff',    // Primary node and line color
-        bg: '#2c3e50',         // Canvas background color
+lock.setTheme({
+    default: {
+        colors: {
+            accent: '#1abc9c',     // Accent color for node
+            primary: '#ffffff',    // Primary node and line color
+            bg: '#2c3e50',         // Canvas background color
+        },
+        dimens: {
+            node_radius: 20,       // Radius of the outer ring of a node
+            line_width: 6,         // Thickness of the line joining nodes
+            node_core: 8,          // Radius of the inner circle of a node
+            node_ring: 1,          // Outer ring thickness
+        }
     },
-    dimens: {
-        node_radius: 20,       // Radius of the outer ring of a node
-        line_width: 6,         // Thickness of the line joining nodes
-        node_core: 8,          // Radius of the inner circle of a node
-        node_ring: 1,          // Outer ring thickness
-    }
+    success: {
+		colors: {
+			accent: '#51e980',     // Green accent on successful match
+		}
+	},
+	failure: {
+		colors: {
+			accent: '#e74c3c',     // Red accent on an unsuccessful match
+		}
+    },
+    customState: {                 // Your custom state
+        dimens: {
+            node_radius: 25,       // Increases the node radius
+        }
+    },
 });
 ```
+
+### Manually change the state
+```javascript
+lock.setThemeState('success'); // Switch state to successful
+lock.setThemeState('customState'); // Switch to your custom state
+```
+
+### You can even change the grid size dynamically
+```javascript
+lock.setGrid(4, 4); // 4x4 grid instead of the default 3x3
+```
+
 
 ### Callback for when the pattern is complete
 ```javascript
 lock.onComplete(({ hash }) => (myRealHash === hash) ? success() : failure());
 ```
 
-### Check if the hash matches your set of passwords
+### Or you can use the matchHash helper to check if the hash matches your set of correct passwords
 ```javascript
 // If the pattern drawn is a Right L or a Diagonal L,
 //    then turn the pattern green
 //    else turn it red
-lock.matchHash('LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==')
-    .onSuccess(() => lock.setTheme('success'))
-    .onFailure(() => lock.setTheme('failure'));
+lock.matchHash([ 'LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==' ])
+    .onSuccess(() => lock.setThemeState('success'))
+    .onFailure(() => lock.setThemeState('failure'));
 ```
-
 
 <br />
