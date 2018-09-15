@@ -70,11 +70,10 @@ var App = (0, _component.component)({
         themeState: themeStates[state.themeStateIndex]
       })), (0, _hyperapp.h)('div', {
         class: 'password'
-      }, ['Your password is: ', (0, _hyperapp.h)('input', {
+      }, ['Generated hash: ', (0, _hyperapp.h)('input', {
         value: state.password
       })]), (0, _hyperapp.h)(_CodeExample.default, {
         config: {
-          $canvas: _CodeExample.default.expression('document.getElementById(\'myCanvas\')'),
           width: 300,
           height: 430,
           grid: grids[state.gridIndex],

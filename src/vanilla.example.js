@@ -31,12 +31,11 @@ const App = component({
 			}),
 		),
 		h('div', { class: 'password' }, [
-			'Your password is: ',
+			'Generated hash: ',
 			h('input', { value: state.password })
 		]),
 		h(CodeExample, {
 			config: {
-				$canvas: CodeExample.expression('document.getElementById(\'myCanvas\')'),
 				width: 300,
 				height: 430,
 				grid: grids[state.gridIndex],

@@ -10,7 +10,7 @@ var _hyperapp = require("hyperapp");
 var CodeKey = function CodeKey(_, children) {
   return (0, _hyperapp.h)('span', {
     style: {
-      color: '#e74c3c'
+      color: '#DB696F'
     }
   }, children);
 };
@@ -19,9 +19,18 @@ var CodeValue = function CodeValue(_ref) {
   var value = _ref.value;
   return (0, _hyperapp.h)('span', {
     style: {
-      color: '#2ecc71'
+      color: '#88CA5F'
     }
-  }, [value.expression ? "".concat(value.expression) : JSON.stringify(value)]);
+  }, JSON.stringify(value));
+};
+
+var FunctionCall = function FunctionCall(_, children) {
+  return (0, _hyperapp.h)('span', {
+    style: {
+      color: '#1abcdc',
+      fontStyle: 'italic'
+    }
+  }, children);
 };
 
 var IndentedBlock = function IndentedBlock(_ref2, children) {
@@ -40,6 +49,7 @@ var CodeExample = function CodeExample(_ref3) {
       config = _ref3.config;
   return (0, _hyperapp.h)('div', {
     style: {
+      fontSize: '.9em',
       textAlign: 'left',
       padding: '1.7em',
       backgroundColor: '#2c3e50',
@@ -51,21 +61,13 @@ var CodeExample = function CodeExample(_ref3) {
     style: {
       color: '#cb89e6'
     }
-  }, 'const'), ' lock = ', (0, _hyperapp.h)('span', {
-    style: {
-      color: '#1abcdc'
-    }
-  }, 'PatternLock'), '({', Object.keys(config).map(function (key) {
+  }, 'const'), ' lock = ', (0, _hyperapp.h)(FunctionCall, {}, 'PatternLock'), '({', (0, _hyperapp.h)(IndentedBlock, {}, [(0, _hyperapp.h)(CodeKey, {}, '$canvas'), ': ', (0, _hyperapp.h)('span', {}, ['document.', (0, _hyperapp.h)(FunctionCall, {}, 'getElementById'), '(', (0, _hyperapp.h)(CodeValue, {
+    value: 'myCanvas'
+  }), ')']), ',']), Object.keys(config).map(function (key) {
     return (0, _hyperapp.h)(IndentedBlock, {}, [(0, _hyperapp.h)(CodeKey, {}, key), ': ', (0, _hyperapp.h)(CodeValue, {
       value: config[key]
     }), ',']);
   }), '});'));
-};
-
-CodeExample.expression = function (expression) {
-  return {
-    expression: expression
-  };
 };
 
 var _default = CodeExample;
