@@ -9,14 +9,12 @@ const copyBtnStyles = {
 	position: 'absolute',
 	right: '0',
 	top: '0',
-	outline: 'none',
 	border: '1px solid #011',
 	background: '#0c1e30',
 	color: '#fff',
 	borderRadius: '0 0 0 10px',
 	fontSize: '.8em',
 	padding: '.3em 1em',
-	cursor: 'pointer',
 };
 
 const CopyBtn = component({

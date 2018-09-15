@@ -12,12 +12,14 @@ const App = component({
 		themeIndex: 0,
 		themeStateIndex: 0,
 		password: '',
+		showControls: false,
 	},
 	actions: {
 		setGrid: gridIndex => () => ({ gridIndex }),
 		setTheme: themeIndex => () => ({ themeIndex }),
 		setThemeState: themeStateIndex => () => ({ themeStateIndex }),
 		setPassword: password => () => ({ password }),
+		toggleControls: () => ({ showControls }) => ({ showControls: !showControls }),
 	},
 	render: ({ grids, themes, themeStates }) => (state, actions) => h('div', {}, [
 		h('div', { class: 'title' }, 'PatternLockJS'),
@@ -34,34 +36,44 @@ const App = component({
 			'Generated hash: ',
 			h('input', { value: state.password })
 		]),
-		h(CodeExample, {
-			config: {
-				width: 300,
-				height: 430,
-				grid: grids[state.gridIndex],
-				theme: themes[state.themeIndex],
-			}
-		}),
-		h('div', {}, [
-			h(OptionsGroup, {
-				name: 'Grid',
-				list: grids,
-				selected: state.gridIndex,
-				onItemSelect: index => () => actions.setGrid(index),
+		h('button', {
+			onclick: actions.toggleControls,
+			style: {
+				padding: '.5em 1em',
+			},
+			class: 'button-primary'
+		}, 'Show Controls'),
+		!state.showControls ? null : h('div', { class: 'controls-wrapper' }, [
+			h(CodeExample, {
+				config: {
+					width: 300,
+					height: 430,
+					grid: grids[state.gridIndex],
+					theme: themes[state.themeIndex],
+				},
 			}),
-			h(OptionsGroup, {
-				name: 'Theme',
-				list: themes,
-				selected: state.themeIndex,
-				onItemSelect: index => () => actions.setTheme(index),
-			}),
-			h(OptionsGroup, {
-				name: 'Theme State',
-				list: themeStates,
-				selected: state.themeStateIndex,
-				onItemSelect: index => () => actions.setThemeState(index),
-			}),
+			h('div', { style: { padding: '1em .3em' } }, [
+				h(OptionsGroup, {
+					name: 'Grid',
+					list: grids,
+					selected: state.gridIndex,
+					onItemSelect: index => () => actions.setGrid(index),
+				}),
+				h(OptionsGroup, {
+					name: 'Theme',
+					list: themes,
+					selected: state.themeIndex,
+					onItemSelect: index => () => actions.setTheme(index),
+				}),
+				h(OptionsGroup, {
+					name: 'Theme State',
+					list: themeStates,
+					selected: state.themeStateIndex,
+					onItemSelect: index => () => actions.setThemeState(index),
+				}),
+			]),
 		]),
+		h('div', { style: { padding: '5em' } }),
 	]),
 });
 

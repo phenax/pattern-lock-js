@@ -24,7 +24,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 				position: 'relative',
 				fontSize: '.9em',
 				textAlign: 'left',
-				padding: '1.7em',
+				padding: '2em',
 				backgroundColor: '#2c3e50',
 				color: '#eee',
 				fontFamily: '"Courier New", Courier, monospace',

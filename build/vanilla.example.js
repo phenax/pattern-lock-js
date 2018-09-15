@@ -17,7 +17,8 @@ var App = (0, _component.component)({
     gridIndex: 1,
     themeIndex: 0,
     themeStateIndex: 0,
-    password: ''
+    password: '',
+    showControls: false
   },
   actions: {
     setGrid: function setGrid(gridIndex) {
@@ -47,12 +48,20 @@ var App = (0, _component.component)({
           password: password
         };
       };
+    },
+    toggleControls: function toggleControls() {
+      return function (_ref) {
+        var showControls = _ref.showControls;
+        return {
+          showControls: !showControls
+        };
+      };
     }
   },
-  render: function render(_ref) {
-    var grids = _ref.grids,
-        themes = _ref.themes,
-        themeStates = _ref.themeStates;
+  render: function render(_ref2) {
+    var grids = _ref2.grids,
+        themes = _ref2.themes,
+        themeStates = _ref2.themeStates;
     return function (state, actions) {
       return (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)('div', {
         class: 'title'
@@ -61,8 +70,8 @@ var App = (0, _component.component)({
       }, 'Draw unlock pattern to generate a hash'), (0, _hyperapp.h)('div', {
         class: 'canvas-wrapper'
       }, (0, _hyperapp.h)(_PatternLockCanvas.default, {
-        onComplete: function onComplete(_ref2) {
-          var hash = _ref2.hash;
+        onComplete: function onComplete(_ref3) {
+          var hash = _ref3.hash;
           return actions.setPassword(hash);
         },
         grid: grids[state.gridIndex],
@@ -72,14 +81,26 @@ var App = (0, _component.component)({
         class: 'password'
       }, ['Generated hash: ', (0, _hyperapp.h)('input', {
         value: state.password
-      })]), (0, _hyperapp.h)(_CodeExample.default, {
+      })]), (0, _hyperapp.h)('button', {
+        onclick: actions.toggleControls,
+        style: {
+          padding: '.5em 1em'
+        },
+        class: 'button-primary'
+      }, 'Show Controls'), !state.showControls ? null : (0, _hyperapp.h)('div', {
+        class: 'controls-wrapper'
+      }, [(0, _hyperapp.h)(_CodeExample.default, {
         config: {
           width: 300,
           height: 430,
           grid: grids[state.gridIndex],
           theme: themes[state.themeIndex]
         }
-      }), (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)(_Options.OptionsGroup, {
+      }), (0, _hyperapp.h)('div', {
+        style: {
+          padding: '1em .3em'
+        }
+      }, [(0, _hyperapp.h)(_Options.OptionsGroup, {
         name: 'Grid',
         list: grids,
         selected: state.gridIndex,
@@ -106,7 +127,11 @@ var App = (0, _component.component)({
             return actions.setThemeState(index);
           };
         }
-      })])]);
+      })])]), (0, _hyperapp.h)('div', {
+        style: {
+          padding: '5em'
+        }
+      })]);
     };
   }
 });
