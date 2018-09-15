@@ -1,7 +1,7 @@
 import EventBus from './utils/EventBus';
 import Matcher from './utils/Matcher';
 
-import { patternToWords, hashCode, gcd } from './utils/libs';
+import { patternToWords, hashCode, gcd, prop } from './utils/libs';
 import { registerEvent, getPixelRatio, raf } from './utils/dom';
 
 import THEMES from './utils/themes';
@@ -71,16 +71,16 @@ export class PatternLock {
 		if(!config.height) throw createInvalidOptionError('height');
 
 		config = { ...defaultConfig, ...config };
-		this.dimens = { width: config.width, height: config.height };
 
-		this.setUpCanvas(config);
-		this.initialize(config);
-	}
-
-	setUpCanvas(config) {
 		this.$canvas = config.$canvas;
 		this.ctx = this.$canvas.getContext('2d');
 
+		this.setDimensions({ width: config.width, height: config.height });
+		this.initialize(config);
+	}
+
+	setDimensions(dimens) {
+		this.dimens = dimens;
 		const ratio = getPixelRatio(this.ctx);
 
 		this.$canvas.width = this.dimens.width * ratio;
@@ -118,22 +118,26 @@ export class PatternLock {
 	});
 
 	// setGrid :: (Number, Number) -> PatternLock
-	setGrid(rows, cols) {
+	setGrid(rows, cols, rerender = true) {
+		if (this.rows === rows && this.cols === cols)
+			return this;
+
 		this.rows = rows;
 		this.cols = cols;
 
 		this.setInitialState();
 		this._onResize();
-		this.forceRender();
+		rerender && this.forceRender();
 		return this;
 	}
 
 	// setTheme :: (Theme, ?Boolean) -> PatternLock
 	setTheme(theme, rerender = true) {
+		if (theme === THEMES[this.theme] || theme === this.theme)
+			return this;
 
-		if(typeof theme === 'string') {
+		if(typeof theme === 'string')
 			theme = THEMES[theme];
-		}
 
 		if(!theme) throw createInvalidOptionError('theme');
 
@@ -147,7 +151,7 @@ export class PatternLock {
 
 	// setThemeState :: (State, ?Boolean) -> PatternLock
 	setThemeState(themeState, rerender = true) {
-		if(!this.theme) throw createInvalidOptionError('theme');
+		if (!this.theme) throw createInvalidOptionError('theme');
 
 		this.themeState = this.theme[themeState || 'default'] || {};
 		this.themeState.colors = { ...this.theme.default.colors, ...this.themeState.colors };
@@ -235,8 +239,8 @@ export class PatternLock {
 		if (this._isDragging) {
 
 			let mousePoint = {
-				x: e.pageX || e.touches[0].pageX,
-				y: e.pageY || e.touches[0].pageY,
+				x: prop('pageX', e) || prop('touches.0.pageX', e) || 0,
+				y: prop('pageY', e) || prop('touches.0.pageY', e) || 0,
 			};
 
 			mousePoint = {

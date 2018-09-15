@@ -182,8 +182,8 @@ function () {
 
       if (_this._isDragging) {
         var mousePoint = {
-          x: e.pageX || e.touches[0].pageX,
-          y: e.pageY || e.touches[0].pageY
+          x: (0, _libs.prop)('pageX', e) || (0, _libs.prop)('touches.0.pageX', e) || 0,
+          y: (0, _libs.prop)('pageY', e) || (0, _libs.prop)('touches.0.pageY', e) || 0
         };
         mousePoint = {
           x: mousePoint.x - _this.bounds.x,
@@ -311,19 +311,19 @@ function () {
     if (!config.width) throw createInvalidOptionError('width');
     if (!config.height) throw createInvalidOptionError('height');
     config = _objectSpread({}, defaultConfig, config);
-    this.dimens = {
+    this.$canvas = config.$canvas;
+    this.ctx = this.$canvas.getContext('2d');
+    this.setDimensions({
       width: config.width,
       height: config.height
-    };
-    this.setUpCanvas(config);
+    });
     this.initialize(config);
   }
 
   _createClass(PatternLock, [{
-    key: "setUpCanvas",
-    value: function setUpCanvas(config) {
-      this.$canvas = config.$canvas;
-      this.ctx = this.$canvas.getContext('2d');
+    key: "setDimensions",
+    value: function setDimensions(dimens) {
+      this.dimens = dimens;
       var ratio = (0, _dom.getPixelRatio)(this.ctx);
       this.$canvas.width = this.dimens.width * ratio;
       this.$canvas.height = this.dimens.height * ratio;
@@ -357,13 +357,15 @@ function () {
     key: "setGrid",
     // setGrid :: (Number, Number) -> PatternLock
     value: function setGrid(rows, cols) {
+      var rerender = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
+      if (this.rows === rows && this.cols === cols) return this;
       this.rows = rows;
       this.cols = cols;
       this.setInitialState();
 
       this._onResize();
 
-      this.forceRender();
+      rerender && this.forceRender();
       return this;
     } // setTheme :: (Theme, ?Boolean) -> PatternLock
 
@@ -371,11 +373,8 @@ function () {
     key: "setTheme",
     value: function setTheme(theme) {
       var rerender = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-      if (typeof theme === 'string') {
-        theme = _themes.default[theme];
-      }
-
+      if (theme === _themes.default[this.theme] || theme === this.theme) return this;
+      if (typeof theme === 'string') theme = _themes.default[theme];
       if (!theme) throw createInvalidOptionError('theme');
       this.theme = theme;
       this.setThemeState('default', false);

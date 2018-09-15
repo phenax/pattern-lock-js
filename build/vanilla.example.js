@@ -1,88 +1,154 @@
 "use strict";
 
-var _PatternLock = _interopRequireDefault(require("./PatternLock"));
+var _hyperapp = require("hyperapp");
 
-var _bdom = require("./example-helpers/bdom");
+var _Options = require("./example-helpers/Options");
+
+var _CodeExample = _interopRequireDefault(require("./example-helpers/CodeExample"));
+
+var _PatternLockCanvas = _interopRequireDefault(require("./example-helpers/PatternLockCanvas"));
+
+var _component = require("./example-helpers/component");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var PatternLockCanvas = function PatternLockCanvas() {
-  var $canvas = document.createElement('canvas');
-  var lock = (0, _PatternLock.default)({
-    $canvas: $canvas,
+var App = (0, _component.component)({
+  state: {
+    gridIndex: 1,
+    themeIndex: 0,
+    themeStateIndex: 0,
+    password: '',
+    showControls: true,
     width: 300,
-    height: 430,
-    grid: [3, 3]
-  }); // Right L, Diagonal L
-
-  lock.matchHash(['LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==']).onSuccess(function () {
-    return lock.setThemeState('success');
-  }).onFailure(function () {
-    return lock.setThemeState('failure');
-  });
-  lock.onStart(function () {
-    return lock.setThemeState('default');
-  });
-  return {
-    lock: lock,
-    $canvas: $canvas
-  };
-};
-
-var App = function App() {
-  var _PatternLockCanvas = PatternLockCanvas(),
-      lock = _PatternLockCanvas.lock,
-      $canvas = _PatternLockCanvas.$canvas;
-
-  var $password = (0, _bdom.input)();
-  lock.onComplete(function () {
-    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        hash = _ref.hash,
-        nodes = _ref.nodes;
-
-    console.log(nodes);
-    $password.value = hash;
-  });
-
-  var onCheckChange = function onCheckChange(_ref2) {
-    var $radio = _ref2.target;
-
-    if ($radio.checked && $radio.value) {
-      var theme = $radio.value;
-      lock.setTheme(theme);
+    height: 430
+  },
+  actions: {
+    setGrid: function setGrid(gridIndex) {
+      return function () {
+        return {
+          gridIndex: gridIndex
+        };
+      };
+    },
+    setTheme: function setTheme(themeIndex) {
+      return function () {
+        return {
+          themeIndex: themeIndex
+        };
+      };
+    },
+    setThemeState: function setThemeState(themeStateIndex) {
+      return function () {
+        return {
+          themeStateIndex: themeStateIndex
+        };
+      };
+    },
+    setPassword: function setPassword(password) {
+      return function () {
+        return {
+          password: password
+        };
+      };
+    },
+    setDimensions: function setDimensions(dimens) {
+      return function () {
+        return dimens;
+      };
+    },
+    toggleControls: function toggleControls() {
+      return function (_ref) {
+        var showControls = _ref.showControls;
+        return {
+          showControls: !showControls
+        };
+      };
     }
-  };
-
-  var themes = ['dark', 'light'];
-  var $app = (0, _bdom.div)({}, [(0, _bdom.div)({
-    class: 'title'
-  }, [(0, _bdom.text)('PatternLockJS')]), (0, _bdom.div)({
-    class: 'subtitle'
-  }, [(0, _bdom.text)('Draw unlock pattern to generate a hash')]), (0, _bdom.div)({
-    class: 'canvas-wrapper'
-  }, [$canvas]), (0, _bdom.div)({}, themes.map(function (value) {
-    return (0, _bdom.div)({}, [(0, _bdom.h)('label')({}, [(0, _bdom.input)({
-      type: 'radio',
-      name: 'themes',
-      value: value
-    }), (0, _bdom.text)("Theme: ".concat(value))])]);
-  }).map(function ($el) {
-    return (0, _bdom.onChange)(onCheckChange, $el);
-  })), (0, _bdom.div)({
-    class: 'password'
-  }, [(0, _bdom.text)('Your password is: '), $password])]);
-  return {
-    $app: $app,
-    lock: lock
-  };
-};
-
+  },
+  render: function render(_ref2) {
+    var grids = _ref2.grids,
+        themes = _ref2.themes,
+        themeStates = _ref2.themeStates;
+    return function (state, actions) {
+      return (0, _hyperapp.h)('div', {}, [(0, _hyperapp.h)('div', {
+        class: 'title'
+      }, 'PatternLockJS'), (0, _hyperapp.h)('div', {
+        class: 'subtitle'
+      }, 'Draw unlock pattern to generate a hash'), (0, _hyperapp.h)('div', {
+        class: 'canvas-wrapper'
+      }, (0, _hyperapp.h)(_PatternLockCanvas.default, {
+        width: state.width,
+        height: state.height,
+        onComplete: function onComplete(_ref3) {
+          var hash = _ref3.hash;
+          return actions.setPassword(hash);
+        },
+        grid: grids[state.gridIndex],
+        theme: themes[state.themeIndex],
+        themeState: themeStates[state.themeStateIndex]
+      })), (0, _hyperapp.h)('div', {
+        class: 'password'
+      }, ['Generated hash: ', (0, _hyperapp.h)('input', {
+        value: state.password
+      })]), (0, _hyperapp.h)('button', {
+        onclick: actions.toggleControls,
+        class: 'button-primary'
+      }, "".concat(state.showControls ? 'Hide' : 'Show', " Controls")), !state.showControls ? null : (0, _hyperapp.h)('div', {
+        class: 'controls-wrapper'
+      }, [(0, _hyperapp.h)(_CodeExample.default, {
+        config: {
+          width: state.width,
+          height: state.height,
+          grid: grids[state.gridIndex],
+          theme: themes[state.themeIndex]
+        }
+      }), (0, _hyperapp.h)('div', {
+        style: {
+          padding: '1em .3em'
+        }
+      }, [(0, _hyperapp.h)(_Options.OptionsGroup, {
+        name: 'Grid',
+        list: grids,
+        selected: state.gridIndex,
+        onItemSelect: function onItemSelect(index) {
+          return function () {
+            return actions.setGrid(index);
+          };
+        }
+      }), (0, _hyperapp.h)(_Options.OptionsGroup, {
+        name: 'Theme',
+        list: themes,
+        selected: state.themeIndex,
+        onItemSelect: function onItemSelect(index) {
+          return function () {
+            return actions.setTheme(index);
+          };
+        }
+      }), (0, _hyperapp.h)(_Options.OptionsGroup, {
+        name: 'Theme State',
+        list: themeStates,
+        selected: state.themeStateIndex,
+        onItemSelect: function onItemSelect(index) {
+          return function () {
+            return actions.setThemeState(index);
+          };
+        }
+      })])]), (0, _hyperapp.h)('div', {
+        style: {
+          padding: '5em'
+        }
+      })]);
+    };
+  }
+});
 document.addEventListener('DOMContentLoaded', function () {
-  var _App = App(),
-      $app = _App.$app,
-      lock = _App.lock;
-
-  var $appRoot = document.getElementById('root');
-  (0, _bdom.render)($app, $appRoot);
-  lock.recalculateBounds();
+  var _App$instance = App.instance,
+      state = _App$instance.state,
+      actions = _App$instance.actions;
+  var view = (0, _hyperapp.h)(App, {
+    grids: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
+    themes: ['dark', 'light'],
+    themeStates: ['default', 'success', 'failure']
+  });
+  (0, _hyperapp.app)(state, actions, view, document.getElementById('root'));
 });

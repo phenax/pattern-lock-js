@@ -1,69 +1,94 @@
+import { h, app } from 'hyperapp';
 
-import PatternLock from './PatternLock';
-import { div, input, text, h, onChange, render } from './example-helpers/bdom';
+import { OptionsGroup } from './example-helpers/Options';
+import CodeExample from './example-helpers/CodeExample';
+import PatternLockCanvas from './example-helpers/PatternLockCanvas';
 
+import { component } from './example-helpers/component';
 
-const PatternLockCanvas = () => {
-	const $canvas = document.createElement('canvas');
-
-	const lock = PatternLock({
-		$canvas,
+const App = component({
+	state: {
+		gridIndex: 1,
+		themeIndex: 0,
+		themeStateIndex: 0,
+		password: '',
+		showControls: true,
 		width: 300,
 		height: 430,
-		grid: [ 3, 3 ],
-	});
-
-	// Right L, Diagonal L
-	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==' ])
-		.onSuccess(() => lock.setThemeState('success'))
-		.onFailure(() => lock.setThemeState('failure'));
-
-	lock.onStart(() => lock.setThemeState('default'));
-
-	return { lock, $canvas };
-};
-
-const App = () => {
-
-	const { lock, $canvas } = PatternLockCanvas();
-
-	const $password = input();
-	lock.onComplete(({ hash, nodes } = {}) => { console.log(nodes); $password.value = hash;});
-
-	const onCheckChange = ({ target: $radio }) => {
-		if($radio.checked && $radio.value) {
-			const theme = $radio.value;
-			lock.setTheme(theme);
-		}
-	};
-
-	const themes = [ 'dark', 'light' ];
-
-	const $app = div({}, [
-		div({ class: 'title' }, [ text('PatternLockJS') ]),
-		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
-		div({ class: 'canvas-wrapper' }, [ $canvas ]),
-		div({},
-			themes
-				.map(value => div({}, [
-					h('label')({}, [
-						input({ type: 'radio', name: 'themes', value }),
-						text(`Theme: ${value}`),
-					])
-				]))
-				.map($el => onChange(onCheckChange, $el))
+	},
+	actions: {
+		setGrid: gridIndex => () => ({ gridIndex }),
+		setTheme: themeIndex => () => ({ themeIndex }),
+		setThemeState: themeStateIndex => () => ({ themeStateIndex }),
+		setPassword: password => () => ({ password }),
+		setDimensions: dimens => () => {
+			return dimens;
+		},
+		toggleControls: () => ({ showControls }) => ({ showControls: !showControls }),
+	},
+	render: ({ grids, themes, themeStates }) => (state, actions) => h('div', {}, [
+		h('div', { class: 'title' }, 'PatternLockJS'),
+		h('div', { class: 'subtitle' }, 'Draw unlock pattern to generate a hash'),
+		h('div', { class: 'canvas-wrapper' },
+			h(PatternLockCanvas, {
+				width: state.width,
+				height: state.height,
+				onComplete: ({ hash }) => actions.setPassword(hash),
+				grid: grids[state.gridIndex],
+				theme: themes[state.themeIndex],
+				themeState: themeStates[state.themeStateIndex],
+			}),
 		),
-		div({ class: 'password' }, [ text('Your password is: '), $password ]),
-	]);
-
-	return { $app, lock };
-};
-
+		h('div', { class: 'password' }, [
+			'Generated hash: ',
+			h('input', { value: state.password })
+		]),
+		h('button', {
+			onclick: actions.toggleControls,
+			class: 'button-primary'
+		}, `${state.showControls ? 'Hide': 'Show'} Controls`),
+		!state.showControls ? null : h('div', { class: 'controls-wrapper' }, [
+			h(CodeExample, {
+				config: {
+					width: state.width,
+					height: state.height,
+					grid: grids[state.gridIndex],
+					theme: themes[state.themeIndex],
+				},
+			}),
+			h('div', { style: { padding: '1em .3em' } }, [
+				h(OptionsGroup, {
+					name: 'Grid',
+					list: grids,
+					selected: state.gridIndex,
+					onItemSelect: index => () => actions.setGrid(index),
+				}),
+				h(OptionsGroup, {
+					name: 'Theme',
+					list: themes,
+					selected: state.themeIndex,
+					onItemSelect: index => () => actions.setTheme(index),
+				}),
+				h(OptionsGroup, {
+					name: 'Theme State',
+					list: themeStates,
+					selected: state.themeStateIndex,
+					onItemSelect: index => () => actions.setThemeState(index),
+				}),
+			]),
+		]),
+		h('div', { style: { padding: '5em' } }),
+	]),
+});
 
 document.addEventListener('DOMContentLoaded', () => {
-	const { $app, lock } = App();
-	const $appRoot = document.getElementById('root');
-	render($app, $appRoot);
-	lock.recalculateBounds();
+	const { state, actions } = App.instance;
+	const view = h(App, {
+		grids: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
+		themes: [ 'dark', 'light' ],
+		themeStates: [ 'default', 'success', 'failure' ],
+	});
+
+	app(state, actions, view, document.getElementById('root'));
 });
 
