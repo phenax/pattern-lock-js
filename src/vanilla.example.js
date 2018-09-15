@@ -12,13 +12,18 @@ const App = component({
 		themeIndex: 0,
 		themeStateIndex: 0,
 		password: '',
-		showControls: false,
+		showControls: true,
+		width: 300,
+		height: 430,
 	},
 	actions: {
 		setGrid: gridIndex => () => ({ gridIndex }),
 		setTheme: themeIndex => () => ({ themeIndex }),
 		setThemeState: themeStateIndex => () => ({ themeStateIndex }),
 		setPassword: password => () => ({ password }),
+		setDimensions: dimens => () => {
+			return dimens;
+		},
 		toggleControls: () => ({ showControls }) => ({ showControls: !showControls }),
 	},
 	render: ({ grids, themes, themeStates }) => (state, actions) => h('div', {}, [
@@ -26,6 +31,8 @@ const App = component({
 		h('div', { class: 'subtitle' }, 'Draw unlock pattern to generate a hash'),
 		h('div', { class: 'canvas-wrapper' },
 			h(PatternLockCanvas, {
+				width: state.width,
+				height: state.height,
 				onComplete: ({ hash }) => actions.setPassword(hash),
 				grid: grids[state.gridIndex],
 				theme: themes[state.themeIndex],
@@ -38,16 +45,13 @@ const App = component({
 		]),
 		h('button', {
 			onclick: actions.toggleControls,
-			style: {
-				padding: '.5em 1em',
-			},
 			class: 'button-primary'
 		}, 'Show Controls'),
 		!state.showControls ? null : h('div', { class: 'controls-wrapper' }, [
 			h(CodeExample, {
 				config: {
-					width: 300,
-					height: 430,
+					width: state.width,
+					height: state.height,
 					grid: grids[state.gridIndex],
 					theme: themes[state.themeIndex],
 				},

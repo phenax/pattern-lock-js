@@ -71,16 +71,16 @@ export class PatternLock {
 		if(!config.height) throw createInvalidOptionError('height');
 
 		config = { ...defaultConfig, ...config };
-		this.dimens = { width: config.width, height: config.height };
 
-		this.setUpCanvas(config);
-		this.initialize(config);
-	}
-
-	setUpCanvas(config) {
 		this.$canvas = config.$canvas;
 		this.ctx = this.$canvas.getContext('2d');
 
+		this.setDimensions({ width: config.width, height: config.height });
+		this.initialize(config);
+	}
+
+	setDimensions(dimens) {
+		this.dimens = dimens;
 		const ratio = getPixelRatio(this.ctx);
 
 		this.$canvas.width = this.dimens.width * ratio;

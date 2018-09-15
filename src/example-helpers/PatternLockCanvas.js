@@ -10,17 +10,12 @@ const PatternLockCanvas = component({
 	locker: Maybe(null),
 	defaultProps: { onComplete: () => {} },
 
-	onCreate: (self, { grid, theme, onComplete }) => $canvas => {
-		const lock = PatternLockJs({
-			$canvas,
-			grid,
-			theme,
-			width: 300,
-			height: 430,
-		});
+	onCreate: (self, { onComplete, ...props }) => $canvas => {
+		const lock = PatternLockJs({ $canvas, ...props });
 		lock.onComplete(onComplete);
 		self.locker = Maybe(lock);
 	},
+
 	onDestroy: self => () =>
 		self.locker.map(lock => lock.destroy()),
 

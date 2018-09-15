@@ -18,7 +18,9 @@ var App = (0, _component.component)({
     themeIndex: 0,
     themeStateIndex: 0,
     password: '',
-    showControls: false
+    showControls: true,
+    width: 300,
+    height: 430
   },
   actions: {
     setGrid: function setGrid(gridIndex) {
@@ -49,6 +51,11 @@ var App = (0, _component.component)({
         };
       };
     },
+    setDimensions: function setDimensions(dimens) {
+      return function () {
+        return dimens;
+      };
+    },
     toggleControls: function toggleControls() {
       return function (_ref) {
         var showControls = _ref.showControls;
@@ -70,6 +77,8 @@ var App = (0, _component.component)({
       }, 'Draw unlock pattern to generate a hash'), (0, _hyperapp.h)('div', {
         class: 'canvas-wrapper'
       }, (0, _hyperapp.h)(_PatternLockCanvas.default, {
+        width: state.width,
+        height: state.height,
         onComplete: function onComplete(_ref3) {
           var hash = _ref3.hash;
           return actions.setPassword(hash);
@@ -83,16 +92,13 @@ var App = (0, _component.component)({
         value: state.password
       })]), (0, _hyperapp.h)('button', {
         onclick: actions.toggleControls,
-        style: {
-          padding: '.5em 1em'
-        },
         class: 'button-primary'
       }, 'Show Controls'), !state.showControls ? null : (0, _hyperapp.h)('div', {
         class: 'controls-wrapper'
       }, [(0, _hyperapp.h)(_CodeExample.default, {
         config: {
-          width: 300,
-          height: 430,
+          width: state.width,
+          height: state.height,
           grid: grids[state.gridIndex],
           theme: themes[state.themeIndex]
         }
