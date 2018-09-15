@@ -118,8 +118,8 @@ export class PatternLock {
 	});
 
 	// setGrid :: (Number, Number) -> PatternLock
-	setGrid(rows, cols) {
-		if(this.rows === rows && this.cols === cols)
+	setGrid(rows, cols, rerender = true) {
+		if (this.rows === rows && this.cols === cols)
 			return this;
 
 		this.rows = rows;
@@ -127,7 +127,7 @@ export class PatternLock {
 
 		this.setInitialState();
 		this._onResize();
-		this.forceRender();
+		rerender && this.forceRender();
 		return this;
 	}
 
@@ -151,7 +151,7 @@ export class PatternLock {
 
 	// setThemeState :: (State, ?Boolean) -> PatternLock
 	setThemeState(themeState, rerender = true) {
-		if(!this.theme) throw createInvalidOptionError('theme');
+		if (!this.theme) throw createInvalidOptionError('theme');
 
 		this.themeState = this.theme[themeState || 'default'] || {};
 		this.themeState.colors = { ...this.theme.default.colors, ...this.themeState.colors };

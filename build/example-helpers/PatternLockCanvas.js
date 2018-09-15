@@ -15,10 +15,6 @@ var _component = require("./component");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
-
-function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
-
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
 
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
@@ -43,8 +39,8 @@ var PatternLockCanvas = (0, _component.component)({
         theme: theme,
         width: 300,
         height: 430
-      }); // lock.onComplete(onComplete);
-
+      });
+      lock.onComplete(onComplete);
       self.locker = (0, _libs.Maybe)(lock);
     };
   },
@@ -55,18 +51,14 @@ var PatternLockCanvas = (0, _component.component)({
       });
     };
   },
-  onReceiveProps: function onReceiveProps(self, _ref2, prevProps) {
-    var grid = _ref2.grid,
-        theme = _ref2.theme,
-        themeState = _ref2.themeState;
+  onReceiveProps: function onReceiveProps(self, props, prevProps) {
+    if ((0, _component.isEqual)(props, prevProps)) return;
     self.locker.map(function (lock) {
-      return lock.setGrid.apply(lock, _toConsumableArray(grid)).setTheme(theme).setThemeState(themeState);
+      return lock.setGrid.apply(lock, _toConsumableArray(props.grid).concat([false])).setTheme(props.theme, false).setThemeState(props.themeState, false).forceRender();
     });
   },
-  render: function render(_ref3) {
-    var rootProps = _ref3.rootProps,
-        props = _objectWithoutProperties(_ref3, ["rootProps"]);
-
+  render: function render(_ref2) {
+    var rootProps = _ref2.rootProps;
     return (0, _hyperapp.h)('canvas', rootProps);
   }
 });

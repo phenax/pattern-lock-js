@@ -357,6 +357,7 @@ function () {
     key: "setGrid",
     // setGrid :: (Number, Number) -> PatternLock
     value: function setGrid(rows, cols) {
+      var rerender = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
       if (this.rows === rows && this.cols === cols) return this;
       this.rows = rows;
       this.cols = cols;
@@ -364,7 +365,7 @@ function () {
 
       this._onResize();
 
-      this.forceRender();
+      rerender && this.forceRender();
       return this;
     } // setTheme :: (Theme, ?Boolean) -> PatternLock
 
