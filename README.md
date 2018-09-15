@@ -1,9 +1,12 @@
 # PatternLockJS
 A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock-js/)
 
-[![forthebadge](http://forthebadge.com/images/badges/uses-js.svg)](http://forthebadge.com)
-[![forthebadge](http://forthebadge.com/images/badges/you-didnt-ask-for-this.svg)](http://forthebadge.com)
-[![forthebadge](http://forthebadge.com/images/badges/no-ragrets.svg)](http://forthebadge.com)
+
+![npm (scoped)](https://img.shields.io/npm/v/@phenax/pattern-lock-js.svg?style=flat-square)
+![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/@phenax/pattern-lock-js.svg?style=flat-square)
+![NpmLicense](https://img.shields.io/npm/l/@phenax/pattern-lock-js.svg?style=flat-square)
+
+
 
 
 ### Installation
