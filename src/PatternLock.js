@@ -276,7 +276,10 @@ export class PatternLock {
 
 			let i = 0;
 			while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
-				this.selectedNodes.push(current);
+				if (!this.isSelected(current)) {
+					this.selectedNodes.push(current);
+				}
+
 				current = {
 					row: current.row + stepNode.row,
 					col: current.col + stepNode.col,

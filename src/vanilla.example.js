@@ -28,7 +28,7 @@ const App = () => {
 	const { lock, $canvas } = PatternLockCanvas();
 
 	const $password = input();
-	lock.onComplete(({ hash } = {}) => $password.value = hash);
+	lock.onComplete(({ hash, nodes } = {}) => { console.log(nodes); $password.value = hash;});
 
 	const onCheckChange = ({ target: $radio }) => {
 		if($radio.checked && $radio.value) {

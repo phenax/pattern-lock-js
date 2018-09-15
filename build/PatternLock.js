@@ -437,54 +437,57 @@ function () {
 
   }, {
     key: "addIntermediaryNodes",
-    // Adds intermediary nodes between lastSelectedNode and the targetNode
+    // Adds intermediary nodes between lastSelectedNode and the target
     // addIntermediaryNodes :: Node -> ()
-    value: function addIntermediaryNodes(targetNode) {
-      var stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, targetNode);
+    value: function addIntermediaryNodes(target) {
+      var stepNode = this.getIntermediaryStepDirection(this.lastSelectedNode, target);
 
       if (stepNode.row !== 0 || stepNode.col !== 0) {
-        var currentNode = {
+        var current = {
           row: this.lastSelectedNode.row + stepNode.row,
           col: this.lastSelectedNode.col + stepNode.col
         };
-        var maxIterations = Math.max(this.rows, this.cols);
+        var max = Math.max(this.rows, this.cols);
         var i = 0;
 
-        while (i++ < maxIterations && (currentNode.row !== targetNode.row || currentNode.col !== targetNode.col)) {
-          this.selectedNodes.push(currentNode);
-          currentNode = {
-            row: currentNode.row + stepNode.row,
-            col: currentNode.col + stepNode.col
+        while (i++ < max && (current.row !== target.row || current.col !== target.col)) {
+          if (!this.isSelected(current)) {
+            this.selectedNodes.push(current);
+          }
+
+          current = {
+            row: current.row + stepNode.row,
+            col: current.col + stepNode.col
           };
         }
       }
 
-      this.lastSelectedNode = targetNode;
+      this.lastSelectedNode = target;
     } // Returns the step direction to select intermediary nodes
     // INFO: Can be moved out of the class as it is independent of `this`
     // getIntermediaryStepDirection :: (Node, Node) -> Node
 
   }, {
     key: "getIntermediaryStepDirection",
-    value: function getIntermediaryStepDirection(previousNode, nextNode) {
+    value: function getIntermediaryStepDirection(prev, next) {
       var finalStep = {
         row: 0,
         col: 0
       };
 
-      if (!previousNode) {
+      if (!prev) {
         return finalStep;
       }
 
-      var dRow = Math.abs(previousNode.row - nextNode.row);
-      var dCol = Math.abs(previousNode.col - nextNode.col);
+      var dRow = Math.abs(prev.row - next.row);
+      var dCol = Math.abs(prev.col - next.col);
 
       if (dRow === 1 || dCol === 1) {
         return finalStep;
       }
 
-      var dRsign = previousNode.row - nextNode.row < 0 ? 1 : -1;
-      var dCsign = previousNode.col - nextNode.col < 0 ? 1 : -1;
+      var dRsign = prev.row - next.row < 0 ? 1 : -1;
+      var dCsign = prev.col - next.col < 0 ? 1 : -1;
 
       if (dRow === 0) {
         if (dCol !== 0) {
