@@ -48,7 +48,11 @@ var onChange = onEvent('change');
 exports.onChange = onChange;
 
 var render = function render($child, $parent) {
-  return $parent.appendChild($child);
+  while ($parent.firstChild) {
+    $parent.removeChild($parent.firstChild);
+  }
+
+  $parent.appendChild($child);
 };
 
 exports.render = render;

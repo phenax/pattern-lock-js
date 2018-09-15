@@ -18,4 +18,7 @@ export const onEvent = ev => (fn, $el) => {
 export const onClick = onEvent('click');
 export const onChange = onEvent('change');
 
-export const render = ($child, $parent) => $parent.appendChild($child);
+export const render = ($child, $parent) => {
+	while($parent.firstChild) $parent.removeChild($parent.firstChild);
+	$parent.appendChild($child);
+};

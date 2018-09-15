@@ -14,6 +14,8 @@ function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.
 
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var PatternLockCanvas = function PatternLockCanvas() {
@@ -25,7 +27,7 @@ var PatternLockCanvas = function PatternLockCanvas() {
     grid: [3, 3]
   }); // Right L, Diagonal L
 
-  lock.matchHash(['LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==']).onSuccess(function () {
+  lock.matchHash(['LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==', 'LTYyMzEzNTM2Ng==']).onSuccess(function () {
     return lock.setThemeState('success');
   }).onFailure(function () {
     return lock.setThemeState('failure');
@@ -71,7 +73,21 @@ var OptionsGroup = function OptionsGroup(_ref2) {
   }))]);
 };
 
-var App = function App() {
+var CodeExample = function CodeExample(_ref3) {
+  var grid = _ref3.grid,
+      theme = _ref3.theme,
+      themeState = _ref3.themeState;
+  return (0, _bdom.div)({}, [(0, _bdom.text)(JSON.stringify({
+    grid: grid,
+    theme: theme
+  }))]);
+};
+
+var App = function App(_ref4) {
+  var grids = _ref4.grids,
+      themes = _ref4.themes,
+      themeStates = _ref4.themeStates;
+
   var _PatternLockCanvas = PatternLockCanvas(),
       lock = _PatternLockCanvas.lock,
       $canvas = _PatternLockCanvas.$canvas;
@@ -92,11 +108,18 @@ var App = function App() {
   };
   var $password = (0, _bdom.input)();
   lock.onComplete(function () {
-    var _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        hash = _ref3.hash;
+    var _ref5 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        hash = _ref5.hash;
 
     return $password.value = hash;
   });
+  var $codeBox = (0, _bdom.div)();
+
+  var renderCodeBox = function renderCodeBox() {
+    return (0, _bdom.render)(CodeExample(_objectSpread({}, state)), $codeBox);
+  };
+
+  renderCodeBox();
 
   var stateChange = function stateChange(stateName, action) {
     return function (value, index) {
@@ -104,6 +127,7 @@ var App = function App() {
         value: value,
         index: index
       };
+      renderCodeBox();
       return action(value);
     };
   };
@@ -116,9 +140,9 @@ var App = function App() {
     class: 'canvas-wrapper'
   }, [$canvas]), (0, _bdom.div)({
     class: 'password'
-  }, [(0, _bdom.text)('Your password is: '), $password]), (0, _bdom.div)({}, [OptionsGroup({
+  }, [(0, _bdom.text)('Your password is: '), $password]), (0, _bdom.div)({}, [$codeBox]), (0, _bdom.div)({}, [OptionsGroup({
     name: 'Grid',
-    list: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
+    list: grids,
     selected: state.grid.index,
     onItemSelect: stateChange('grid', function (grid) {
       return function () {
@@ -127,7 +151,7 @@ var App = function App() {
     })
   }), OptionsGroup({
     name: 'Theme',
-    list: ['dark', 'light'],
+    list: themes,
     selected: state.theme.index,
     onItemSelect: stateChange('theme', function (theme) {
       return function () {
@@ -136,7 +160,7 @@ var App = function App() {
     })
   }), OptionsGroup({
     name: 'Theme State',
-    list: ['default', 'success', 'failure'],
+    list: themeStates,
     selected: state.themeState.index,
     onItemSelect: stateChange('themeState', function (ts) {
       return function () {
@@ -151,7 +175,11 @@ var App = function App() {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-  var _App = App(),
+  var _App = App({
+    grids: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
+    themes: ['dark', 'light'],
+    themeStates: ['default', 'success', 'failure']
+  }),
       $app = _App.$app,
       lock = _App.lock;
 

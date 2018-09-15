@@ -14,7 +14,7 @@ const PatternLockCanvas = () => {
 	});
 
 	// Right L, Diagonal L
-	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==' ])
+	lock.matchHash([ 'LTExNjI0MjcxOTA=', 'MTQ2NjgyMjczMw==', 'LTYyMzEzNTM2Ng==' ])
 		.onSuccess(() => lock.setThemeState('success'))
 		.onFailure(() => lock.setThemeState('failure'));
 
@@ -51,7 +51,16 @@ const OptionsGroup = ({ list, onItemSelect, name, selected }) => (
 	])
 );
 
-const App = () => {
+const CodeExample = ({ grid, theme, themeState }) => {
+	return div({}, [
+		text(JSON.stringify({
+			grid,
+			theme,
+		})),
+	]);
+};
+
+const App = ({ grids, themes, themeStates }) => {
 	const { lock, $canvas } = PatternLockCanvas();
 	const state = {
 		grid: { value: '', index: 1 },
@@ -61,9 +70,14 @@ const App = () => {
 
 	const $password = input();
 	lock.onComplete(({ hash } = {}) => $password.value = hash);
+	
+	const $codeBox = div();
+	const renderCodeBox = () => render(CodeExample({ ...state }), $codeBox);
 
+	renderCodeBox();
 	const stateChange = (stateName, action) => (value, index) => {
 		state[stateName] = { value, index };
+		renderCodeBox();
 		return action(value);
 	};
 
@@ -72,22 +86,23 @@ const App = () => {
 		div({ class: 'subtitle' }, [ text('Draw unlock pattern to generate a hash') ]),
 		div({ class: 'canvas-wrapper' }, [ $canvas ]),
 		div({ class: 'password' }, [ text('Your password is: '), $password ]),
+		div({}, [ $codeBox ]),
 		div({}, [
 			OptionsGroup({
 				name: 'Grid',
-				list: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
+				list: grids,
 				selected: state.grid.index,
 				onItemSelect: stateChange('grid', grid => () => lock.setGrid(...grid)),
 			}),
 			OptionsGroup({
 				name: 'Theme',
-				list: [ 'dark', 'light' ],
+				list: themes,
 				selected: state.theme.index,
 				onItemSelect: stateChange('theme', theme => () => lock.setTheme(theme)),
 			}),
 			OptionsGroup({
 				name: 'Theme State',
-				list: [ 'default', 'success', 'failure' ],
+				list: themeStates,
 				selected: state.themeState.index,
 				onItemSelect: stateChange('themeState', ts => () => lock.setThemeState(ts)),
 			}),
@@ -98,7 +113,11 @@ const App = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-	const { $app, lock } = App();
+	const { $app, lock } = App({
+		grids: [ [2,2], [3,3], [3, 4], [4,4], [4,5] ],
+		themes: [ 'dark', 'light' ],
+		themeStates: [ 'default', 'success', 'failure' ],
+	});
 	const $appRoot = document.getElementById('root');
 	render($app, $appRoot);
 	lock.recalculateBounds();
