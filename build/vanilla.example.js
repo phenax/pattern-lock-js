@@ -37,9 +37,11 @@ var App = function App() {
   var $password = (0, _bdom.input)();
   lock.onComplete(function () {
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        hash = _ref.hash;
+        hash = _ref.hash,
+        nodes = _ref.nodes;
 
-    return $password.value = hash;
+    console.log(nodes);
+    $password.value = hash;
   });
 
   var onCheckChange = function onCheckChange(_ref2) {
