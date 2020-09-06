@@ -5,6 +5,7 @@ A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock
 ![npm (scoped)](https://img.shields.io/npm/v/@phenax/pattern-lock-js.svg?style=flat-square)
 ![npm bundle size (minified + gzip)](https://img.shields.io/bundlephobia/minzip/@phenax/pattern-lock-js.svg?style=flat-square)
 ![NpmLicense](https://img.shields.io/npm/l/@phenax/pattern-lock-js.svg?style=flat-square)
+<a href="https://www.buymeacoffee.com/phenax"><img src="https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=flat-square" alt="Buy Me A Coffee donate button" /></a>
 
 
 
