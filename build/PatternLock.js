@@ -145,8 +145,8 @@ function () {
 
     _defineProperty(this, "recalculateBounds", function () {
       return _this.bounds = {
-        x: _this.$canvas.offsetLeft,
-        y: _this.$canvas.offsetTop
+        x: _this.$canvas.getBoundingClientRect().left,
+        y: _this.$canvas.getBoundingClientRect().top
       };
     });
 
