@@ -144,9 +144,13 @@ function () {
     });
 
     _defineProperty(this, "recalculateBounds", function () {
-      return _this.bounds = {
-        x: _this.$canvas.getBoundingClientRect().left,
-        y: _this.$canvas.getBoundingClientRect().top
+      var _this$$canvas$getBoun = _this.$canvas.getBoundingClientRect(),
+          left = _this$$canvas$getBoun.left,
+          top = _this$$canvas$getBoun.top;
+
+      _this.bounds = {
+        x: left,
+        y: top
       };
     });
 

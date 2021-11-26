@@ -206,10 +206,10 @@ export class PatternLock {
 
 
 	// recalculateBounds :: () -> Point
-	recalculateBounds = () => this.bounds = ({
-		x: this.$canvas.getBoundingClientRect().left,
-		y: this.$canvas.getBoundingClientRect().top,
-	});
+	recalculateBounds = () => {
+		const { left, top } = this.$canvas.getBoundingClientRect()
+		this.bounds = { x: left, y: top }
+	};
 
 	_onResize = () => raf(this.recalculateBounds);
 
