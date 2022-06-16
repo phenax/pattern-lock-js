@@ -216,6 +216,8 @@ export class PatternLock {
 	_onTouchStart = e => {
 		if (e) e.preventDefault();
 
+		raf(this.recalculateBounds);
+
 		this.setInitialState();
 		this.forceRender();
 

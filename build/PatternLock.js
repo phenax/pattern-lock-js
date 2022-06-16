@@ -160,6 +160,7 @@ function () {
 
     _defineProperty(this, "_onTouchStart", function (e) {
       if (e) e.preventDefault();
+      (0, _dom.raf)(_this.recalculateBounds);
 
       _this.setInitialState();
 
