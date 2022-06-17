@@ -144,13 +144,13 @@ function () {
     });
 
     _defineProperty(this, "recalculateBounds", function () {
-      var _this$$canvas$getBoun = _this.$canvas.getBoundingClientRect(),
-          left = _this$$canvas$getBoun.left,
-          top = _this$$canvas$getBoun.top;
+      var bodyRect = document.body.getBoundingClientRect(),
+          elemRect = _this.$canvas.getBoundingClientRect(),
+          offset = elemRect.top - bodyRect.top;
 
       _this.bounds = {
-        x: left,
-        y: top
+        x: elemRect.left,
+        y: offset
       };
     });
 
