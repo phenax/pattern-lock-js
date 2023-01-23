@@ -98,4 +98,10 @@ lock.matchHash([ 'LTU2MTIyNjM0Ng==', 'MTk1OTMwNzY2NQ==' ])
     .onFailure(() => lock.setThemeState('failure'));
 ```
 
+### Destroy to enable scrolling on touch
+
+```
+lock.destroy();
+```
+
 <br />
