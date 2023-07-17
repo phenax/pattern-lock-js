@@ -1162,7 +1162,7 @@ var CodeExample = ({ tabSize = 4, config }) => h(
     " lock = ",
     h(FunctionCall, {}, "PatternLock"),
     "({",
-    h(IndentedBlock, {}, [
+    h(IndentedBlock, { level: tabSize }, [
       h(CodeKey, {}, "$canvas"),
       ": ",
       h("span", {}, [
@@ -1174,7 +1174,7 @@ var CodeExample = ({ tabSize = 4, config }) => h(
       ]),
       ","
     ]),
-    Object.keys(config).map((key) => h(IndentedBlock, {}, [
+    Object.keys(config).map((key) => h(IndentedBlock, { level: tabSize }, [
       h(CodeKey, {}, key),
       ": ",
       h(CodeValue, { value: config[key] }),
@@ -1186,7 +1186,7 @@ var CodeExample = ({ tabSize = 4, config }) => h(
     text: `const lock = PatternLock(${prettyPrint({
       $canvas: prettyPrint.expresssion('document.getElementById("myCanvas")'),
       ...config
-    })});`
+    }, tabSize)});`
   })
 );
 var CodeExample_default = CodeExample;
@@ -1389,6 +1389,12 @@ var PatternLock = class {
     this.themeState = this.theme[themeState || "default"] || {};
     this.themeState.colors = { ...this.theme.default.colors, ...this.themeState.colors };
     this.themeState.dimens = { ...this.theme.default.dimens, ...this.themeState.dimens };
+    rerender && this.forceRender();
+    return this;
+  }
+  // setThemeState :: (Boolean, ?Boolean) -> PatternLock
+  setShowArrow(showArrows, rerender = true) {
+    this.showArrows = showArrows;
     rerender && this.forceRender();
     return this;
   }
@@ -1630,9 +1636,9 @@ var PatternLock = class {
     }
     const point1 = { x: factor.x * row1, y: factor.y * col1 };
     const point2 = { x: factor.x * row2, y: factor.y * col2 };
+    this.ctx.lineCap = "round";
     this.ctx.lineWidth = this.themeState.dimens.line_width;
     this.ctx.strokeStyle = this.themeState.colors.accent;
-    this.ctx.lineCap = "round";
     this.ctx.beginPath();
     this.ctx.moveTo(point1.x, point1.y);
     this.ctx.lineTo(point2.x, point2.y);
@@ -1642,6 +1648,15 @@ var PatternLock = class {
       let angle = Math.atan((point2.y - point1.y) / (point2.x - point1.x));
       angle = point2.x < point1.x ? Math.PI + angle : angle;
       const segment = 8;
+      this.ctx.lineWidth = this.themeState.dimens.line_width + 2;
+      this.ctx.strokeStyle = `rgba(0, 0, 0, 0.1)`;
+      this.ctx.beginPath();
+      this.ctx.moveTo(mid.x - segment * Math.cos(angle - Math.PI / 4), mid.y - segment * Math.sin(angle - Math.PI / 4));
+      this.ctx.lineTo(mid.x, mid.y);
+      this.ctx.lineTo(mid.x - segment * Math.cos(angle + Math.PI / 4), mid.y - segment * Math.sin(angle + Math.PI / 4));
+      this.ctx.stroke();
+      this.ctx.lineWidth = this.themeState.dimens.line_width;
+      this.ctx.strokeStyle = this.themeState.colors.accent;
       this.ctx.beginPath();
       this.ctx.moveTo(mid.x - segment * Math.cos(angle - Math.PI / 4), mid.y - segment * Math.sin(angle - Math.PI / 4));
       this.ctx.lineTo(mid.x, mid.y);
@@ -1674,7 +1689,7 @@ var PatternLockCanvas = component({
     if (isEqual(props, prevProps))
       return;
     self.locker.map((lock) => {
-      return lock.setGrid(...props.grid, false).setTheme(props.theme, false).setThemeState(props.themeState, false).forceRender();
+      return lock.setGrid(...props.grid, false).setTheme(props.theme, false).setThemeState(props.themeState, false).setShowArrow(props.showArrows, false).forceRender();
     });
   },
   render: ({ rootProps }) => h("canvas", rootProps)
@@ -1688,72 +1703,78 @@ var App = component({
     themeIndex: 0,
     themeStateIndex: 0,
     password: "",
-    showControls: true,
     width: 300,
-    height: 430
+    height: 430,
+    showArrows: false
   },
   actions: {
     setGrid: (gridIndex) => () => ({ gridIndex }),
     setTheme: (themeIndex) => () => ({ themeIndex }),
     setThemeState: (themeStateIndex) => () => ({ themeStateIndex }),
     setPassword: (password) => () => ({ password }),
-    setDimensions: (dimens) => () => {
-      return dimens;
-    },
-    toggleControls: () => ({ showControls }) => ({ showControls: !showControls })
+    setShowArrows: (showArrows) => () => ({ showArrows })
   },
   render: ({ grids, themes: themes2, themeStates }) => (state, actions) => h("div", {}, [
     h("div", { class: "title" }, "PatternLockJS"),
-    h("div", { class: "subtitle" }, "Draw unlock pattern to generate a hash"),
     h(
       "div",
-      { class: "canvas-wrapper" },
-      h(PatternLockCanvas_default, {
-        width: state.width,
-        height: state.height,
-        onComplete: ({ hash }) => actions.setPassword(hash),
-        grid: grids[state.gridIndex],
-        showArrows: true,
-        theme: themes2[state.themeIndex],
-        themeState: themeStates[state.themeStateIndex]
-      })
+      { class: "subtitle" },
+      "Draw unlock pattern to generate a hash"
     ),
-    h("div", { class: "password" }, [
-      "Generated hash: ",
-      h("input", { value: state.password })
-    ]),
-    h("button", {
-      onclick: actions.toggleControls,
-      class: "button-primary"
-    }, `${state.showControls ? "Hide" : "Show"} Controls`),
-    !state.showControls ? null : h("div", { class: "controls-wrapper" }, [
-      h(CodeExample_default, {
-        config: {
+    h("div", { class: "container" }, [
+      h("div", { class: "canvas-wrapper" }, [
+        h(PatternLockCanvas_default, {
           width: state.width,
           height: state.height,
+          onComplete: ({ hash }) => actions.setPassword(hash),
           grid: grids[state.gridIndex],
-          theme: themes2[state.themeIndex]
-        }
-      }),
-      h("div", { style: { padding: "1em .3em" } }, [
-        h(OptionsGroup, {
-          name: "Grid",
-          list: grids,
-          selected: state.gridIndex,
-          onItemSelect: (index) => () => actions.setGrid(index)
+          showArrows: state.showArrows,
+          theme: themes2[state.themeIndex],
+          themeState: themeStates[state.themeStateIndex]
         }),
-        h(OptionsGroup, {
-          name: "Theme",
-          list: themes2,
-          selected: state.themeIndex,
-          onItemSelect: (index) => () => actions.setTheme(index)
-        }),
-        h(OptionsGroup, {
-          name: "Theme State",
-          list: themeStates,
-          selected: state.themeStateIndex,
-          onItemSelect: (index) => () => actions.setThemeState(index)
-        })
+        h("div", { class: "password" }, [
+          "Generated hash: ",
+          h("input", { value: state.password || "-" })
+        ])
+      ]),
+      h("div", { class: "controls-container" }, [
+        h("div", { class: "controls-wrapper" }, [
+          h(CodeExample_default, {
+            config: {
+              width: state.width,
+              height: state.height,
+              grid: grids[state.gridIndex],
+              theme: themes2[state.themeIndex],
+              showArrows: state.showArrows
+            }
+          }),
+          h("div", { style: { padding: "1em .3em" } }, [
+            h(OptionsGroup, {
+              name: "Grid",
+              list: grids,
+              selected: state.gridIndex,
+              onItemSelect: (index) => () => actions.setGrid(index)
+            }),
+            h(OptionsGroup, {
+              name: "Theme",
+              list: themes2,
+              selected: state.themeIndex,
+              onItemSelect: (index) => () => actions.setTheme(index)
+            }),
+            h(OptionsGroup, {
+              name: "Theme State",
+              list: themeStates,
+              selected: state.themeStateIndex,
+              onItemSelect: (index) => () => actions.setThemeState(index)
+            }),
+            h(OptionsGroup, {
+              name: "Arrows",
+              list: ["disabled", "enabled"],
+              selected: state.showArrows ? 1 : 0,
+              onItemSelect: (index) => () => actions.setShowArrows(!!index)
+            })
+          ])
+        ])
       ])
     ]),
     h("div", { style: { padding: "5em" } })
@@ -1762,7 +1783,13 @@ var App = component({
 document.addEventListener("DOMContentLoaded", () => {
   const { state, actions } = App.instance;
   const view = h(App, {
-    grids: [[2, 2], [3, 3], [3, 4], [4, 4], [4, 5]],
+    grids: [
+      [2, 2],
+      [3, 3],
+      [3, 4],
+      [4, 4],
+      [4, 5]
+    ],
     themes: ["dark", "light"],
     themeStates: ["default", "success", "failure"]
   });

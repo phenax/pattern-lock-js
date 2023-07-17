@@ -36,7 +36,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 			' lock = ',
 			h(FunctionCall, {}, 'PatternLock'),
 			'({',
-			h(IndentedBlock, {}, [
+			h(IndentedBlock, { level: tabSize }, [
 				h(CodeKey, {}, '$canvas'),
 				': ',
 				h('span', {}, [
@@ -48,7 +48,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 				]),
 				',',
 			]),
-			Object.keys(config).map(key => h(IndentedBlock, {}, [
+			Object.keys(config).map(key => h(IndentedBlock, { level: tabSize }, [
 				h(CodeKey, {}, key),
 				': ',
 				h(CodeValue, { value: config[key] }),
@@ -60,7 +60,7 @@ const CodeExample = ({ tabSize = 4, config }) => (
 			text: `const lock = PatternLock(${prettyPrint({
 				$canvas: prettyPrint.expresssion('document.getElementById("myCanvas")'),
 				...config,
-			})});`,
+			}, tabSize)});`,
 		}),
 	)
 );

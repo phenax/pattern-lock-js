@@ -43,7 +43,7 @@ type Options = {
 	grid :: ?Grid
 	width :: ?Pixels
 	height :: ?Pixels
-	showArrows: Bool
+	showArrows: Boolean
 }
 
 */
@@ -160,6 +160,13 @@ export class PatternLock {
 		this.themeState.colors = { ...this.theme.default.colors, ...this.themeState.colors };
 		this.themeState.dimens = { ...this.theme.default.dimens, ...this.themeState.dimens };
 
+		rerender && this.forceRender();
+		return this;
+	}
+
+	// setThemeState :: (Boolean, ?Boolean) -> PatternLock
+	setShowArrow(showArrows, rerender = true) {
+		this.showArrows = showArrows;
 		rerender && this.forceRender();
 		return this;
 	}
@@ -498,9 +505,9 @@ export class PatternLock {
 		const point2 = { x: factor.x * row2, y: factor.y * col2 };
 
 		// Config
+		this.ctx.lineCap = 'round';
 		this.ctx.lineWidth = this.themeState.dimens.line_width;
 		this.ctx.strokeStyle = this.themeState.colors.accent;
-		this.ctx.lineCap = 'round';
 
 		// Draw line
 		this.ctx.beginPath();
@@ -514,6 +521,17 @@ export class PatternLock {
 			let angle = Math.atan((point2.y - point1.y) / (point2.x - point1.x))
 			angle = point2.x < point1.x ? Math.PI + angle : angle
 			const segment = 8
+
+			this.ctx.lineWidth = this.themeState.dimens.line_width + 2
+			this.ctx.strokeStyle = `rgba(0, 0, 0, 0.1)`
+			this.ctx.beginPath();
+			this.ctx.moveTo(mid.x - segment*Math.cos(angle - Math.PI/4), mid.y - segment*Math.sin(angle - Math.PI/4));
+			this.ctx.lineTo(mid.x, mid.y);
+			this.ctx.lineTo(mid.x - segment*Math.cos(angle + Math.PI/4), mid.y - segment*Math.sin(angle + Math.PI/4));
+			this.ctx.stroke();
+
+			this.ctx.lineWidth = this.themeState.dimens.line_width;
+			this.ctx.strokeStyle = this.themeState.colors.accent;
 			this.ctx.beginPath();
 			this.ctx.moveTo(mid.x - segment*Math.cos(angle - Math.PI/4), mid.y - segment*Math.sin(angle - Math.PI/4));
 			this.ctx.lineTo(mid.x, mid.y);
