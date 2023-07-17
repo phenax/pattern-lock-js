@@ -9,7 +9,6 @@ A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock
 
 
 
-
 ### Installation
 
 Install the library with
@@ -28,7 +27,9 @@ const lock = PatternLock({
     $canvas: document.querySelector('#patternLock'),
     width: 300,
     height: 430,
-    grid: [ 3, 3 ],
+    grid: [ 3, 3 ], // 3x3 grid
+    theme: 'dark', // Theme name
+    showArrows: true, // Show arrows on pattern
 });
 ```
 
