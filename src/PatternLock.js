@@ -43,6 +43,7 @@ type Options = {
 	grid :: ?Grid
 	width :: ?Pixels
 	height :: ?Pixels
+	showArrows: Bool
 }
 
 */
@@ -61,6 +62,7 @@ const defaultConfig = {
 	grid: [ 3, 3 ],
 	width: 300,
 	height: 430,
+	showArrows: false,
 };
 
 export class PatternLock {
@@ -90,7 +92,7 @@ export class PatternLock {
 		this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 	}
 
-	initialize({ theme, grid: [ rows, cols ] }) {
+	initialize({ theme, grid: [ rows, cols ], showArrows }) {
 		this._subscriptions = [];
 		this.eventBus = EventBus();
 
@@ -98,6 +100,7 @@ export class PatternLock {
 		this.setGrid(rows, cols);
 		this.renderGrid();
 		this.attachEventHandlers();
+		this.showArrows = showArrows;
 	}
 
 	setInitialState() {
@@ -392,17 +395,18 @@ export class PatternLock {
 
 			// Plot all the selected nodes
 			const lastNode = this.selectedNodes.reduce((prevNode, node) => {
-				if (prevNode) {
-					const p1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
-					const p2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
+				if (!prevNode) return node
 
-					// Make the two selected nodes bigger
-					this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
-					this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3);
+				const p1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
+				const p2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
 
-					// Join the nodes
-					this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
-				}
+				// Make the two selected nodes bigger
+				this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
+				this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3);
+
+				// Join the nodes
+				// index === 0 ? accentFirstNode : accent
+				this.joinNodes(prevNode.row, prevNode.col, node.row, node.col, false);
 
 				return node;
 			}, null);
@@ -482,7 +486,7 @@ export class PatternLock {
 		this.ctx.stroke();
 	}
 
-	joinNodes(row1, col1, row2, col2, isCoordinates = false) {
+	joinNodes(row1, col1, row2, col2, isCoordinates) {
 
 		let factor = this.interval;
 
@@ -503,6 +507,19 @@ export class PatternLock {
 		this.ctx.moveTo(point1.x, point1.y);
 		this.ctx.lineTo(point2.x, point2.y);
 		this.ctx.stroke();
+
+		// Arrow
+		if (this.showArrows) {
+			const mid = { x: (point2.x + point1.x)/2, y: (point2.y + point1.y)/2 }
+			let angle = Math.atan((point2.y - point1.y) / (point2.x - point1.x))
+			angle = point2.x < point1.x ? Math.PI + angle : angle
+			const segment = 8
+			this.ctx.beginPath();
+			this.ctx.moveTo(mid.x - segment*Math.cos(angle - Math.PI/4), mid.y - segment*Math.sin(angle - Math.PI/4));
+			this.ctx.lineTo(mid.x, mid.y);
+			this.ctx.lineTo(mid.x - segment*Math.cos(angle + Math.PI/4), mid.y - segment*Math.sin(angle + Math.PI/4));
+			this.ctx.stroke();
+		}
 	}
 
 	// Will check if the drawn pattern matches produces a hash from the passed list

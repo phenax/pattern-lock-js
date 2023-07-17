@@ -35,6 +35,7 @@ const App = component({
 				height: state.height,
 				onComplete: ({ hash }) => actions.setPassword(hash),
 				grid: grids[state.gridIndex],
+				showArrows: true,
 				theme: themes[state.themeIndex],
 				themeState: themeStates[state.themeStateIndex],
 			}),
