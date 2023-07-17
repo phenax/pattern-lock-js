@@ -210,7 +210,9 @@ export class PatternLock {
 			hash = hashCode(password);
 		}
 
-		this.emit(events.PATTERN_COMPLETE, { nodes, password, hash });
+		const image = this.$canvas.toDataURL('image/png');
+
+		this.emit(events.PATTERN_COMPLETE, { nodes, password, hash, image });
 	}
 	// Event handler stuff end
 
