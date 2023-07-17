@@ -163,7 +163,8 @@ var defaultConfig = {
   theme: DEFAULT_THEME_NAME,
   grid: [3, 3],
   width: 300,
-  height: 430
+  height: 430,
+  showArrows: false
 };
 var PatternLock = class {
   constructor(config) {
@@ -188,13 +189,14 @@ var PatternLock = class {
     this.$canvas.style.height = this.dimens.height + "px";
     this.ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   }
-  initialize({ theme, grid: [rows, cols] }) {
+  initialize({ theme, grid: [rows, cols], showArrows }) {
     this._subscriptions = [];
     this.eventBus = EventBus_default();
     this.setTheme(theme, false);
     this.setGrid(rows, cols);
     this.renderGrid();
     this.attachEventHandlers();
+    this.showArrows = showArrows;
   }
   setInitialState() {
     this.coordinates = null;
@@ -244,6 +246,12 @@ var PatternLock = class {
     rerender && this.forceRender();
     return this;
   }
+  // setThemeState :: (Boolean, ?Boolean) -> PatternLock
+  setShowArrow(showArrows, rerender = true) {
+    this.showArrows = showArrows;
+    rerender && this.forceRender();
+    return this;
+  }
   // Attach event listeners and start frame loops
   attachEventHandlers() {
     const register = (t, ev, fn) => this._subscriptions.push(registerEvent(t, ev, fn));
@@ -273,7 +281,8 @@ var PatternLock = class {
       password = patternToWords(nodes);
       hash = hashCode(password);
     }
-    this.emit(events.PATTERN_COMPLETE, { nodes, password, hash });
+    const image = this.$canvas.toDataURL("image/png");
+    this.emit(events.PATTERN_COMPLETE, { nodes, password, hash, image });
   }
   // Event handler stuff end
   // recalculateBounds :: () -> Point
@@ -412,13 +421,13 @@ var PatternLock = class {
       this.ctx.clearRect(0, 0, this.dimens.width, this.dimens.height);
       this.renderGrid();
       const lastNode = this.selectedNodes.reduce((prevNode, node) => {
-        if (prevNode) {
-          const p1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
-          const p2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
-          this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
-          this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3);
-          this.joinNodes(prevNode.row, prevNode.col, node.row, node.col);
-        }
+        if (!prevNode)
+          return node;
+        const p1 = { x: node.row * this.interval.x, y: node.col * this.interval.y };
+        const p2 = { x: prevNode.row * this.interval.x, y: prevNode.col * this.interval.y };
+        this.drawNode(p1.x, p1.y, accent, primary, ringWidth + 3);
+        this.drawNode(p2.x, p2.y, accent, primary, ringWidth + 3);
+        this.joinNodes(prevNode.row, prevNode.col, node.row, node.col, false);
         return node;
       }, null);
       if (lastNode && this.coordinates) {
@@ -475,20 +484,40 @@ var PatternLock = class {
     this.ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
     this.ctx.stroke();
   }
-  joinNodes(row1, col1, row2, col2, isCoordinates = false) {
+  joinNodes(row1, col1, row2, col2, isCoordinates) {
     let factor = this.interval;
     if (isCoordinates) {
       factor = { x: 1, y: 1 };
     }
     const point1 = { x: factor.x * row1, y: factor.y * col1 };
     const point2 = { x: factor.x * row2, y: factor.y * col2 };
+    this.ctx.lineCap = "round";
     this.ctx.lineWidth = this.themeState.dimens.line_width;
     this.ctx.strokeStyle = this.themeState.colors.accent;
-    this.ctx.lineCap = "round";
     this.ctx.beginPath();
     this.ctx.moveTo(point1.x, point1.y);
     this.ctx.lineTo(point2.x, point2.y);
     this.ctx.stroke();
+    if (this.showArrows) {
+      const mid = { x: (point2.x + point1.x) / 2, y: (point2.y + point1.y) / 2 };
+      let angle = Math.atan((point2.y - point1.y) / (point2.x - point1.x));
+      angle = point2.x < point1.x ? Math.PI + angle : angle;
+      const segment = 8;
+      this.ctx.lineWidth = this.themeState.dimens.line_width + 2;
+      this.ctx.strokeStyle = `rgba(0, 0, 0, 0.1)`;
+      this.ctx.beginPath();
+      this.ctx.moveTo(mid.x - segment * Math.cos(angle - Math.PI / 4), mid.y - segment * Math.sin(angle - Math.PI / 4));
+      this.ctx.lineTo(mid.x, mid.y);
+      this.ctx.lineTo(mid.x - segment * Math.cos(angle + Math.PI / 4), mid.y - segment * Math.sin(angle + Math.PI / 4));
+      this.ctx.stroke();
+      this.ctx.lineWidth = this.themeState.dimens.line_width;
+      this.ctx.strokeStyle = this.themeState.colors.accent;
+      this.ctx.beginPath();
+      this.ctx.moveTo(mid.x - segment * Math.cos(angle - Math.PI / 4), mid.y - segment * Math.sin(angle - Math.PI / 4));
+      this.ctx.lineTo(mid.x, mid.y);
+      this.ctx.lineTo(mid.x - segment * Math.cos(angle + Math.PI / 4), mid.y - segment * Math.sin(angle + Math.PI / 4));
+      this.ctx.stroke();
+    }
   }
   // Will check if the drawn pattern matches produces a hash from the passed list
   // matchHash :: Array<Hash> -> Matcher

@@ -9,7 +9,6 @@ A pattern lock library for the web. [Demo](https://phenax.github.io/pattern-lock
 
 
 
-
 ### Installation
 
 Install the library with
@@ -28,7 +27,9 @@ const lock = PatternLock({
     $canvas: document.querySelector('#patternLock'),
     width: 300,
     height: 430,
-    grid: [ 3, 3 ],
+    grid: [ 3, 3 ], // 3x3 grid
+    theme: 'dark', // Theme name
+    showArrows: true, // Show arrows on pattern
 });
 ```
 
@@ -82,10 +83,17 @@ lock.setThemeState('customState'); // Switch to your custom state
 lock.setGrid(4, 4); // 4x4 grid instead of the default 3x3
 ```
 
-
 ### Callback for when the pattern is complete
 ```javascript
 lock.onComplete(({ hash }) => (myRealHash === hash) ? success() : failure());
+```
+
+### Use image of the pattern
+```javascript
+lock.onComplete(({ image }) => {
+    // Open image
+    window.open(image)
+});
 ```
 
 ### Or you can use the matchHash helper to check if the hash matches your set of correct passwords

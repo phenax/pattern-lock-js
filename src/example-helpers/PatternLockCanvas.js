@@ -27,6 +27,7 @@ const PatternLockCanvas = component({
 				.setGrid(...props.grid, false)
 				.setTheme(props.theme, false)
 				.setThemeState(props.themeState, false)
+				.setShowArrow(props.showArrows, false)
 				.forceRender();
 		});
 	},
